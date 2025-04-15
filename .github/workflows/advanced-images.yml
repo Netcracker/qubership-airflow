@@ -1,16 +1,20 @@
 name: Build Advanced Images
 on:
-  workflow_run:
-    workflows: [Build Basic Images]
-    types:
-      - completed
-  workflow_dispatch:
-    inputs:
-      publish_docker:
-        description: "Publish image to ghcr.io"
-        type: boolean
-        default: true
-        required: false
+  push:
+    branches:
+      - '**'
+# ToDo resstore before master
+#  workflow_run:
+#    workflows: [Build Basic Images]
+#    types:
+#      - completed
+#  workflow_dispatch:
+#    inputs:
+#      publish_docker:
+#        description: "Publish image to ghcr.io"
+#        type: boolean
+#        default: true
+#        required: false
 
 env:
   TAG_NAME: ${{ github.event.release.tag_name || github.ref }}
