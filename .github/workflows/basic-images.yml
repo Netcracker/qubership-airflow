@@ -32,10 +32,10 @@ jobs:
             context: ""
           - name: qubership-airflow-sm
             file: site-manager/docker/Dockerfile
-            context: site-manage
+            context: site-manager
           - name: qubership-airflow-integration-tests
             file: integration-tests/tests/docker/Dockerfile
-            context: integration-tests/tests/docker
+            context: integration-tests/tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -65,7 +65,7 @@ jobs:
           no-cache: true
           context: ${{ matrix.component.context }}
           file: ${{ matrix.component.file }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64 # ToDo ,linux/arm64
           push: true
           tags: ghcr.io/netcracker/${{ matrix.component.name }}:${{ env.TAG_NAME }}
           provenance: false
