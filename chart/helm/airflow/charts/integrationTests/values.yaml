@@ -1,0 +1,45 @@
+service:
+  name: airflow-integration-tests
+
+secret:
+  airflow:
+    user: "admin"
+    password: "admin"
+
+serviceAccount:
+  create: true
+  name: "airflow-integration-tests"
+
+image: "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
+tags: "smoke"
+airflowHost: "airflow-webserver"
+airflowPort: 8080
+workerServiceName: "airflow-worker"
+webServiceName: "airflow-webserver"
+schedulerDeployment: "airflow-scheduler"
+prometheusHost: ""
+prometheusPort: 9090
+executorType: "CeleryExecutor"
+securityContexts:
+  pod:
+    runAsUser: 50000
+    runAsNonRoot: true
+    fsGroup: 50000
+    seccompProfile:
+      type: RuntimeDefault
+  container:
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
+statusWritingEnabled: "true"
+isShortStatusMessage: "true"
+onlyIntegrationTests: "false"
+resources: {}
+priorityClassName: ~
+#  requests:
+#    memory: 256Mi
+#    cpu: 50m
+#  limits:
+#    memory: 256Mi
+#    cpu: 400m

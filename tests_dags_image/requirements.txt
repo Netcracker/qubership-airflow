@@ -1,0 +1,23 @@
+# Core
+pypandoc
+kafka_python
+atlasclient
+hmsclient
+# HDFS
+hdfs
+# kerberos
+requests-kerberos
+# airflow providers
+apache-airflow-providers-apache-hdfs
+# apache-airflow-providers-apache-hive
+apache-airflow-providers-cncf-kubernetes
+apache-airflow-providers-apache-spark
+apache-airflow-providers-ssh
+apache-airflow-providers-amazon
+apache-airflow-providers-apache-kafka
+# Spark
+pyspark==3.1.2
+# pyHive for Python 3.9 wait for https://github.com/apache/airflow/pull/32607
+# PyHive
+# sasl
+# thrift-sasl

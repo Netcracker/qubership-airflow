@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "airflow-site-manager.fullname" . }}
+  labels:
+#---Qubership custom change: Labels for Qubership release---
+    {{- include "service_only_labels" . | nindent 4 }}
+#---Qubership custom change: Labels for Qubership release---
+    {{- include "airflow-site-manager.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "airflow-site-manager.selectorLabels" . | nindent 4 }}

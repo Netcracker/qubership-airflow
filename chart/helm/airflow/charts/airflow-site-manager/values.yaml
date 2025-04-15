@@ -1,0 +1,112 @@
+# Default values for airflow-site-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+labels:
+  app.kubernetes.io/part-of: 'airflow'
+
+image:
+  repository: ghcr.io/netcracker/qubership-airflow-site-manager
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: main
+
+imagePullSecrets: []
+priorityClassName: ~
+nameOverride: ""
+fullnameOverride: "airflow-site-manager"
+
+siteManager:
+  apiGroup: qubership.com
+  clusterRoleBinding:
+    install: true
+  cr:
+    install: false
+  startAfter: ["pg"]
+  timeout: 180
+
+dr:
+  mode: 'standby'
+  noWait: false
+
+START_TIMEOUT: 120
+SHUTDOWN_TIMEOUT: 25
+FLOWER_REPLICAS: 1
+WORKER_REPLICAS: 1
+SCHEDULER_REPLICAS: 1
+WEB_SERVER_REPLICAS: 1
+
+RESOURCE_FOR_DR: '"" v1 configmaps airflow-dr-state' # do not change
+USE_DEFAULT_PATHS: 'false' # do not change
+DISASTER_RECOVERY_MODE_PATH: 'data.mode' # do not change
+DISASTER_RECOVERY_NOWAIT_PATH: 'data.noWait' # do not change
+DISASTER_RECOVERY_STATUS_MODE_PATH: 'data.status_mode' # do not change
+DISASTER_RECOVERY_STATUS_STATUS_PATH: 'data.status_status' # do not change
+DISASTER_RECOVERY_STATUS_COMMENT_PATH: 'data.status_comment' # do not change
+DISASTER_RECOVERY_NOWAIT_AS_STRING: 'true' # do not change
+TREAT_STATUS_AS_FIELD: 'true' # do not change
+HEALTH_MAIN_SERVICES_ACTIVE: deployment airflow-airflow-webserver
+
+# auth settings
+HTTP_AUTH_ENABLED: false
+SM_SECURE_AUTH: false
+SITE_MANAGER_SERVICE_ACCOUNT_NAME: ""
+SITE_MANAGER_NAMESPACE: site-manager
+SITE_MANAGER_CUSTOM_AUDIENCE: "sm-services"
+
+logLevel: 2
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "airflow-site-manager"
+
+podAnnotations: {}
+
+securityContexts:
+  pod:
+    runAsUser: 50000
+    runAsNonRoot: true
+    fsGroup: 50000
+    seccompProfile:
+      type: RuntimeDefault
+  container:
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          backend:
+            servicePort: 8080
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+

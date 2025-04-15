@@ -1,0 +1,16 @@
+{{ if .Values.platformAirflowMonitoring }}
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDashboard
+metadata:
+  name: airflow-overview.json
+  labels:
+    {{- with .Values.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/processed-by-operator: grafana-operator
+    app: grafana
+spec:
+  name: airflow-overview.json
+  json: >
+{{ .Files.Get "monitoring/airflow-overview.json" | indent 4 }}
+{{ end }}

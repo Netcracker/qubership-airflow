@@ -1,0 +1,35 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: airflow-site-manager-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "airflow-site-manager.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+    - apps
+  resources:
+    - deployments
+    - statefulsets
+  verbs:
+    - get
+    - update
+    - list
+- apiGroups:
+    - ""
+  resources:
+    - configmaps
+  verbs:
+    - get
+    - delete
+    - update
+    - watch
+    - list
+- apiGroups:
+    - ""
+  resources:
+    - pods
+  verbs:
+    - get
+    - list
+    - delete

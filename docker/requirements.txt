@@ -1,0 +1,7 @@
+#slim image missing libraries
+apache-airflow-providers-common-sql==1.24.0 # manually update version because latest PG provider does not support default
+apache-airflow-providers-celery==3.10.0 # see https://github.com/apache/airflow/issues/47781
+apache-airflow[celery,kerberos,ldap,statsd,redis,rabbitmq,postgres,kubernetes]==2.10.5
+# Monitoring
+airflow-exporter
+Authlib
