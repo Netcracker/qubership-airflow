@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# This file can be used to get hadoop config from Ambari or Cloudera Manager
+
 set -x
 
 # Usage message
