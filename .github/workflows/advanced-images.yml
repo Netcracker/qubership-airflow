@@ -28,7 +28,7 @@ jobs:
       matrix:
         component:
           - name: qubership-airflow-tests-dags-image
-            file: tests-dags-image/Dockerfile
+            file: tests_dags_image/Dockerfile
             context: ""
     runs-on: ubuntu-latest
     steps:
