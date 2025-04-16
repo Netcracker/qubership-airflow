@@ -43,7 +43,7 @@ metadata:
       {{- toYaml . | nindent 4 }}
     {{- end }}
 #---Qubership custom change: Labels for Qubership release---
-    {{- include "deployment_only_labels_cleunup_cronjob" . | nindent 4 }}
+    {{- include "deployment_only_labels_cleanup_cronjob" . | nindent 4 }}
 #---Qubership custom change: Labels for Qubership release---
   {{- with .Values.cleanup.jobAnnotations }}
   annotations: {{- toYaml . | nindent 4 }}
@@ -71,7 +71,7 @@ spec:
               {{- mustMerge .Values.cleanup.labels .Values.labels | toYaml | nindent 12 }}
             {{- end }}
 #---Qubership custom change: Labels for Qubership release---
-            {{- include "deployment_only_labels_cleunup_cronjob" . | nindent 12 }}
+            {{- include "deployment_only_labels_cleanup_cronjob" . | nindent 12 }}
 #---Qubership custom change: Labels for Qubership release---
           annotations:
             sidecar.istio.io/inject: "false"

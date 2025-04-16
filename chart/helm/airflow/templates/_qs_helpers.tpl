@@ -54,7 +54,7 @@ app.kubernetes.io/managed-by: 'airflow-kubernetes-executor'
 app.kubernetes.io/technology: python
 {{- end }}
 
-{{- define "deployment_only_labels_cleunup_cronjob" -}}
+{{- define "deployment_only_labels_cleanup_cronjob" -}}
 {{ include "deployment_only_labels" . }}
 app.kubernetes.io/component: {{ .Values.componentLabel | default "airflow-cleanup-cronjob" }}
 app.kubernetes.io/technology: python
