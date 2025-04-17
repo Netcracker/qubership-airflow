@@ -410,11 +410,15 @@ extraEnv: |-
 {{- define "pgbouncer_exporter_image" -}}
   {{- printf "%s:%s" .Values.images.pgbouncerExporter.repository .Values.images.pgbouncerExporter.tag }}
 {{- end }}
-
+#---Qubership custom change: use rclone instead of gitsync
 {{- define "git_sync_image" -}}
+  {{- if .Values.dags.gitSync.rcloneImage -}}
+  {{ .Values.images.rclone.image }}
+  {{- else -}}
   {{- printf "%s:%s" .Values.images.gitSync.repository .Values.images.gitSync.tag }}
+  {{- end -}}
 {{- end }}
-
+#---Qubership custom change: use rclone instead of gitsync
 {{- define "fernet_key_secret" -}}
   {{- default (printf "%s-fernet-key" .Release.Name) .Values.fernetKeySecretName }}
 {{- end }}
