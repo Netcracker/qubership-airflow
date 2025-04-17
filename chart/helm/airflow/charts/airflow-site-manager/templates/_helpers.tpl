@@ -85,3 +85,11 @@ Service Account for Site Manager depending on smSecureAuth
     {{- end -}}
   {{- end -}}
 {{- end -}}
+
+{{/*
+Additional Service only labels for Qubership Release
+*/}}
+{{- define "service_only_labels" -}}
+name: {{ include "airflow.fullname" . }}
+app.kubernetes.io/name: {{ include "airflow.fullname" . }}
+{{- end }}
