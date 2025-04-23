@@ -1474,7 +1474,7 @@ extraEnvFrom: |
 
 ## Using Git Sync
 
-Airflow manifest includes a GitSync image that can be used to download DAGs from Git. 
+Airflow deployment can use GitSync image to download DAGs from Git. 
 
 **Note**: When using gitSync, pay attention to `dags.gitSync.maxFailures` parameter. If connection to git is unstable, setting this parameter to low value can cause frequent gitSync sideCar restarts. 
 
