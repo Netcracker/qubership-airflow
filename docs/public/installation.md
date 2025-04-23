@@ -790,7 +790,7 @@ config:
 [Platform-provided DBaaS integration package for Airflow](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) also allows to get Kafka connections from MaaS. The approach works mostly the same as with DBaaS connection, but the structure of JSON connection config is a bit different. To get Kafka connection, it is necessary to specify the data [for MaaS request](https://github.com/Netcracker/qubership-maas/blob/main/docs/rest-api.md#get-or-create-kafka-topic) to `{maas_host}/api/v1/kafka/topic` in the `maas_request_data` field, additional properties for connection in the `connection_properties` field (is used to fill the extra field of the connection, can be used to overwrite the properties received from MaaS) and the connection type in the `maas_type` field. All these three field should be added to the field with "${connection_name}_maas" name. Following is an example for connection with name `kafka_test_conn`:
 
 ```yaml
-nc_secrets_backend_params:
+qs_secrets_backend_params:
   kafka_test_conn_maas:
     maas_request_data:
       instance: kafkaone
@@ -809,7 +809,7 @@ nc_secrets_backend_params:
 config:
   secrets:
     backend: qsbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend # used by default
-    backend_kwargs: "{{ .Values.nc_secrets_backend_params | toJson }}"
+    backend_kwargs: "{{ .Values.qs_secrets_backend_params | toJson }}"
 ```
 
 Since Airflow Kafka connection does not include topic, the topic name is not passed to the connection. The following fields are taken from the MaaS response and added to the Kafka connection extra field: `bootstrap.servers`, `sasl.username`, `sasl.password`, `sasl.mechanism`, `security.protocol`.
@@ -1298,7 +1298,7 @@ airflowLocalSettings:  |-
 config:
 ...
   logging:
-    nc_logging_type: stdoutfilesystem
+    qs_logging_type: stdoutfilesystem
     remote_logging: '{{- ternary "True" "False" .Values.elasticsearch.enabled }}'
     colored_console_log: 'False'
     task_log_reader: task
@@ -1322,7 +1322,7 @@ config:
     remote_logging: '{{- ternary "True" "False" .Values.elasticsearch.enabled }}'
     colored_console_log: 'False'
     audit_log_level: INFO
-    nc_logging_type: stdout
+    qs_logging_type: stdout
     logging_config_class: airflow_local_settings.QS_DEFAULT_LOGGING_CONFIG
     task_log_reader: stdout_task
     task_log_prefix_template: "[DAG_ID]:'{{ \"{{ ti.dag_id }}\" }}' [TASK_ID]:'{{ \"{{ ti.task_id }}\" }}' [TIMESTAMP]:'{{ \"{{ ts }}\" }}' [TRY_NUMBER]:'{{ \"{{ ti.try_number }}\" }}'"
@@ -1345,7 +1345,7 @@ config:
     remote_log_conn_id: test_s3
     encrypt_s3_logs: 'False'
     logging_config_class: airflow_local_settings.QS_DEFAULT_LOGGING_CONFIG
-    nc_logging_type: stdoutfilesystem
+    qs_logging_type: stdoutfilesystem
 ```
 
 **Note**: [delete_local_logs](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#delete-local-logs) configuration parameter can be used to remove local logs, so the logs will be present only in stdout and S3.
@@ -1365,7 +1365,7 @@ config:
     remote_log_conn_id: test_s3
     encrypt_s3_logs: 'False'
     logging_config_class: airflow_local_settings.QS_DEFAULT_LOGGING_CONFIG
-    nc_logging_type: stdout
+    qs_logging_type: stdout
     task_log_reader: stdout_task
 ```
 
