@@ -49,5 +49,20 @@ The following folders/files were added to the chart:
 * Files for custom monitoring are added(Grafana dashboard, service monitors and prometheus alerts). The dashboard content can be found [here](/chart/helm/airflow/qs_files), other files can be found [here](/chart/helm/airflow/templates/qsmonitoring).
 * [Custom helpers file](/chart/helm/airflow/templates/_qs_helpers.tpl) was added.
 
+Main values.yaml file changes:
 
-For more information about the helm chart changes(including the ones in values.yaml), please refer to [installation.md](/docs/public/installation.md).
+* Security context modified.
+* Image parameters are customized to use the ones built in this repo.
+* `app.kubernetes.io/part-of: 'airflow'` label is added to all objects.
+* Web server ingress is enabled by default.
+* Custom logging config is used in `airflowLocalSettings`.
+* `env`, `extraSecrets`, `extraEnvFrom`, `metadataSecretName`, `brokerUrlSecretName` parameters are modified to support Qubership DBaaS.
+* Some of `enableBuiltInSecretEnvVars` disabled for DBaaS support.
+* Persistence is disabled by default and volume size is set to 10 gb.
+* Triggerer is disabled by default.
+* Internal Redis, PG are disabled.
+* Airflow config is modified to support new loging config, secrets backend.
+* Airflow config is modified in order to set different images for k8s executor pods.
+* New parameters related to custom Qubership certManager integration, monitoring, Site-Manager, integration tests, statusProvisioner and pre-install job are added.
+
+For more information about the helm chart changes, please refer to [installation.md](/docs/public/installation.md).
