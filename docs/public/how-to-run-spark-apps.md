@@ -78,7 +78,7 @@ subjects:
 
 To submit the Spark Applications:
 
-1. Prepare the SparkApplication yaml files. For more information, refer to [Spark Operator documentation](https://kubeflow.github.io/spark-operator/).  
+1. Prepare the SparkApplication yaml files. For more information, refer to [Spark Operator documentation](https://kubeflow.github.io/spark-operator/) and to [qubership-spark-on-k8s project](https://github.com/Netcracker/qubership-spark-on-k8s).  
 1. Prepare a DAG to submit SparkApplication files:
    1. [airflow.providers.cncf.kubernetes.operators.spark_kubernetes](https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/_api/airflow/providers/cncf/kubernetes/operators/spark_kubernetes/index.html) can be used to create a task for Spark application submission.  
    1. [airflow.providers.cncf.kubernetes.sensors.spark_kubernetes](https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/_api/airflow/providers/cncf/kubernetes/sensors/spark_kubernetes/index.html) can be used to add a monitoring task to monitor the application status.  
