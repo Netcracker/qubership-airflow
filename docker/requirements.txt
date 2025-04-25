@@ -1,4 +1,4 @@
-apache-airflow[celery,kerberos,ldap,statsd,redis,rabbitmq,postgres,kubernetes]==3.0.0
+apache-airflow[celery,kerberos,ldap,statsd,redis,rabbitmq,postgres,cncf.kubernetes]==3.0.0
 # Monitoring
 airflow-exporter
 Authlib
