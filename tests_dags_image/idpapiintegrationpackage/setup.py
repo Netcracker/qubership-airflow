@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='ncidpapiintegration',
+    name='qsidpapiintegration',
     version='1.0',
-    packages=['.ncidpapiintegration'],
+    packages=['.qsidpapiintegration'],
 )
