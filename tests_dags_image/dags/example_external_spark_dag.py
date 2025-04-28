@@ -15,6 +15,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+# Modified in 2025 by NetCracker Technology Corp.
 
 """
 Example Airflow DAG to submit Apache Spark applications using
@@ -24,7 +26,7 @@ from airflow.models import DAG
 # from airflow.providers.apache.spark.operators.spark_jdbc import SparkJDBCOperator
 # from airflow.providers.apache.spark.operators.spark_sql import SparkSqlOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
-from airflow.utils.dates import days_ago
+import datetime
 
 import os
 
@@ -68,7 +70,7 @@ with DAG(
         dag_id='example_spark_operator',
         default_args=args,
         schedule_interval=None,
-        start_date=days_ago(2),
+        start_date=datetime.datetime(2025, 1, 1),
         tags=['example'],
 ) as dag:
     # [START howto_operator_spark_submit]

@@ -1,16 +1,16 @@
+import datetime
 import os
 import uuid
 
 from airflow.models import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.apache.hdfs.hooks.webhdfs import WebHDFSHook
-from airflow.utils.dates import days_ago
 
 # for this DAG to work the webhdfs_default connection must be configured
 
 args = {
     'owner': 'Airflow',
-    'start_date': days_ago(2),
+    'start_date': datetime.datetime(2025, 1, 1),
 }
 
 dag = DAG(
