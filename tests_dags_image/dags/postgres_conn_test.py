@@ -5,7 +5,7 @@ import datetime
 
 from airflow import DAG
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from airflow.operators.python import PythonOperator
+from airflow.providers.standard.operators.python import PythonOperator
 
 DAG_ID = "postgres_operator_test_dag"
 
@@ -14,7 +14,7 @@ def check_awaited_message(ti, **kwargs):
     return_value = ti.xcom_pull(task_ids=['get_birth_date'], key='return_value')[0]
     print(f"awaited message:{len(return_value[1])}")
     if len(return_value[1]) < 4:
-        raise ValueError("Wrong message recieved")
+        raise ValueError("Wrong message received")
 
 
 with DAG(

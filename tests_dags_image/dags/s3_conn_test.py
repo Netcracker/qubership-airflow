@@ -1,12 +1,12 @@
-from airflow.utils.dates import days_ago
+import datetime
 
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.hooks.S3_hook import S3Hook
+from airflow.providers.standard.operators.python import PythonOperator
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 args = {
     'owner': 'Airflow',
-    'start_date': days_ago(2),
+    'start_date': datetime.datetime(2025, 1, 1),
 }
 
 S3_FILENAME = "my-test-dag.py"
