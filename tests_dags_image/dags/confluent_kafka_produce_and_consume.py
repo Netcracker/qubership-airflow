@@ -1,8 +1,9 @@
+import datetime
+
 from airflow.providers.apache.kafka.operators.consume import ConsumeFromTopicOperator
 from airflow.providers.apache.kafka.operators.produce import ProduceToTopicOperator
 from airflow.providers.apache.kafka.sensors.kafka import AwaitMessageSensor
-from airflow.operators.python import PythonOperator
-from airflow.utils.dates import days_ago
+from airflow.providers.standard.operators.python import PythonOperator
 
 from airflow.models import DAG
 
@@ -34,7 +35,7 @@ def check_awaited_message(ti, **kwargs):
 
 args = {
     'owner': 'Airflow',
-    'start_date': days_ago(2),
+    'start_date': datetime.datetime(2025, 1, 1),
 }
 
 dag = DAG(

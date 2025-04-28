@@ -5,20 +5,19 @@ import json
 import os
 import logging
 import time
+import datetime
 
 import requests
 
 from datetime import timedelta
 
-from airflow.utils.dates import days_ago
-
 from airflow.models import DAG
-from airflow.contrib.operators.ssh_operator import SSHOperator
-from airflow.operators.python import BranchPythonOperator, PythonOperator
-from airflow.operators.bash import BashOperator
+from airflow.providers.ssh.operators.ssh import SSHOperator
+from airflow.providers.standard.operators.python import BranchPythonOperator, PythonOperator
+from airflow.providers.standard.operators.bash import BashOperator
 from airflow.providers.apache.hdfs.hooks.webhdfs import WebHDFSHook
 
-from airflow.operators.dummy import DummyOperator
+from airflow.providers.standard.operators.empty import EmptyOperator
 
 copy_pg_hive_db_command = '''#!/bin/bash
 set -e
@@ -124,7 +123,7 @@ PGPASSWORD="${DRAIRFLOWPGHOSTTOBACKUPPASSWORD}" pg_dump -F c -h "${DRAIRFLOWPGHO
 
 args = {
     'owner': 'airflow',
-    'start_date': days_ago(2),
+    'start_date': datetime.datetime(2025, 1, 1),
 }
 
 dr_delta_hours = os.getenv("DR_DAG_TIMEDELTA", 2)
@@ -373,7 +372,7 @@ task0 = SSHOperator(ssh_conn_id='ssh_dr',
                     command=f'kinit -kt  {keytab_file_path} {airflow_user}',
                     cmd_timeout=604800,
                     dag=dag) if use_security != "False" \
-    else DummyOperator(task_id='do_kinit', dag=dag)
+    else EmptyOperator(task_id='do_kinit', dag=dag)
 
 stop_hive = PythonOperator(
     task_id='stop_hive',

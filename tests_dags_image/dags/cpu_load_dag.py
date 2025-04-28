@@ -1,13 +1,12 @@
 import math
-
-from airflow.utils.dates import days_ago
+import datetime
 
 from airflow.models import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.providers.standard.operators.python import PythonOperator
 
 args = {
     'owner': 'Airflow',
-    'start_date': days_ago(2),
+    'start_date': datetime.datetime(2025, 1, 1),
 }
 
 dag = DAG(
