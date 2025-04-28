@@ -11,8 +11,8 @@ import os
 
 def create_dag(branch_count, branch_length, file_size):
     args = {
-        'owner': 'airflow',
-        'start_date': datetime.datetime(2025, 1, 1),
+        "owner": "airflow",
+        "start_date": datetime.datetime(2025, 1, 1),
     }
 
     dag = DAG(
@@ -20,17 +20,19 @@ def create_dag(branch_count, branch_length, file_size):
         default_args=args,
         # schedule_interval="*/1 * * * *",
         schedule=None,
-        tags=['check_hdfs_svt'],
-        catchup=False
+        tags=["check_hdfs_svt"],
+        catchup=False,
     )
 
     def load_file(ds, **kwargs):
-        hdfs_hook = WebHDFSHook(webhdfs_conn_id='webhdfs_default')
+        hdfs_hook = WebHDFSHook(webhdfs_conn_id="webhdfs_default")
         file = open("testfile", "wb")
-        file.write(os.urandom(file_size))  # generate 100MB random content file by default
+        file.write(
+            os.urandom(file_size)
+        )  # generate 100MB random content file by default
         file.close()
-        cwd = os.getcwd() + '/testfile'
-        path = kwargs['task'].task_id
+        cwd = os.getcwd() + "/testfile"
+        path = kwargs["task"].task_id
         if hdfs_hook.check_for_path(path):
             print("found old folder, deleting...")
             hdfs_hook.get_conn().delete(path, recursive=True)

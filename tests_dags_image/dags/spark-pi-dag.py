@@ -37,8 +37,12 @@ from airflow import DAG
 from airflow.models import Variable
 
 # Operators; we need this to operate!
-from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
-from airflow.providers.cncf.kubernetes.sensors.spark_kubernetes import SparkKubernetesSensor
+from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import (
+    SparkKubernetesOperator,
+)
+from airflow.providers.cncf.kubernetes.sensors.spark_kubernetes import (
+    SparkKubernetesSensor,
+)
 import datetime
 
 # [END import_module]
@@ -47,21 +51,21 @@ import datetime
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'max_active_runs': 1,
+    "owner": "airflow",
+    "depends_on_past": False,
+    "email": ["airflow@example.com"],
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "max_active_runs": 1,
 }
 # [END default_args]
 
 # [START instantiate_dag]
 
 dag = DAG(
-    dag_id='spark_pi-airflow-spark-operator',
+    dag_id="spark_pi-airflow-spark-operator",
     default_args=default_args,
-    description='submit spark-pi as sparkApplication on kubernetes',
+    description="submit spark-pi as sparkApplication on kubernetes",
     schedule=timedelta(days=1),
     start_date=datetime.datetime(2025, 1, 1),
 )
@@ -70,7 +74,7 @@ dag = DAG(
 spark_app_namespace = Variable.get("spark_app_namespace", "spark-apps")
 
 t1 = SparkKubernetesOperator(
-    task_id='spark_pi_submit',
+    task_id="spark_pi_submit",
     namespace=spark_app_namespace,
     application_file="./spark-apps-cr/spark-pi-airflow.yaml",
     kubernetes_conn_id="kubernetes_default",
@@ -79,7 +83,7 @@ t1 = SparkKubernetesOperator(
 )
 
 t2 = SparkKubernetesSensor(
-    task_id='spark_pi_monitor',
+    task_id="spark_pi_monitor",
     namespace=spark_app_namespace,
     application_name="{{ task_instance.xcom_pull(task_ids='spark_pi_submit')['metadata']['name'] }}",
     kubernetes_conn_id="kubernetes_default",

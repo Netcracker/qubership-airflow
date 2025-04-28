@@ -11,7 +11,7 @@ DAG_ID = "postgres_operator_test_dag"
 
 
 def check_awaited_message(ti, **kwargs):
-    return_value = ti.xcom_pull(task_ids=['get_birth_date'], key='return_value')[0]
+    return_value = ti.xcom_pull(task_ids=["get_birth_date"], key="return_value")[0]
     print(f"awaited message:{len(return_value[1])}")
     if len(return_value[1]) < 4:
         raise ValueError("Wrong message received")
@@ -49,19 +49,26 @@ with DAG(
             VALUES ( 'Quincy', 'Parrot', '2013-08-11', 'Anne');
             """,
     )
-    get_all_pets = SQLExecuteQueryOperator(conn_id="postgres_test_conn",
-                                           task_id="get_all_pets", sql="SELECT * FROM pet;")
+    get_all_pets = SQLExecuteQueryOperator(
+        conn_id="postgres_test_conn", task_id="get_all_pets", sql="SELECT * FROM pet;"
+    )
     get_birth_date = SQLExecuteQueryOperator(
         conn_id="postgres_test_conn",
         task_id="get_birth_date",
         sql="SELECT * FROM pet WHERE birth_date BETWEEN SYMMETRIC %(begin_date)s AND %(end_date)s",
         parameters={"begin_date": "2010-01-01", "end_date": "2020-12-31"},
-        hook_params={'options': '-c statement_timeout=3000ms'},
+        hook_params={"options": "-c statement_timeout=3000ms"},
     )
 
     check_return = PythonOperator(
-        task_id='check_return',
+        task_id="check_return",
         python_callable=check_awaited_message,
     )
 
-    create_pet_table >> populate_pet_table >> get_all_pets >> get_birth_date >> check_return
+    (
+        create_pet_table
+        >> populate_pet_table
+        >> get_all_pets
+        >> get_birth_date
+        >> check_return
+    )

@@ -5,22 +5,21 @@ from airflow.models import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 
 args = {
-    'owner': 'Airflow',
-    'start_date': datetime.datetime(2025, 1, 1),
+    "owner": "Airflow",
+    "start_date": datetime.datetime(2025, 1, 1),
 }
 
 dag = DAG(
-    dag_id='cpu_load_dag',
+    dag_id="cpu_load_dag",
     default_args=args,
     schedule=None,
-    tags=['cpu_load'],
-    is_paused_upon_creation=False
+    tags=["cpu_load"],
+    is_paused_upon_creation=False,
 )
 
 
 # see https://github.com/TheAlgorithms/Python/blob/master/maths/sieve_of_eratosthenes.py
 def prime_sieve(num: int) -> list[int]:
-
     if num <= 0:
         msg = f"{num}: Invalid input, please enter a positive integer."
         raise ValueError(msg)
@@ -70,54 +69,58 @@ def prime400000000():
 
 
 prime100000000_1 = PythonOperator(
-    task_id='prime100000000_1',
+    task_id="prime100000000_1",
     python_callable=prime100000000,
     dag=dag,
 )
 
 prime200000000_1 = PythonOperator(
-    task_id='prime200000000_1',
+    task_id="prime200000000_1",
     python_callable=prime200000000,
     dag=dag,
 )
 
 prime300000000_1 = PythonOperator(
-    task_id='prime300000000_1',
+    task_id="prime300000000_1",
     python_callable=prime300000000,
     dag=dag,
 )
 
 prime400000000_1 = PythonOperator(
-    task_id='prime400000000_1',
+    task_id="prime400000000_1",
     python_callable=prime400000000,
     dag=dag,
 )
 
 
 prime100000000_2 = PythonOperator(
-    task_id='prime100000000_2',
+    task_id="prime100000000_2",
     python_callable=prime100000000,
     dag=dag,
 )
 
 prime200000000_2 = PythonOperator(
-    task_id='prime200000000_2',
+    task_id="prime200000000_2",
     python_callable=prime200000000,
     dag=dag,
 )
 
 prime300000000_2 = PythonOperator(
-    task_id='prime300000000_2',
+    task_id="prime300000000_2",
     python_callable=prime300000000,
     dag=dag,
 )
 
 prime400000000_2 = PythonOperator(
-    task_id='prime400000000_2',
+    task_id="prime400000000_2",
     python_callable=prime400000000,
     dag=dag,
 )
 
-prime100000000_1 >> prime200000000_1 >> \
-    [prime100000000_2, prime200000000_2, prime300000000_2, prime400000000_2] >> \
-    prime300000000_1 >> prime400000000_1
+(
+    prime100000000_1
+    >> prime200000000_1
+    >> [prime100000000_2, prime200000000_2, prime300000000_2, prime400000000_2]
+    >> prime300000000_1
+    >> prime400000000_1
+)

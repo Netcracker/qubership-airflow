@@ -6,17 +6,14 @@ from airflow.models import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 
 args = {
-    'owner': 'Airflow',
-    'start_date': datetime.datetime(2025, 1, 1),
-    'retries': 3,
-    'retry_delay': timedelta(minutes=1)
+    "owner": "Airflow",
+    "start_date": datetime.datetime(2025, 1, 1),
+    "retries": 3,
+    "retry_delay": timedelta(minutes=1),
 }
 
 dag = DAG(
-    dag_id='sleep_dag_with_retries',
-    default_args=args,
-    schedule=None,
-    tags=['sleeping']
+    dag_id="sleep_dag_with_retries", default_args=args, schedule=None, tags=["sleeping"]
 )
 
 # def sleep1():
@@ -46,20 +43,20 @@ def sleep3():
 
 
 task1 = PythonOperator(
-    task_id='sleep1',
+    task_id="sleep1",
     python_callable=sleep1,
     dag=dag,
 )
 
 task2 = PythonOperator(
-    task_id='task2',
+    task_id="task2",
     python_callable=sleep2,
     dag=dag,
 )
 
 
 task3 = PythonOperator(
-    task_id='task3',
+    task_id="task3",
     python_callable=sleep3,
     dag=dag,
 )

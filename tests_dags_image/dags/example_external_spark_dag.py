@@ -22,7 +22,9 @@
 Example Airflow DAG to submit Apache Spark applications using
 `SparkSubmitOperator`, `SparkJDBCOperator` and `SparkSqlOperator`.
 """
+
 from airflow.models import DAG
+
 # from airflow.providers.apache.spark.operators.spark_jdbc import SparkJDBCOperator
 # from airflow.providers.apache.spark.operators.spark_sql import SparkSqlOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
@@ -63,20 +65,21 @@ DEFAULT_SPARK_CONF = {
 }
 
 args = {
-    'owner': 'Airflow',
+    "owner": "Airflow",
 }
 
 with DAG(
-        dag_id='example_spark_operator',
-        default_args=args,
-        schedule=None,
-        start_date=datetime.datetime(2025, 1, 1),
-        tags=['example'],
+    dag_id="example_spark_operator",
+    default_args=args,
+    schedule=None,
+    start_date=datetime.datetime(2025, 1, 1),
+    tags=["example"],
 ) as dag:
     # [START howto_operator_spark_submit]
     submit_job = SparkSubmitOperator(
         application=os.getenv("SPARK_HOME") + "/examples/src/main/python/pi.py",
-        task_id="submit_job", conf=DEFAULT_SPARK_CONF
+        task_id="submit_job",
+        conf=DEFAULT_SPARK_CONF,
     )
     # [END howto_operator_spark_submit]
 

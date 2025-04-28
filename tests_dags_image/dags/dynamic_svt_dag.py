@@ -6,8 +6,8 @@ from airflow.providers.standard.operators.python import PythonOperator
 
 def create_dag(branch_count, branch_length):
     args = {
-        'owner': 'airflow',
-        'start_date': datetime.datetime(2025, 1, 1),
+        "owner": "airflow",
+        "start_date": datetime.datetime(2025, 1, 1),
     }
 
     dag = DAG(
@@ -15,8 +15,8 @@ def create_dag(branch_count, branch_length):
         default_args=args,
         # schedule_interval="*/1 * * * *",
         schedule=None,
-        tags=['noop'],
-        catchup=False
+        tags=["noop"],
+        catchup=False,
     )
 
     def noop():
