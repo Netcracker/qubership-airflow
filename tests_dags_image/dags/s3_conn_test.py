@@ -16,7 +16,7 @@ BUCKET_NAME = "source"
 dag = DAG(
     dag_id='s3_conn_test',
     default_args=args,
-    schedule_interval=None,
+    schedule=None,
     tags=['check_s3'],
     is_paused_upon_creation=True
 )

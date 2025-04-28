@@ -41,7 +41,7 @@ args = {
 dag = DAG(
     dag_id='kafka_confluent_conn_test',
     default_args=args,
-    schedule_interval=None,
+    schedule=None,
     tags=['confluent_send_kafka'],
     is_paused_upon_creation=True
 )

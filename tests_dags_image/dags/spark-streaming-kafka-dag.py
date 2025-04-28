@@ -60,7 +60,7 @@ dag = DAG(
     dag_id='spark_streaming-kafka-word-count-spark-operator',
     default_args=default_args,
     description='submit spark-streaming-kafka-word-count as sparkApplication on kubernetes',
-    schedule_interval=timedelta(days=1),
+    schedule=timedelta(days=1),
     start_date=datetime.datetime(2025, 1, 1),
 )
 

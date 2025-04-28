@@ -14,7 +14,7 @@ args = {
 dag = DAG(
     dag_id='hdfs_conn_test',
     default_args=args,
-    schedule_interval=None,
+    schedule=None,
     tags=['check_hdfs'],
     is_paused_upon_creation=True
 )

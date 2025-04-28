@@ -69,7 +69,7 @@ args = {
 with DAG(
         dag_id='example_spark_operator',
         default_args=args,
-        schedule_interval=None,
+        schedule=None,
         start_date=datetime.datetime(2025, 1, 1),
         tags=['example'],
 ) as dag:

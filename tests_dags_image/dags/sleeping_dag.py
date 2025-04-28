@@ -13,7 +13,7 @@ args = {
 dag = DAG(
     dag_id='sleeping_dag',
     default_args=args,
-    schedule_interval=None,
+    schedule=None,
     tags=['sleeping'],
     is_paused_upon_creation=False
 )

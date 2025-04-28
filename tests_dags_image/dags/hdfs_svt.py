@@ -19,7 +19,7 @@ def create_dag(branch_count, branch_length, file_size):
         dag_id=dag_id,
         default_args=args,
         # schedule_interval="*/1 * * * *",
-        schedule_interval=None,
+        schedule=None,
         tags=['check_hdfs_svt'],
         catchup=False
     )

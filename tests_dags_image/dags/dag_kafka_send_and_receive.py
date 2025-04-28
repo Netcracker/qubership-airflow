@@ -12,7 +12,7 @@ args = {
 dag = DAG(
     dag_id='kafka_conn_test',
     default_args=args,
-    schedule_interval=None,
+    schedule=None,
     tags=['send_kafka'],
     is_paused_upon_creation=True
 )

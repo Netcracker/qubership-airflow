@@ -12,7 +12,7 @@ args = {
 dag = DAG(
     dag_id='cpu_load_dag',
     default_args=args,
-    schedule_interval=None,
+    schedule=None,
     tags=['cpu_load'],
     is_paused_upon_creation=False
 )

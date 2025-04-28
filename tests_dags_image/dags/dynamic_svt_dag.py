@@ -14,7 +14,7 @@ def create_dag(branch_count, branch_length):
         dag_id=dag_id,
         default_args=args,
         # schedule_interval="*/1 * * * *",
-        schedule_interval=None,
+        schedule=None,
         tags=['noop'],
         catchup=False
     )

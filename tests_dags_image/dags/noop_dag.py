@@ -11,7 +11,7 @@ args = {
 dag = DAG(
     dag_id='noop_dag',
     default_args=args,
-    schedule_interval=None,
+    schedule=None,
     tags=['noop']
 )
 

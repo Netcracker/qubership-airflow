@@ -132,7 +132,7 @@ dag = DAG(
     dag_id="DR_SYNC_DAG_V2",
     default_args=args,
     # schedule_interval="*/1 * * * *",
-    schedule_interval=timedelta(hours=float(dr_delta_hours)),  # "@hourly"
+    schedule=timedelta(hours=float(dr_delta_hours)),  # "@hourly"
     max_active_runs=1,
     tags=['Platform'],
     catchup=False

@@ -15,7 +15,7 @@ args = {
 dag = DAG(
     dag_id='sleep_dag_with_retries',
     default_args=args,
-    schedule_interval=None,
+    schedule=None,
     tags=['sleeping']
 )
 
