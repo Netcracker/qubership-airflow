@@ -37,7 +37,7 @@ from airflow.models import Variable
 # Operators; we need this to operate!
 from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
 from airflow.providers.cncf.kubernetes.sensors.spark_kubernetes import SparkKubernetesSensor
-from airflow.utils.dates import days_ago
+import datetime
 
 # [END import_module]
 
@@ -61,7 +61,7 @@ dag = DAG(
     default_args=default_args,
     description='submit spark-streaming-kafka-word-count as sparkApplication on kubernetes',
     schedule_interval=timedelta(days=1),
-    start_date=days_ago(1),
+    start_date=datetime.datetime(2025, 1, 1),
 )
 
 # airflow variable to set spark applications namespace. By default the namespace is "spark-apps".
