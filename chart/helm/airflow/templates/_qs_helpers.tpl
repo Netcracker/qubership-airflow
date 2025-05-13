@@ -38,7 +38,7 @@ Additional Deployment only labels for Qubership Release
 name: {{ include "airflow.fullname" . }}
 app.kubernetes.io/name: {{ include "airflow.fullname" . }}
 app.kubernetes.io/instance: '{{ .Release.Name }}'
-app.kubernetes.io/version: {{ .Values.images.airflow.tag }}'
+app.kubernetes.io/version: '{{ .Values.images.airflow.tag }}'
 {{- end }}
 
 {{- define "deployment_only_labels_worker" -}}
