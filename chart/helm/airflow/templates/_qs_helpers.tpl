@@ -17,8 +17,8 @@ Calculates resources that should be monitored during deployment by Deployment St
   {{- if .Values.scheduler.replicas }}
   {{- printf "Deployment %s-scheduler, " (include "airflow.fullname" .) -}}
   {{- end }}
-  {{- if .Values.webserver.replicas }}
-  {{- printf "Deployment %s-webserver, " (include "airflow.fullname" .) -}}
+  {{- if .Values.apiServer.replicas }}
+  {{- printf "Deployment %s-api-server, " (include "airflow.fullname" .) -}}
   {{- end }}
   {{- if and .Values.statsd.enabled .Values.scheduler.replicas .Values.webserver.replicas }}
   {{- printf "Deployment %s-statsd, " (include "airflow.fullname" .) -}}
