@@ -8,10 +8,10 @@ Find a Deployment Status Provisioner image in various places.
 Calculates resources that should be monitored during deployment by Deployment Status Provisioner.
 */}}
 {{- define "airflow.monitoredResources" -}}
-  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") (not .Values.workers.persistence) .Values.workers.replicas -}}
+  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") (not .Values.workers.persistence.enabled) .Values.workers.replicas -}}
   {{- printf "Deployment %s-worker, " (include "airflow.fullname" .) -}}
   {{- end -}}
-  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") .Values.workers.persistence .Values.workers.replicas -}}
+  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") .Values.workers.persistence.enabled .Values.workers.replicas -}}
   {{- printf "StatefulSet %s-worker, " (include "airflow.fullname" .) -}}
   {{- end -}}
   {{- if .Values.scheduler.replicas }}
@@ -19,6 +19,9 @@ Calculates resources that should be monitored during deployment by Deployment St
   {{- end }}
   {{- if .Values.apiServer.replicas }}
   {{- printf "Deployment %s-api-server, " (include "airflow.fullname" .) -}}
+  {{- end }}
+  {{- if .Values.dagProcessor.replicas }}
+  {{- printf "Deployment %s-dag-processor, " (include "airflow.fullname" .) -}}
   {{- end }}
   {{- if and .Values.statsd.enabled .Values.scheduler.replicas .Values.webserver.replicas }}
   {{- printf "Deployment %s-statsd, " (include "airflow.fullname" .) -}}
