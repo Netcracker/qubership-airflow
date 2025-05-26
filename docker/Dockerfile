@@ -35,8 +35,7 @@ RUN python3 -m pip install -r ${AIRFLOW_USER_HOME}/requirements.txt \
     && rm -r /dbaasintegrationpackage/*
 
 # WA because prometheus plugin is not working
-RUN 
-curl https://raw.githubusercontent.com/drshott/airflow-exporter/refs/heads/airflow3-compat/airflow_exporter/prometheus_exporter.py -o /home/airflow/.local/lib/python3.11/site-packages/airflow_exporter/prometheus_exporter.py
+RUN curl https://raw.githubusercontent.com/drshott/airflow-exporter/refs/heads/airflow3-compat/airflow_exporter/prometheus_exporter.py -o /home/airflow/.local/lib/python3.11/site-packages/airflow_exporter/prometheus_exporter.py
 
 
 
