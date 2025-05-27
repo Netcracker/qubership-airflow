@@ -49,7 +49,7 @@ The `down` and  `degraded` statuses are included in `allowedStandbyStateList` fo
 
 1. By the time site-manager gets to Airflow on a standby site, PostgreSQL is already in the active mode on that site.
 2. Site-manager switches standby Airflow on a standby site to the active mode.
-3. Airflow components like Web Server, Scheduler, Workers, Flower (if deployed), and StatsD (if deployed) are scaled to replicas set in the `WEB_SERVER_REPLICAS`, `SCHEDULER_REPLICAS`, `WORKER_REPLICAS`, `FLOWER_REPLICAS`, and `STATSD_REPLICAS` parameters accordingly.    
+3. Airflow components like Web Server, DAG processor, Scheduler, Workers, Flower (if deployed), and StatsD (if deployed) are scaled to replicas set in the `API_SERVER_REPLICAS`, `DAG_PROCESSOR` `SCHEDULER_REPLICAS`, `WORKER_REPLICAS`, `FLOWER_REPLICAS`, and `STATSD_REPLICAS` parameters accordingly.    
 4. DAGs run according to the schedule.
 
 ### Switch to Disable Mode
@@ -132,7 +132,7 @@ Airflow Site Manager supports the following REST API:
   - Flower component can only change the status to `degraded` if it is installed and unhealthy.
   - StatsD component can only change the status to `degraded` if it is installed and unhealthy.
   - Airflow is considered `down` if at least one of the components (Scheduler, Web Server, Worker) is unhealthy.
-  - Airflow is considered `degraded` if at least one of the components (Scheduler, Web Server, Worker, Flower) has fewer replicas than specified in the Airflow Site Manager's deployment parameters - `SCHEDULER_REPLICAS`, `WEB_SERVER_REPLICAS`, `WORKER_REPLICAS`, and `FLOWER_REPLICAS`.
+  - Airflow is considered `degraded` if at least one of the components (Scheduler, Web Server, Worker, Flower) has fewer replicas than specified in the Airflow Site Manager's deployment parameters - `SCHEDULER_REPLICAS`, `DAG_PROCESSOR_REPLICAS`, `API_SERVER_REPLICAS`, `WORKER_REPLICAS`, and `FLOWER_REPLICAS`.
   - In other cases, Airflow is `up`
   - KubernetesExecutor pods do not impact health of Airflow.   
   - CeleryExecutor impacts the health only if it is installed.
