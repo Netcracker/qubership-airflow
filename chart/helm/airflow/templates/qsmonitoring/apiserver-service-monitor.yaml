@@ -27,7 +27,7 @@ spec:
     {{- if .Values.serviceMonitor.scrapeTimeout }}
     scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
     {{- end }}
-    {{- if or .Values.config.webserver.web_server_ssl_key Values.config.api.ssl_key }}
+    {{- if or .Values.config.webserver.web_server_ssl_key .Values.config.api.ssl_key }}
     scheme: https
     tlsConfig:
       serverName: {{ include "airflow.fullname" . }}-webserver
