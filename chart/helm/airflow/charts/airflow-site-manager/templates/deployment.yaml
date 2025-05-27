@@ -51,12 +51,14 @@ spec:
               value: '{{ .Values.SHUTDOWN_TIMEOUT }}'
             - name: FLOWER_REPLICAS
               value: '{{ .Values.FLOWER_REPLICAS }}'
+            - name: DAG_PROCESSOR_REPLICAS
+              value: '{{ .Values.DAG_PROCESSOR_REPLICAS }}'
             - name: WORKER_REPLICAS
               value: '{{ .Values.WORKER_REPLICAS }}'
             - name: SCHEDULER_REPLICAS
               value: '{{ .Values.SCHEDULER_REPLICAS }}'
-            - name: WEB_SERVER_REPLICAS
-              value: '{{ .Values.WEB_SERVER_REPLICAS }}'
+            - name: API_SERVER_REPLICAS
+              value: '{{ .Values.API_SERVER_REPLICAS }}'
             - name: RESOURCE_FOR_DR
               value: '{{ .Values.RESOURCE_FOR_DR }}'
             - name: USE_DEFAULT_PATHS

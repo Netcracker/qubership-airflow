@@ -491,9 +491,10 @@ func (m DRManager) retryGetDeployment(err error) bool {
 //
 //	//replicaMap := map[string]int{
 //	//	"flower":    getEnvInt("FLOWER_REPLICAS", 1),
+//	//	"dagprocessor":    getEnvInt("DAG_PROCESSOR_REPLICAS", 1),
 //	//	"worker":    getEnvInt("WORKER_REPLICAS", 1),
 //	//	"scheduler": getEnvInt("SCHEDULER_REPLICAS", 1),
-//	//	"webserver": getEnvInt("WEB_SERVER_REPLICAS", 1),
+//	//	"apiserver": getEnvInt("API_SERVER_REPLICAS", 1),
 //	//}
 //
 //	controller := DRManager{
