@@ -5,7 +5,7 @@ import requests
 from flask_appbuilder import expose
 from flask_appbuilder.security.manager import AUTH_OAUTH
 from flask_appbuilder.security.views import AuthOAuthView
-from airflow.www.security import AirflowSecurityManager
+from airflow.providers.fab.auth_manager.security_manager.override import FabAirflowSecurityManagerOverride
 from airflow import configuration as conf
 
 logging.basicConfig(format='[%(asctime)s] [%(levelname)s] [%(filename)s] [thread=%(threadName)s] %(message)s',
@@ -23,7 +23,7 @@ AIRFLOW_KEYCLOAK_ADMIN_ROLES = os.getenv("AIRFLOW_KEYCLOAK_ADMIN_ROLES", "airflo
 
 APP_URL_LOGOUT = os.getenv("APP_URL_LOGOUT")
 
-SQLALCHEMY_DATABASE_URI = conf.get('core', 'SQL_ALCHEMY_CONN')
+SQLALCHEMY_DATABASE_URI = conf.get_mandatory_value('core', 'SQL_ALCHEMY_CONN')
 
 CSRF_ENABLED = True
 
@@ -71,7 +71,7 @@ class CustomAuthRemoteUserView(AuthOAuthView):
         return super().logout()
 
 
-class CustomSecurityManager(AirflowSecurityManager):
+class CustomSecurityManager(FabAirflowSecurityManagerOverride):
     authoauthview = CustomAuthRemoteUserView
 
     def oauth_user_info(self, provider, response):
