@@ -173,7 +173,6 @@ spec:
             {{- if or .Values.apiServer.apiServerConfig .Values.apiServer.apiServerConfigConfigMapName }}
               {{- include "airflow_api_server_config_mount" . | nindent 12 }}
             {{- end }}
-            {{- include "airflow_config_mount" . | nindent 12 }}
             {{- if .Values.logs.persistence.enabled }}
             - name: logs
               mountPath: {{ template "airflow_logs" . }}
