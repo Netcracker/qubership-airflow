@@ -17,6 +17,7 @@ airflowPort: 8080
 workerServiceName: "airflow-worker"
 apiServiceName: "airflow-api-server"
 schedulerDeployment: "airflow-scheduler"
+dagProcessorDeployment: "airflow-dag-processor"
 prometheusHost: ""
 prometheusPort: 9090
 executorType: "CeleryExecutor"
