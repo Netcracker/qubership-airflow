@@ -11,11 +11,11 @@ Create PG Connection
     [Arguments]  ${PG_HOST}  ${PG_USER}  ${PG_PASSWORD}  ${PG_DATABASE}
     &{data}=  Create Dictionary  connection_id=postgres_test_conn  conn_type=postgres  description=PG connection  host=${PG_HOST}  login=${PG_USER}  schema=${PG_DATABASE}  port=${5432}  password=${PG_PASSWORD}
     &{headers}=  Create Dictionary  Content-Type=application/json  Accept=application/json
-    ${resp}=  POST On Session  airflowsession  /api/v1/connections  json=${data}  headers=${headers}
+    ${resp}=  POST On Session  airflowsession  /api/v2/connections  json=${data}  headers=${headers}
     Should Be Equal  ${resp.status_code}  ${200}
 
 Delete PG Connection
-    ${resp}=  DELETE On Session  airflowsession  /api/v1/connections/postgres_test_conn
+    ${resp}=  DELETE On Session  airflowsession  /api/v2/connections/postgres_test_conn
     Should Be Equal  ${resp.status_code}  ${204}
 
 

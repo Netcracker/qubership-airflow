@@ -74,7 +74,7 @@ Test HA Case With WEB pod
     Skip If  ${count} == 0  Airflow doesn't have available dags!
     Unpause DAG  sleep_dag_with_retries
     ${resp} =  Run DAG  sleep_dag_with_retries
-    @{web_pod} =  Get Pod Names For Deployment Entity  ${WEB_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
+    @{web_pod} =  Get Pod Names For Deployment Entity  ${API_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
     Log to console  LIST_PODS: ${web_pod}
     FOR  ${pod}  IN  @{web_pod}
         Delete Pod By Pod Name  ${pod}  ${AIRFLOW_NAMESPACE}
@@ -82,4 +82,4 @@ Test HA Case With WEB pod
     END
     Wait Until Keyword Succeeds  ${COUNT_OF_RETRY}  ${RETRY_INTERVAL}
     ...  Wait Until DAG Succeed  sleep_dag_with_retries  ${resp['dag_run_id']}
-    [Teardown]  Set Replicas For Deployment Entity  ${WEB_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}  replicas=1
+    [Teardown]  Set Replicas For Deployment Entity  ${API_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}  replicas=1

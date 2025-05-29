@@ -48,9 +48,17 @@ Test Hardcoded Images In Scheduler
     Pass Execution If  "${dags_manager}" == "${None}"  There is no dags manager, passed!
     Check Image Correctness  deployment  ${name}  ${container_name}  ${manifest_image}
 
-Test Hardcoded Images In Webserver
-    [Tags]  airflow  airflow_images  airflow_images_webserver
-    ${name}  ${container_name}  ${manifest_image}=  Get Resource Details  ${WEB_SERVICE_NAME}
+Test Hardcoded Images In DAG processor
+    [Tags]  airflow  airflow_images  airflow_images_dag_processor
+    ${name}  ${container_name}  ${manifest_image}=  Get Resource Details  ${DAG_PROCESSOR_DEPLOYMENT}
+    Check Image Correctness  deployment  ${name}  ${container_name}  ${manifest_image}
+    ${dags_manager}  ${container_name}  ${manifest_image}=  Get Manager Of Dags
+    Pass Execution If  "${dags_manager}" == "${None}"  There is no dags manager, passed!
+    Check Image Correctness  deployment  ${name}  ${container_name}  ${manifest_image}
+
+Test Hardcoded Images In Apiserver
+    [Tags]  airflow  airflow_images  airflow_images_apiserver
+    ${name}  ${container_name}  ${manifest_image}=  Get Resource Details  ${API_SERVICE_NAME}
     Check Image Correctness  deployment  ${name}  ${container_name}  ${manifest_image}
 
 Test Hardcoded Images In Tests

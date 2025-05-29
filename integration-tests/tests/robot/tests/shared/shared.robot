@@ -4,8 +4,9 @@ ${AIRFLOW_PASSWORD}         %{AIRFLOW_PASSWORD}
 ${AIRFLOW_HOST}             %{AIRFLOW_HOST}
 ${AIRFLOW_PORT}             %{AIRFLOW_PORT}
 ${AIRFLOW_NAMESPACE}        %{AIRFLOW_NAMESPACE}
-${WEB_SERVICE_NAME}         %{WEB_SERVICE_NAME}
+${API_SERVICE_NAME}         %{API_SERVICE_NAME}
 ${SCHEDULER_DEPLOYMENT}     %{SCHEDULER_DEPLOYMENT}
+${DAG_PROCESSOR_DEPLOYMENT} %{DAG_PROCESSOR_DEPLOYMENT}
 ${WORKER_SERVICE_NAME}      %{WORKER_SERVICE_NAME}
 ${MANAGED_BY_OPERATOR}      true
 ${COUNT_OF_RETRY}           100x
@@ -30,7 +31,7 @@ Get Names Of Entities
     Set Suite Variable  ${IF_WORKERS_STATEFULSET}
     Run Keyword If  ${IF_WORKERS_STATEFULSET} == True  Get Workers On StatefulSet
     ...  ELSE  Get Workers On Deployments
-    ${web_deployments} =  get_deployment_entity_names_by_service_name  ${WEB_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
+    ${web_deployments} =  get_deployment_entity_names_by_service_name  ${API_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
     ${WEB_DEPLOYMENT} =  Get From List  ${web_deployments}  0
     Set Suite Variable  ${WEB_DEPLOYMENT}
 
@@ -46,7 +47,7 @@ Get Workers On Deployments
 
 Execute PATCH request to DAG
     [Arguments]  ${DAG_ID}  ${body}
-    ${resp} =  PATCH On Session  airflowsession  /api/v1/dags/${DAG_ID}  data=${body}  headers=${headers}
+    ${resp} =  PATCH On Session  airflowsession  /api/v2/dags/${DAG_ID}  data=${body}  headers=${headers}
     Should Be Equal As Strings  ${resp.status_code}   200
     Log To Console  \nExecute PATCH Request To ${DAG_ID} With Status Code: ${resp.status_code}
     ${resp_json} =  Convert Json ${resp.content} To Type
@@ -55,7 +56,7 @@ Execute PATCH request to DAG
 Run DAG
     [Arguments]  ${DAG_ID}
     ${body} =  Set Variable  {"conf": {}}
-    ${resp} =  POST On Session  airflowsession  /api/v1/dags/${DAG_ID}/dagRuns  data=${body}  headers=${headers}
+    ${resp} =  POST On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns  data=${body}  headers=${headers}
     Should Be Equal As Strings  ${resp.status_code}   200
     Log To Console  \nDAG ${DAG_ID} Started With Status Code: ${resp.status_code}
     ${resp_json} =  Convert Json ${resp.content} To Type
@@ -63,7 +64,7 @@ Run DAG
 
 Get Dag Status
     [Arguments]  ${DAG_ID}  ${dag_run_id}
-    ${status} =  GET On Session  airflowsession  /api/v1/dags/${DAG_ID}/dagRuns/${dag_run_id}
+    ${status} =  GET On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns/${dag_run_id}
     Should Be Equal As Strings  ${status.status_code}  200
     ${status_json} =  Convert Json ${status.content} To Type
     [Return]  ${status_json['state']}
@@ -113,7 +114,7 @@ Unpause DAG
     ${request} =  Execute PATCH request to DAG  ${dag_name}  ${body}
 
 Check Dags Amount
-    ${resp} =  GET On Session  airflowsession  /api/v1/dags
+    ${resp} =  GET On Session  airflowsession  /api/v2/dags
     ${resp_json} =  Convert Json ${resp.content} To Type
     ${dags_amount} =  Get Length  ${resp_json['dags']}
     Log to console  DAGS COUNT: ${dags_amount}

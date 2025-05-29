@@ -76,10 +76,12 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.service.name }}-secret
                   key: airflow-password
-            - name: WEB_SERVICE_NAME
+            - name: API_SERVICE_NAME
               value: {{ .Values.webServiceName }}
             - name: SCHEDULER_DEPLOYMENT
               value: {{ .Values.schedulerDeployment }}
+            - name: DAG_PROCESSOR_DEPLOYMENT
+              value: {{ .Values.dagProcessorDeployment }}
             - name: PROMETHEUS_HOST
               value: {{ .Values.prometheusHost }}
             - name: PROMETHEUS_PORT

@@ -2417,7 +2417,7 @@ This section contains information about integration test tags that can be used t
     * `airflow_images` tag runs all tests connected to check pod images' scenarios.
       * `airflow_images_worker` tag runs `Test Hardcoded Images In Worker` test.
       * `airflow_images_scheduler` tag runs `Test Hardcoded Images In Scheduler` test.
-      * `airflow_images_webserver` tag runs `Test Hardcoded Images In Webserver` test.
+      * `airflow_images_apiserver` tag runs `Test Hardcoded Images In Apiserver` test.
       * `airflow_images_tests` tag runs `Test Hardcoded Images In Tests` test.
       * `airflow_images_statsd` tag runs `Test Hardcoded Images In Statsd` test.
     
