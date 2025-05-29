@@ -23,7 +23,7 @@ AIRFLOW_KEYCLOAK_ADMIN_ROLES = os.getenv("AIRFLOW_KEYCLOAK_ADMIN_ROLES", "airflo
 
 APP_URL_LOGOUT = os.getenv("APP_URL_LOGOUT")
 
-SQLALCHEMY_DATABASE_URI = conf.get_mandatory_value('core', 'SQL_ALCHEMY_CONN')
+SQLALCHEMY_DATABASE_URI = conf.get_mandatory_value('database', 'SQL_ALCHEMY_CONN')
 
 CSRF_ENABLED = True
 
