@@ -2359,7 +2359,7 @@ config:
 |integrationTests.airflowHost|Specifies the host name of the Airflow WEB server.|
 |integrationTests.airflowPort|Specifies the port of Airflow.|
 |integrationTests.workerServiceName|Specifies the name of the Airflow Worker service.|
-|integrationTests.webServiceName|Specifies the name of the Airflow Web service.|
+|integrationTests.apiServiceName|Specifies the name of the Airflow Web service.|
 |integrationTests.schedulerDeployment|Specifies the name of the Airflow Scheduler deployment.|
 |integrationTests.prometheusHost|Specifies the host name of the Prometheus service.|
 |integrationTests.prometheusPort|Specifies the port of the Prometheus service.|
@@ -2385,7 +2385,7 @@ integrationTests:
   airflowHost: "airflow-webserver"
   airflowPort: 8080
   workerServiceName: "airflow-worker"
-  webServiceName: "airflow-webserver"
+  apiServiceName: "airflow-webserver"
   schedulerDeployment: "airflow-scheduler"
   prometheusHost: ""
   prometheusPort: 9090

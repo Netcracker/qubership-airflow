@@ -77,7 +77,7 @@ spec:
                   name: {{ .Values.service.name }}-secret
                   key: airflow-password
             - name: API_SERVICE_NAME
-              value: {{ .Values.webServiceName }}
+              value: {{ .Values.apiServiceName }}
             - name: SCHEDULER_DEPLOYMENT
               value: {{ .Values.schedulerDeployment }}
             - name: DAG_PROCESSOR_DEPLOYMENT

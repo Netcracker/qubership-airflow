@@ -12,10 +12,10 @@ serviceAccount:
 
 image: "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
 tags: "smoke"
-airflowHost: "airflow-webserver"
+airflowHost: "airflow-api-server"
 airflowPort: 8080
 workerServiceName: "airflow-worker"
-webServiceName: "airflow-webserver"
+apiServiceName: "airflow-api-server"
 schedulerDeployment: "airflow-scheduler"
 prometheusHost: ""
 prometheusPort: 9090
