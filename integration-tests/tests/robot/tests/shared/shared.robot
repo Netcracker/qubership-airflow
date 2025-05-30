@@ -29,9 +29,9 @@ Preparation
     ...    password=${AIRFLOW_PASSWORD}
     ${response}=    POST On Session    auth_session    ${AUTH_ENDPOINT}    json=${auth_data}
     Should Be Equal As Strings    ${response.status_code}    201
-    ${jwt_token}=    Set Variable    ${response.json()}[access_token]
+    ${airflow_token}=    Set Variable    ${response.json()}[access_token]
     ${headers_auth}=    Create Dictionary
-    ...    Authorization=JWT ${jwt_token}
+    ...    Authorization=Bearer ${airflow_token}
     ...    Content-Type=application/json
     ${headers} =  Create Dictionary  Content-Type=application/json
     Set Global Variable  ${headers}
