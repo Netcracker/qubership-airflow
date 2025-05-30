@@ -16,6 +16,7 @@ ${AUTH_ENDPOINT}            /auth/token
 
 *** Settings ***
 Library  String
+Library  DateTime
 Library	 Collections
 Library	 RequestsLibrary
 Library  PlatformLibrary  managed_by_operator=${MANAGED_BY_OPERATOR}
@@ -66,9 +67,9 @@ Execute PATCH request to DAG
 
 Run DAG
     [Arguments]  ${DAG_ID}
-#    ${body} =  Set Variable  {"conf": {}}
-#    ${resp} =  POST On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns  data=${body}  headers=${headers}
-    ${resp} =  POST On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns
+ #   ${timestamp} =  Get Current Date    result_format=%Y-%m-%dT%H:%M:%S.%f
+    ${body} =  Set Variable  {"conf": {}, "logical_date": "2025-05-30T09:50:20.218Z"}
+    ${resp} =  POST On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns  data=${body}  headers=${headers}
     Should Be Equal As Strings  ${resp.status_code}   200
     Log To Console  \nDAG ${DAG_ID} Started With Status Code: ${resp.status_code}
     ${resp_json} =  Convert Json ${resp.content} To Type
