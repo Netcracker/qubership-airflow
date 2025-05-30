@@ -67,7 +67,9 @@ Execute PATCH request to DAG
 
 Run DAG
     [Arguments]  ${DAG_ID}
-    ${body} =  Set Variable  {"conf": {}, "logical_date": "${None}"}
+    ${body}=    Create Dictionary
+    ...    conf={}
+    ...    logical_date=${None}
     ${resp} =  POST On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns  data=${body}  headers=${headers}
     Should Be Equal As Strings  ${resp.status_code}   200
     Log To Console  \nDAG ${DAG_ID} Started With Status Code: ${resp.status_code}
