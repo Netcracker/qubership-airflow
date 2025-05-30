@@ -33,7 +33,6 @@ Preparation
     ${headers_auth}=    Create Dictionary
     ...    Authorization=JWT ${jwt_token}
     ...    Content-Type=application/json
-    Create Session    api_session    ${BASE_URL}    headers=${headers}
     ${headers} =  Create Dictionary  Content-Type=application/json
     Set Global Variable  ${headers}
     Create Session    airflowsession    http://{AIRFLOW_HOST}:${AIRFLOW_PORT}    headers=${headers_auth}
