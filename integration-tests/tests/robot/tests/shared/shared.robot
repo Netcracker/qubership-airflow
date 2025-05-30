@@ -35,7 +35,7 @@ Preparation
     ...    Content-Type=application/json
     ${headers} =  Create Dictionary  Content-Type=application/json
     Set Global Variable  ${headers}
-    Create Session    airflowsession    http://{AIRFLOW_HOST}:${AIRFLOW_PORT}    headers=${headers_auth}
+    Create Session    airflowsession    http://${AIRFLOW_HOST}:${AIRFLOW_PORT}    headers=${headers_auth}
 
 Get Names Of Entities
     ${IF_WORKERS_STATEFULSET} =  Run Keyword And Return Status  Get Stateful Set  ${WORKER_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
