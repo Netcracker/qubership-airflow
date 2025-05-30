@@ -68,7 +68,7 @@ Execute PATCH request to DAG
 Run DAG
     [Arguments]  ${DAG_ID}
     ${body}=    Evaluate    {"conf": {}, "logical_date": None}
-    ${resp} =  POST On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns  data=${body}  headers=${headers}
+    ${resp} =  POST On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns  json=${body}  headers=${headers}
     Should Be Equal As Strings  ${resp.status_code}   200
     Log To Console  \nDAG ${DAG_ID} Started With Status Code: ${resp.status_code}
     ${resp_json} =  Convert Json ${resp.content} To Type
