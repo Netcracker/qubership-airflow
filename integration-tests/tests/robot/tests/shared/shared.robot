@@ -67,8 +67,8 @@ Execute PATCH request to DAG
 
 Run DAG
     [Arguments]  ${DAG_ID}
- #   ${timestamp} =  Get Current Date    result_format=%Y-%m-%dT%H:%M:%S.%f
-    ${body} =  Set Variable  {"conf": {}, "logical_date": "2025-05-30T09:50:20.218Z"}
+    ${timestamp} =  Get Current Date    result_format=%Y-%m-%dT%H:%M:%S.%f%z
+    ${body} =  Set Variable  {"conf": {}, "logical_date": "${timestamp}"}
     ${resp} =  POST On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns  data=${body}  headers=${headers}
     Should Be Equal As Strings  ${resp.status_code}   200
     Log To Console  \nDAG ${DAG_ID} Started With Status Code: ${resp.status_code}
