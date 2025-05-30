@@ -6,12 +6,13 @@ ${AIRFLOW_PORT}             %{AIRFLOW_PORT}
 ${AIRFLOW_NAMESPACE}        %{AIRFLOW_NAMESPACE}
 ${API_SERVICE_NAME}         %{API_SERVICE_NAME}
 ${SCHEDULER_DEPLOYMENT}     %{SCHEDULER_DEPLOYMENT}
-${DAG_PROCESSOR_DEPLOYMENT} %{DAG_PROCESSOR_DEPLOYMENT}
+${DAG_PROCESSOR_DEPLOYMENT}    %{DAG_PROCESSOR_DEPLOYMENT}
 ${WORKER_SERVICE_NAME}      %{WORKER_SERVICE_NAME}
 ${MANAGED_BY_OPERATOR}      true
 ${COUNT_OF_RETRY}           100x
 ${RETRY_INTERVAL}           5s
 ${EXECUTOR_TYPE}            %{EXECUTOR_TYPE}
+${AUTH_ENDPOINT}            /auth/token
 
 *** Settings ***
 Library  String
@@ -22,9 +23,20 @@ Library  PlatformLibrary  managed_by_operator=${MANAGED_BY_OPERATOR}
 
 *** Keywords ***
 Preparation
+    Create Session    auth_session    http://${AIRFLOW_HOST}:${AIRFLOW_PORT}
+    &{auth_data}=    Create Dictionary
+    ...    username=${AIRFLOW_USER}
+    ...    password=${AIRFLOW_PASSWORD}
+    ${response}=    POST On Session    auth_session    ${AUTH_ENDPOINT}    json=${auth_data}
+    Should Be Equal As Strings    ${response.status_code}    200
+    ${jwt_token}=    Set Variable    ${response.json()}[access_token]
+    ${headers_auth}=    Create Dictionary
+    ...    Authorization=JWT ${jwt_token}
+    ...    Content-Type=application/json
+    Create Session    api_session    ${BASE_URL}    headers=${headers}
     ${headers} =  Create Dictionary  Content-Type=application/json
     Set Global Variable  ${headers}
-    Create Session    airflowsession    http://${AIRFLOW_USER}:${AIRFLOW_PASSWORD}@${AIRFLOW_HOST}:${AIRFLOW_PORT}
+    Create Session    airflowsession    http://{AIRFLOW_HOST}:${AIRFLOW_PORT}    headers=${headers_auth}
 
 Get Names Of Entities
     ${IF_WORKERS_STATEFULSET} =  Run Keyword And Return Status  Get Stateful Set  ${WORKER_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
