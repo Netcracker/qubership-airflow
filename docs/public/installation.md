@@ -2413,7 +2413,7 @@ This section contains information about integration test tags that can be used t
       * `worker_down` tag runs `Test Alert Worker Error` test.
       * `worker_down_firing` tag runs `Test Alert Worker Error With Firing State` test.
       * `scheduler_down` tag runs `Test Alert Scheduler error` test.
-      * `web_down` tag runs `Test Alert Web error` test.
+      * `api_down` tag runs `Test Alert Web error` test.
     * `airflow_images` tag runs all tests connected to check pod images' scenarios.
       * `airflow_images_worker` tag runs `Test Hardcoded Images In Worker` test.
       * `airflow_images_scheduler` tag runs `Test Hardcoded Images In Scheduler` test.

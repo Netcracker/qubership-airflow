@@ -43,9 +43,9 @@ Get Names Of Entities
     Set Suite Variable  ${IF_WORKERS_STATEFULSET}
     Run Keyword If  ${IF_WORKERS_STATEFULSET} == True  Get Workers On StatefulSet
     ...  ELSE  Get Workers On Deployments
-    ${web_deployments} =  get_deployment_entity_names_by_service_name  ${API_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
-    ${WEB_DEPLOYMENT} =  Get From List  ${web_deployments}  0
-    Set Suite Variable  ${WEB_DEPLOYMENT}
+    ${api_deployments} =  get_deployment_entity_names_by_service_name  ${API_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
+    ${API_DEPLOYMENT} =  Get From List  ${api_deployments}  0
+    Set Suite Variable  ${API_DEPLOYMENT}
 
 Get Workers On StatefulSet
     ${statefulsets} =  get_stateful_set_names_by_label  namespace=${AIRFLOW_NAMESPACE}  label_value=worker  label_name=component

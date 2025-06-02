@@ -5,7 +5,7 @@ ${WORKER_STATEFULSET_DEGRADED_ALERT_NAME}   WorkerStatefulsetIsDegraded
 ${WORKER_DEPLOYMENT_DEGRADED_ALERT_NAME}    ThereAreUnavailableWorkers
 ${WORKER_DOWN_ALERT_NAME}                   WorkerError
 ${SCHEDULER_DOWN_ALERT_NAME}                SchedulerError
-${WEB_DOWN_ALERT_NAME}                      WebUIerror
+${API_DOWN_ALERT_NAME}                      APIerror
 ${FIRING_STATE}                             firing
 ${PENDING_STATE}                            pending
 ${INACTIVE_STATE}                           inactive
@@ -110,12 +110,12 @@ Test Alert Scheduler error
     [Teardown]  Set Replicas For Deployment Entity  ${SCHEDULER_DEPLOYMENT}  ${AIRFLOW_NAMESPACE}  replicas=1
 
 Test Alert Web error
-    [Tags]  alert  web_down  airflow
-    Set Replicas For Deployment Entity  ${WEB_DEPLOYMENT}  ${AIRFLOW_NAMESPACE}  replicas=0
+    [Tags]  alert  api_down  airflow
+    Set Replicas For Deployment Entity  ${API_DEPLOYMENT}  ${AIRFLOW_NAMESPACE}  replicas=0
     Wait Until Keyword Succeeds  ${RETRY}  ${INTERVAL}
-    ...  Check That Alert In Right Status  ${WEB_DOWN_ALERT_NAME}  ${PENDING_STATE}
+    ...  Check That Alert In Right Status  ${API_DOWN_ALERT_NAME}  ${PENDING_STATE}
     Log To Console  Alert triggered. Return state
-    Set Replicas For Deployment Entity  ${WEB_DEPLOYMENT}  ${AIRFLOW_NAMESPACE}  replicas=1
+    Set Replicas For Deployment Entity  ${API_DEPLOYMENT}  ${AIRFLOW_NAMESPACE}  replicas=1
     Wait Until Keyword Succeeds  ${RETRY}  ${INTERVAL}
-    ...  Check That Alert In Right Status  ${WEB_DOWN_ALERT_NAME}  ${INACTIVE_STATE}
-    [Teardown]  Set Replicas For Deployment Entity  ${WEB_DEPLOYMENT}  ${AIRFLOW_NAMESPACE}  replicas=1
+    ...  Check That Alert In Right Status  ${API_DOWN_ALERT_NAME}  ${INACTIVE_STATE}
+    [Teardown]  Set Replicas For Deployment Entity  ${API_DEPLOYMENT}  ${AIRFLOW_NAMESPACE}  replicas=1

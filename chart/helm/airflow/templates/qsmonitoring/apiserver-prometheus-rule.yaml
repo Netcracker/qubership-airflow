@@ -89,7 +89,7 @@ spec:
         annotations:
           description: "There are problem pods in the namespace"
           summary: Problematic pods are present
-        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-webserver"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_statefulset_status_replicas_current{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"}) - sum(kube_statefulset_status_replicas_ready{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"})) != 0
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_statefulset_status_replicas_current{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"}) - sum(kube_statefulset_status_replicas_ready{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"})) != 0
         for: "1m"
         labels:
           severity: warning
@@ -120,7 +120,7 @@ spec:
         annotations:
           description: "There are problem pods in the namespace"
           summary: Problematic pods are present
-        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-webserver"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-worker"})) != 0
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-worker"})) != 0
         for: "1m"
         labels:
           severity: warning
@@ -151,7 +151,7 @@ spec:
         annotations:
           description: "There are problem pods in the namespace"
           summary: Problematic pods are present
-        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-webserver"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"})) != 0
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"})) != 0
         for: "1m"
         labels:
           severity: warning
@@ -200,11 +200,11 @@ spec:
           severity: high
           namespace: {{ .Release.Namespace }}
           service: {{ .Release.Name }}
-      - alert: WebUIerror
+      - alert: APIerror
         annotations:
-          description: "Web UI is unavailable for some reason"
-          summary: There is no web UI available
-        expr: sum(kube_deployment_status_replicas_available{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-webserver"}) == 0
+          description: "API server is unavailable for some reason"
+          summary: There is no airflow API server available
+        expr: sum(kube_deployment_status_replicas_available{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) == 0
         for: "1m"
         labels:
           severity: high
