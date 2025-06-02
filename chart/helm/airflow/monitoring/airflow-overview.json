@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1628,
+  "id": 167,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -56,10 +56,11 @@
     },
     {
       "datasource": {
+        "default": false,
         "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Displays the Airflow status. If no scheduler/web/worker pod is available it displays the DOWN status. If at least one pod of each type (scheduler/web/worker) is available, but some scheduler/web/worker pods are in other states than running, it displays DEGRADED status, otherwise displays UP status.",
+      "description": "Displays the Airflow status. If no scheduler/api/worker/dagprocessor pod is available it displays the DOWN status. If at least one pod of each type (scheduler/api/worker/dagprocessor) is available, but some scheduler/api/worker/dagprocessor pods are in other states than running, it displays DEGRADED status, otherwise displays UP status.",
       "fieldConfig": {
         "defaults": {
           "displayName": "",
@@ -146,7 +147,8 @@
             "type": "prometheus",
             "uid": "$datasource"
           },
-          "expr": "sum(kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-scheduler\", cluster=~\"$cluster\"})*sum(kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-webserver\", cluster=~\"$cluster\"})*sum(kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-worker\", cluster=~\"$cluster\"} OR on() vector(1))*sum(kube_statefulset_status_replicas_ready{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\", cluster=~\"$cluster\"} OR on() vector(1))*(sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-scheduler\", cluster=~\"$cluster\"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-webserver\", cluster=~\"$cluster\"}) + (sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-worker\", cluster=~\"$cluster\"}) OR on() vector(0)) + (sum(kube_statefulset_status_replicas{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\", cluster=~\"$cluster\"}) OR on() vector(0)) - (sum(kube_statefulset_status_replicas_ready{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\", cluster=~\"$cluster\"}) OR on() vector(0)) -0.5 )",
+          "editorMode": "code",
+          "expr": "sum(kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-scheduler\", cluster=~\"$cluster\"})*sum(kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-api-server\", cluster=~\"$cluster\"})*sum(kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-dag-processor\", cluster=~\"$cluster\"})*sum(kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-worker\", cluster=~\"$cluster\"} OR on() vector(1))*sum(kube_statefulset_status_replicas_ready{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\", cluster=~\"$cluster\"} OR on() vector(1))*(sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-scheduler\", cluster=~\"$cluster\"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-api-server\", cluster=~\"$cluster\"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-dag-processor\", cluster=~\"$cluster\"}) + (sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-worker\", cluster=~\"$cluster\"}) OR on() vector(0)) + (sum(kube_statefulset_status_replicas{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\", cluster=~\"$cluster\"}) OR on() vector(0)) - (sum(kube_statefulset_status_replicas_ready{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\", cluster=~\"$cluster\"}) OR on() vector(0)) -0.5 )",
           "hide": false,
           "instant": true,
           "interval": "",
@@ -159,6 +161,8 @@
     },
     {
       "datasource": {
+        "default": false,
+        "type": "prometheus",
         "uid": "$datasource"
       },
       "description": "Shows the number of unavailable pods in the airflow namespace except for flower",
@@ -230,7 +234,8 @@
           "datasource": {
             "uid": "$datasource"
           },
-          "expr": "sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-scheduler\"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-webserver\"}) + (sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-worker\"}) OR on() vector(0)) + (sum(kube_statefulset_status_replicas{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\"}) OR on() vector(0)) - (sum(kube_statefulset_status_replicas_ready{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\"}) OR on() vector(0))",
+          "editorMode": "code",
+          "expr": "sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-scheduler\"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-api-server\"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-dag-processor\"}) + (sum(kube_deployment_status_replicas_unavailable{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-worker\"}) OR on() vector(0)) + (sum(kube_statefulset_status_replicas{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\"}) OR on() vector(0)) - (sum(kube_statefulset_status_replicas_ready{exported_namespace=~\"$airflow_namespace\", statefulset=~\".*-worker\"}) OR on() vector(0))",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -410,9 +415,11 @@
     },
     {
       "datasource": {
+        "default": false,
+        "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Shows the number of available  webUI pods in the airflow namespace",
+      "description": "Shows the number of available  API server pods in the airflow namespace",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -482,21 +489,24 @@
           "datasource": {
             "uid": "$datasource"
           },
-          "expr": "kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-webserver\", cluster=~\"$cluster\"}",
+          "editorMode": "code",
+          "expr": "kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-api-server\", cluster=~\"$cluster\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Available Web Pods Count",
+      "title": "Available API server Pods Count",
       "type": "stat"
     },
     {
       "datasource": {
+        "default": false,
+        "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Shows the number of available flower pods in the airflow namespace",
+      "description": "Shows the number of available dag processors pods in the airflow namespace",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -566,14 +576,15 @@
           "datasource": {
             "uid": "$datasource"
           },
-          "expr": "kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-flower\", cluster=~\"$cluster\"}",
+          "editorMode": "code",
+          "expr": "kube_deployment_status_replicas_available{exported_namespace=~\"$airflow_namespace\", deployment=~\".*-dag-processor\", cluster=~\"$cluster\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Available Flower Pods Count",
+      "title": "Available Dag Processors Pods Count",
       "type": "stat"
     },
     {
@@ -1563,8 +1574,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
-                "value": null
+                "color": "red"
               },
               {
                 "color": "red",
@@ -1728,8 +1738,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
-                "value": null
+                "color": "red"
               },
               {
                 "color": "red",
@@ -1804,8 +1813,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "green",
@@ -1911,8 +1919,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2015,8 +2022,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2137,8 +2143,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2232,8 +2237,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2906,8 +2910,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           }
@@ -2971,8 +2974,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3071,8 +3073,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           }
@@ -3131,8 +3132,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3201,8 +3201,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3297,8 +3296,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3367,8 +3365,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3437,8 +3434,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3540,8 +3536,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3649,8 +3644,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3729,8 +3723,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "green",
@@ -3807,8 +3800,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "green",
@@ -4649,8 +4641,8 @@
       {
         "current": {
           "selected": false,
-          "text": "airflow-statsd-5756fb4755-pgrrd",
-          "value": "airflow-statsd-5756fb4755-pgrrd"
+          "text": "airflow-statsd-5f44cbc799-nlf4g",
+          "value": "airflow-statsd-5f44cbc799-nlf4g"
         },
         "datasource": {
           "type": "prometheus",
