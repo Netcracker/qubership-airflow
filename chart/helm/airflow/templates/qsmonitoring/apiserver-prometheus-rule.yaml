@@ -89,7 +89,7 @@ spec:
         annotations:
           description: "There are problem pods in the namespace"
           summary: Problematic pods are present
-        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_statefulset_status_replicas_current{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"}) - sum(kube_statefulset_status_replicas_ready{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"})) != 0
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-dag-processor"})+ sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_statefulset_status_replicas_current{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"}) - sum(kube_statefulset_status_replicas_ready{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"})) != 0
         for: "1m"
         labels:
           severity: warning
@@ -120,7 +120,7 @@ spec:
         annotations:
           description: "There are problem pods in the namespace"
           summary: Problematic pods are present
-        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-worker"})) != 0
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-dag-processor}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-worker"})) != 0
         for: "1m"
         labels:
           severity: warning
@@ -151,7 +151,7 @@ spec:
         annotations:
           description: "There are problem pods in the namespace"
           summary: Problematic pods are present
-        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"})) != 0
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-dag-processor"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"})) != 0
         for: "1m"
         labels:
           severity: warning
@@ -195,6 +195,26 @@ spec:
           description: "Scheduler memory load is over 95%"
           summary: Scheduler has memory load over 95%
         expr: max(container_memory_usage_bytes{namespace="{{ .Release.Namespace }}",pod=~".*-scheduler-.*"}) / max(kube_pod_container_resource_limits_memory_bytes{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*-scheduler-.*"}) > 0.95
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: DagProcessorCPUload
+        annotations:
+          description: "DAG Processor CPU load is over 95%"
+          summary: DAG Processor has CPU load over 95%
+        expr: max(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}",pod=~".*-dag-processor-.*"}[1m])) / max(kube_pod_container_resource_limits_cpu_cores{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*-dag-processor-.*"}) > 0.95
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: DagProcessorMemoryLoad
+        annotations:
+          description: "DAG Processor memory load is over 95%"
+          summary: DAG Processor has memory load over 95%
+        expr: max(container_memory_usage_bytes{namespace="{{ .Release.Namespace }}",pod=~".*-dag-processor-.*"}) / max(kube_pod_container_resource_limits_memory_bytes{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*-dag-processor-.*"}) > 0.95
         for: "1m"
         labels:
           severity: high
