@@ -3,12 +3,13 @@ pypandoc
 kafka_python
 atlasclient
 hmsclient
+opentelemetry-proto==1.33.1
 # HDFS
 hdfs
 # kerberos
 requests-kerberos
 # airflow providers
-# apache-airflow-providers-apache-hdfs
+apache-airflow-providers-apache-hdfs
 # apache-airflow-providers-apache-hive
 apache-airflow-providers-cncf-kubernetes
 apache-airflow-providers-apache-spark
