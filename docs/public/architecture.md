@@ -35,8 +35,8 @@ The modifications and additional features include the following:
 * Support of DR deployment.
 * Custom pre-install job support (can be used to create database directly or through qubership DBAAS).
 * Custom Airflow secrets backend to get Airflow Redis, PG and Kafka connections from Qubesrhip DBaaS/MaaS. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/index.html).
-* Additional Python logging configuration to support writing logs to stdout.
-* LDAP and IDP(Keycloak) security integrations.
+* Additional Python logging configuration to support writing logs to stdout(Only for airflow 2 for now).
+* LDAP and IDP(Keycloak) security integrations using [airflow FAB provider](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/index.html).
 * Monitoring integrations for [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/metrics.html) and [Airflow plugin](https://github.com/epoch8/airflow-exporter).
 * Custom [Rclone](https://rclone.org/) image that can be used to sync DAGs from remote cloud storages or HTTP. It can be used as GitSync alternative.
 
@@ -65,11 +65,15 @@ This mandatory Airflow component is responsible for scheduling DAGs and submitti
 
 This mandatory Airflow component is responsible for running tasks. In K8s deployments, it specifies passing tasks to workers. Also, since Qubership Version only provides K8s deployments, executors are running in the same containers as the scheduler. Qubership version usually used only with Celery and Kubernetes executors.
 
+## DAG Processor
+
+Since Airflow 3.0 this is a mandatory Airflow component that is responsible for parsing DAGs.
+
 ## Workers
 
 Workers are responsible for executing the task logic.
 
-## Webserver
+## API server
 
 This Airflow component provides the UI for monitoring and managing DAGs. With an additional third-party plugin, it can provide Prometheus metrics.
 
@@ -114,7 +118,7 @@ Following the above pictures, let us describe the main parts of the Airflow K8s 
   * Create user job, which creates a user in the Airflow database when the webserver does not use security integrations for users.
 * Scheduler - The scheduler can consist of one (or more for HA) pod and in a K8s scheduler pod, it also includes an executor.
 * Workers - In case of a **Celery executor**, there are a constant number of worker pods and every worker pod represents itself as a celery worker. In case of a **Kubernetes executor**, the executor creates a worker pod for every running Airflow task, so the number of pods is dynamic, and when there are no running tasks, there are no worker pods. No broker is needed in this case. Depending on the configuration, it can store task logs internally, or on a PVC, or send them to stdout, or to S3 storage.
-* Webserver - It consists of one (or more for HA) pods. Depending on the configuration, it can get the task logs from S3 or from the workers directly.
+* API server - It consists of one (or more for HA) pods. Depending on the configuration, it can get the task logs from S3 or from the workers directly.
 * Flower - It is used only for a Celery executor, and not recommended for production. It helps to monitor Celery tasks in a Celery executor.
 * StatsD exporter (one pod) - It converts the metrics provided by Airflow in the StatsD format to the Prometheus format.
 * DR site manager - (**Optional**) It is the component that is used for the DR deployment. The DR deployment is described in the [DR Deployment Schema](#dr-deployment-schema) section.

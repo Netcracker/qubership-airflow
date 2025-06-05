@@ -3,7 +3,7 @@ The topics covered in this section are as follows:
 * [Airflow DAG has Failed State](#airflow-dag-has-failed-state)
 * [Tasks are Stuck in Queued State](#tasks-are-stuck-in-queued-state)
 * [DAGs are Stuck in Running State](#dags-are-stuck-in-running-state)
-* [Webserver Pod Restarts Multiple Times](#webserver-pod-restarts-multiple-times)
+* [Webserver Pod Restarts Multiple Times](#api-server-pod-restarts-multiple-times)
 * [Airflow Pods Restart Multiple Times](#airflow-pods-restart-multiple-times)
 * [Task does not Execute and Worker Logs are Stuck in Celery Executor](#task-does-not-execute-and-worker-logs-are-stuck-in-celery-executor)
 * [Task does not Execute and Worker Logs Contain Redis Connection Error](#task-does-not-execute-and-worker-logs-contain-redis-connection-error)
@@ -40,14 +40,14 @@ Check if the scheduler instance is alive. This problem could also be seen in the
 
 If the scheduler is alive, and tasks are stuck in the queued state, see [Tasks are Stuck in Queued State](#tasks-are-stuck-in-queued-state).
 
-# Webserver Pod Restarts Multiple Times
+# API server Pod Restarts Multiple Times
 
-If webserver pod keeps restarting, it indicates a problem with the database and caused by unavailability of database.
+If api server pod keeps restarting, it indicates a problem with the database and caused by unavailability of database.
 
 **Solution**:
 
 * Check if the database is alive.
-* Check if the database is available from webserver.
+* Check if the database is available from api server.
 * Check if the database has no data loss. If Airflow table is lost, you can use backup/restore to resolve this issue.
 * Check the [Airflow Pods Restart Multiple Times](#airflow-pods-restart-multiple-times).
 
@@ -126,8 +126,8 @@ in your address bar.
 The possible solutions to this problem are described below:
 
 * If it is openshift that uses HA-proxy, you can try adding airflow route address to `/etc/haproxy/ocp_sni_passthrough.map` file on the balancer nodes.
-* Try setting `proxy_fix_x_proto` parameter from `webserver` section. It should be set to the number of proxies in front of airflow pod, starting with the proxy where TLS termination happens. For example, in case of only openshift route and balancer with TLS termination happening on balancer, it should be set to `2`. For more information, refer to https://werkzeug.palletsprojects.com/en/3.0.x/middleware/proxy_fix/.
-* It is possible to overwrite `login` method of `flask_appbuilder.security.views.AuthOAuthView` and set https manually. For example, if you are using webserver config (can be passed using `webserver.webserverConfig` parameter) similar to [webserver_config.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py), it is possible to overwrite the method like below:
+* Try setting `proxy_fix_x_proto` parameter from `apiServer` section. It should be set to the number of proxies in front of airflow pod, starting with the proxy where TLS termination happens. For example, in case of only openshift route and balancer with TLS termination happening on balancer, it should be set to `2`. For more information, refer to https://werkzeug.palletsprojects.com/en/3.0.x/middleware/proxy_fix/.
+* It is possible to overwrite `login` method of `flask_appbuilder.security.views.AuthOAuthView` and set https manually. For example, if you are using webserver config (can be passed using `apiServer.apiServerConfig` parameter) similar to [webserver_config.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py), it is possible to overwrite the method like below:
 
 ```python
 ...

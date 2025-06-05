@@ -6,7 +6,7 @@ Topics covered in this section:
 * [Example of Audit Logs](#example-of-audit-logs)
 * [Audit Logs Formatting](#audit-logs-formatting)
 * [Audit Logs Configuration](#audit-logs-configuration)
-* [Audit in Airflow Web UI](#audit-in-airflow-web-ui)
+* [Audit in Airflow API server](#audit-in-airflow-web-ui)
 
 # Audit Logs
 
@@ -65,6 +65,11 @@ QS_DEFAULT_LOGGING_CONFIG = {
             'handlers': ['audit'],
             'level': AUDIT_LOG_LEVEL,
             'propagate': False,
+        },
+        "airflow.providers.fab.auth_manager": {
+            "handlers": ["audit"],
+            "level": AUDIT_LOG_LEVEL,
+            "propagate": False,
         }
     },
     'root': {
@@ -127,20 +132,20 @@ route_to_stream(id: "60a7c56b425a052b6d8e67e4", remove_from_default: true);
 end
 ```
 
-# Audit in Airflow Web UI
+# Audit in Airflow API server
 
-Airflow Web UI provides the following pages with audit information:
+Airflow WAPI server provides the following pages with audit information:
 
 ## User's Statistics
 
-Log in to Airflow Web UI and navigate to **Security** -> **User's Statistics** tab.  
+Log in to Airflow API server and navigate to **Security** -> **User's Statistics** tab.  
 This tab provides the user's login count and the failed login count.
 
 ![alt text](/docs/public/images/airflow-ui-user-stat.png "User Statistics")
 
 ## Logs
 
-Log in to the Airflow Web UI and navigate to **Browse** -> **Logs** tab.  
+Log in to the Airflow API server and navigate to **Browse** -> **Logs** tab.  
 
 This tab contains events such as:
 

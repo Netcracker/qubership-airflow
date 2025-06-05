@@ -20,8 +20,8 @@ The following is a list of dashboard variables:
 
 This section is based on the third party Airflow plugin and shows the status of the Airflow pods and resources used. The following panels are available:
 
-* `Airflow State` - Displays the Airflow status. If no scheduler/web/worker pod is available it displays the `DOWN` status. If at least one pod of each type (scheduler/web/worker) is available, but some scheduler/web/worker pods are in other states than `running`, it displays `DEGRADED` status, otherwise displays `UP` status.
-* `Unavailable Pods Count` - Displays the number of scheduler/web/worker unavailable pods in Airflow namespace.
+* `Airflow State` - Displays the Airflow status. If no scheduler/api/worker/DAG processor pod is available it displays the `DOWN` status. If at least one pod of each type (scheduler/api/worker/DAG processor) is available, but some scheduler/web/worker pods are in other states than `running`, it displays `DEGRADED` status, otherwise displays `UP` status.
+* `Unavailable Pods Count` - Displays the number of cheduler/api/worker/DAG processorunavailable pods in Airflow namespace.
 * `Available Scheduler/Worker/Web/Flower Pods Count` - Displays the number of available Scheduler/Worker/Web/Flower Pods.
 * `CPU/Memory usage` - Displays CPU/memory usages per pod.
 * `CPU/Memory limits usage` - Displays CPU/memory limits usages per pod.

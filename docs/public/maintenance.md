@@ -6,11 +6,11 @@ This sub-section provides information about how to change the Airflow Web user i
 
 ## Without LDAP
 
-When LDAP is not used, it is possible to change the default user password with recreation of the user using command line in the web UI pod. For more information refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/stable/security/webserver.html#web-authentication](https://airflow.apache.org/docs/apache-airflow/stable/security/webserver.html#web-authentication).
+When LDAP is not used, it is possible to change the default user password with recreation of the user using command line in the web UI pod. For more information refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/index.html](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/index.html).
 
 ## With LDAP
 
-When LDAP is used, you must change the password via LDAP. You can update the bind user credentials; after the credentials are changed on the LDAP server, in Airflow configuration via deployer job. The relevant parameter is `webserver.webserverConfig`.
+When LDAP is used, you must change the password via LDAP. You can update the bind user credentials; after the credentials are changed on the LDAP server, in Airflow configuration via deployer job. The relevant parameter is `apiServer.apiServerConfig`.
 
 # Update PostgreSQL, Redis Passwords, and Kerberos Keytab
 
@@ -38,17 +38,17 @@ The connections and variables created through the UI or pod terminals must be up
 
 When RBAC is enabled, Airflow provides the following default roles for web UI users: `Admin`, `User`, `Op`, `Viewer`, and `Public`.
 
-It is also possible to create custom roles if required. For more information about roles and permissions, refer to [https://airflow.apache.org/docs/apache-airflow/2.10.5/security/access-control.html#default-roles](https://airflow.apache.org/docs/apache-airflow/2.10.5/security/access-control.html#default-roles).
+It is also possible to create custom roles if required. For more information about roles and permissions, refer to [https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/index.html#](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/index.html#) and [https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html).
 
 ## Add Roles for Users
 
 To add roles for a user via UI, you must login to Airflow as an admin user.
-Navigate to **Security > List Users > Edit Record**. Enter the role in **Role** text box.
+Navigate to **Security > Users > Edit Record**. Enter the role in **Role** text box.
 
-**Note**: It is possible to add a role during user creation. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/stable/cli-and-env-variables-ref.html#users](https://airflow.apache.org/docs/apache-airflow/stable/cli-and-env-variables-ref.html#users).
+**Note**: It is possible to add a role during user creation. For more information, refer to [https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/cli-ref.html](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/cli-ref.html].
 
 ## Roles with LDAP
 
-When `AUTH_ROLES_MAPPING` is not specified in the `webserver.webserverConfig` parameter there is no synchronization between LDAP roles and web UI Airflow roles since the web UI Airflow roles are configured separately. In this case, the role assigned to a user existing on the LDAP server on the first login in Airflow web UI is specified in the `webserver.webserverConfig` parameter in the `AUTH_USER_REGISTRATION_ROLE` variable. You can change this role later via web UI if required. It is also possible to pre-create users with required role using the `airflow users` command. Then, the user is able to login to Airflow with this role provided the user with the same username exists on the LDAP server.
+When `AUTH_ROLES_MAPPING` is not specified in the `apiServer.apiServerConfig` parameter there is no synchronization between LDAP roles and web UI Airflow roles since the web UI Airflow roles are configured separately. In this case, the role assigned to a user existing on the LDAP server on the first login in Airflow web UI is specified in the `apiServer.apiServerConfig` parameter in the `AUTH_USER_REGISTRATION_ROLE` variable. You can change this role later via web UI if required. It is also possible to pre-create users with required role using the `airflow users` command. Then, the user is able to login to Airflow with this role provided the user with the same username exists on the LDAP server.
 
-When `AUTH_ROLES_MAPPING` is specified in `webserver.webserverConfig` a group mapping is enabled between LDAP and Airflow web UI. Assuming `AUTH_USER_REGISTRATION` is set to `True`, the roles for the users in this case are assigned as per the `AUTH_ROLES_MAPPING` parameter.
+When `AUTH_ROLES_MAPPING` is specified in `apiServer.apiServerConfig` a group mapping is enabled between LDAP and Airflow web UI. Assuming `AUTH_USER_REGISTRATION` is set to `True`, the roles for the users in this case are assigned as per the `AUTH_ROLES_MAPPING` parameter.
