@@ -134,7 +134,7 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
     },
     "loggers": {
         "airflow.task": {
-            "handlers": ["stdout_task"] if QS_LOGGING_TYPE == "stdout" else ["task", "stdout_task"],
+            "handlers": ["task"] if QS_LOGGING_TYPE == "filesystem" else ["stdout_task"] if QS_LOGGING_TYPE == "stdout" else ["task", "stdout_task"],
             "level": LOG_LEVEL,
             # Set to true here (and reset via set_context) so that if no file is configured we still get logs!
             "propagate": True,
