@@ -68,15 +68,15 @@ Test HA Case With Scheduler Pod Sleep Dag With Retries
     ...  Wait Until DAG Succeed  sleep_dag_with_retries  ${resp['dag_run_id']}
     [Teardown]  Set Replicas For Deployment Entity  ${SCHEDULER_DEPLOYMENT}  ${AIRFLOW_NAMESPACE}  replicas=1
 
-Test HA Case With WEB pod
-    [Tags]  ha  web  airflow
+Test HA Case With API pod
+    [Tags]  ha  api  airflow
     ${count}=  Check Dags Amount
     Skip If  ${count} == 0  Airflow doesn't have available dags!
     Unpause DAG  sleep_dag_with_retries
     ${resp} =  Run DAG  sleep_dag_with_retries
-    @{web_pod} =  Get Pod Names For Deployment Entity  ${API_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
-    Log to console  LIST_PODS: ${web_pod}
-    FOR  ${pod}  IN  @{web_pod}
+    @{api_pod} =  Get Pod Names For Deployment Entity  ${API_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
+    Log to console  LIST_PODS: ${api_pod}
+    FOR  ${pod}  IN  @{api_pod}
         Delete Pod By Pod Name  ${pod}  ${AIRFLOW_NAMESPACE}
         Log To Console  Delete ${pod}
     END
