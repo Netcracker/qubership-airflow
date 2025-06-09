@@ -105,9 +105,10 @@ For more information about the deployment schema, refer to the [Overview](/docs/
 The main Airflow deployment units are as follows:
 
 * Airflow scheduler deployment deploys the Airflow scheduler pods
-* Airflow Web deployment deploys the Airflow UI
+* Airflow API Server deployment deploys the Airflow UI
+* Airflow DAG Processor deployment deploys DAG processor.
 * Airflow worker statefulset (deployment in case of stdout logging configuration) deploys Celery workers (only for Celery executor)
-* Airflow flower deployment deploys a Web UI built on top of Celery to monitor Celery workers (only for Celery executor)
+* Airflow flower deployment deploys a Web UI built on top of Celery to monitor Celery workers (only for Celery executor, deprecated)
 * (optional) Ingress/route that exposes the service outside of the cloud.
 
 # Prerequisites
@@ -246,9 +247,9 @@ The recommended configurations that are tested are as follows:
 
 * Celery Executor or Kubernetes executor is used.
 * External Postgres/Redis is used.
-* No persistence storage for DAGs is used. DAGs are added with the image.
+* No persistence storage for DAGs is used. DAGs are added with the image, using gitSync or rclone.
 * Persistence storage for logs is used.
-* Triggerer and DAG processor are disabled.
+* Triggerer is disabled.
 
 **Note**: When installing Airflow, consider the `fernetKey` parameter. For more information, see [https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/fernet.html](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/fernet.html). This parameter is used for the database encryption. When not specified in the **values.yaml** file, it is automatically generated as a random value by helm during the installation. In this case, after uninstalling Airflow, the key is lost and it would be impossible to recover the database. Hence, it is recommended to specify this parameter during the installation. It is also recommended to specify the `webserverSecretKey` parameter during the installation to avoid unnecessary pod restarts during chart upgrades.
 
@@ -293,21 +294,23 @@ Qubership platform provides 3 different reference resource profiles, but these p
 
 The profile resources are shown below:
 
-| Container                            | CPU       | RAM, Mi | Number of containers |
-|--------------------------------------|-----------|---------|----------------------|
-| Scheduler                            | 0.4       | 768     | 1          |
-| Scheduler log groomer sidecar(`*`)   | 0.1       | 256     | 1          |
-| Webserver                            | 0.5       | 1024    | 1          |
-| Worker                               | 0.9       | 1920    | 1          |
-| Worker log groomer sidecar(`*`)      | 0.1       | 256     | 1          |
-| Migrate database job (`*`)(`**`)     | 0.5       | 512     | 1          |
-| Create User Job (`*`)(`**`)          | 0.5       | 512     | 1          |
-| Custom Preinstall Job (`*`)(`**`)    | 0.1       | 512     | 1          |
-| GitSync(Rclone) sidecar (`*`)        | 0.2       | 512     | 2          |
-| StatsD prometheus exporter (`*`)     | 0.1       | 256     | 1          |
-| Status Provisioner (`**`)            | 0.2       | 256     | 1          |
-| Airflow Site Manager (`*`)           | 0.2       | 256     | 1          |
-| Integration Tests (`*`)(`**`)        | 0.2       | 256     | 1          |
+| Container                             | CPU       | RAM, Mi | Number of containers |
+|---------------------------------------|-----------|---------|----------------------|
+| Scheduler                             | 0.4       | 768     | 1          |
+| Scheduler log groomer sidecar(`*`)    | 0.1       | 256     | 1          |
+| API server                            | 0.5       | 1024    | 1          |
+| DAG Processor                         | 0.4       | 768     | 1          |
+| DAG Processor log groomer sidecar(`*`)| 0.1       | 256     | 1          |
+| Worker                                | 0.9       | 1920    | 1          |
+| Worker log groomer sidecar(`*`)       | 0.1       | 256     | 1          |
+| Migrate database job (`*`)(`**`)      | 0.5       | 512     | 1          |
+| Create User Job (`*`)(`**`)           | 0.5       | 512     | 1          |
+| Custom Preinstall Job (`*`)(`**`)     | 0.1       | 512     | 1          |
+| GitSync(Rclone) sidecar (`*`)         | 0.2       | 512     | 2          |
+| StatsD prometheus exporter (`*`)      | 0.1       | 256     | 1          |
+| Status Provisioner (`**`)             | 0.2       | 256     | 1          |
+| Airflow Site Manager (`*`)            | 0.2       | 256     | 1          |
+| Integration Tests (`*`)(`**`)         | 0.2       | 256     | 1          |
 
 Here `*` - optional container based on configuration, `**` - temporary container.
 
@@ -323,21 +326,23 @@ Here `*` - optional container based on configuration, `**` - temporary container
 
 The profile resources are shown below:
 
-| Container                            | CPU       | RAM, Mi | Number of containers |
-|--------------------------------------|-----------|---------|----------------------|
-| Scheduler                            | 1.2       | 1536   | 1          |
-| Scheduler log groomer sidecar(`*`)   | 0.1       | 320     | 1          |
-| Webserver                            | 0.5       | 2048    | 1          |
-| Worker                               | 1.3       | 3072    | 1          |
-| Worker log groomer sidecar(`*`)      | 0.1       | 320     | 1          |
-| Migrate database job (`*`)(`**`)     | 1         | 1024    | 1          |
-| Create User Job (`*`)(`**`)          | 0.5       | 512     | 1          |
-| Custom Preinstall Job (`*`)(`**`)    | 0.1       | 512     | 1          |
-| GitSync(Rclone) sidecar (`*`)        | 0.4       | 768     | 2          |
-| StatsD prometheus exporter (`*`)     | 0.8       | 1024    | 1          |
-| Status Provisioner (`**`)            | 0.2       | 512     | 1          |
-| Airflow Site Manager (`*`)           | 0.2       | 512     | 1          |
-| Integration Tests (`*`)(`**`)        | 0.2       | 512     | 1          |
+| Container                             | CPU | RAM, Mi | Number of containers |
+|---------------------------------------|-----|---------|----------------------|
+| Scheduler                             | 1.0 | 1280    | 1          |
+| Scheduler log groomer sidecar(`*`)    | 0.1 | 320     | 1          |
+| API server                            | 0.5 | 2048    | 1          |
+| DAG Processor                         | 1.0 | 1280    | 1          |
+| DAG Processor log groomer sidecar(`*`)| 0.1 | 320     | 1          |
+| Worker                                | 1.3 | 3072    | 1          |
+| Worker log groomer sidecar(`*`)       | 0.1 | 320     | 1          |
+| Migrate database job (`*`)(`**`)      | 1   | 1024    | 1          |
+| Create User Job (`*`)(`**`)           | 0.5 | 512     | 1          |
+| Custom Preinstall Job (`*`)(`**`)     | 0.1 | 512     | 1          |
+| GitSync(Rclone) sidecar (`*`)         | 0.4 | 768     | 2          |
+| StatsD prometheus exporter (`*`)      | 0.8 | 1024    | 1          |
+| Status Provisioner (`**`)             | 0.2 | 512     | 1          |
+| Airflow Site Manager (`*`)            | 0.2 | 512     | 1          |
+| Integration Tests (`*`)(`**`)         | 0.2 | 512     | 1          |
 
 Here `*` - optional container based on configuration, `**` - temporary container.
 
@@ -351,21 +356,23 @@ Here `*` - optional container based on configuration, `**` - temporary container
 
 The profile resources are shown below:
 
-| Container                            | CPU       | RAM, Mi | Number of containers |
-|--------------------------------------|-----------|---------|----------------------|
-| Scheduler                            | 1.2       | 2048    | 2          |
-| Scheduler log groomer sidecar(`*`)   | 0.1       | 320     | 1          |
-| Webserver                            | 0.8       | 2048    | 1          |
-| Worker                               | 1.3       | 3072    | 3          |
-| Worker log groomer sidecar(`*`)      | 0.1       | 320     | 1          |
-| Migrate database job (`*`)(`**`)     | 1         | 1024    | 1          |
-| Create User Job (`*`)(`**`)          | 0.5       | 512     | 1          |
-| Custom Preinstall Job (`*`)(`**`)    | 0.1       | 512     | 1          |
-| GitSync(Rclone) sidecar (`*`)        | 0.4       | 768     | 5          |
-| StatsD prometheus exporter (`*`)     | 0.8       | 1024    | 1          |
-| Status Provisioner (`**`)            | 0.2       | 512     | 1          |
-| Airflow Site Manager (`*`)           | 0.2       | 512     | 1          |
-| Integration Tests (`*`)(`**`)        | 0.2       | 512     | 1          |
+| Container                            | CPU | RAM, Mi | Number of containers |
+|--------------------------------------|-----|---------|----------------------|
+| Scheduler                            | 1.2 | 2048    | 2                    |
+| Scheduler log groomer sidecar(`*`)   | 0.1 | 320     | 1                    |
+| API server                            | 0.8 | 2048    | 1                    |
+| DAG Processor                         | 1.0 | 1536    | 2                    |
+| DAG Processor log groomer sidecar(`*`)| 0.1 | 320     | 1                    |
+| Worker                               | 1.3 | 3072    | 3                    |
+| Worker log groomer sidecar(`*`)      | 0.1 | 320     | 1                    |
+| Migrate database job (`*`)(`**`)     | 1   | 1024    | 1                    |
+| Create User Job (`*`)(`**`)          | 0.5 | 512     | 1                    |
+| Custom Preinstall Job (`*`)(`**`)    | 0.1 | 512     | 1                    |
+| GitSync(Rclone) sidecar (`*`)        | 0.4 | 768     | 5                    |
+| StatsD prometheus exporter (`*`)     | 0.8 | 1024    | 1                    |
+| Status Provisioner (`**`)            | 0.2 | 512     | 1                    |
+| Airflow Site Manager (`*`)           | 0.2 | 512     | 1                    |
+| Integration Tests (`*`)(`**`)        | 0.2 | 512     | 1                    |
 
 Here `*` - optional container based on configuration, `**` - temporary container.
 
@@ -388,8 +395,8 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * Parameters for direct Prometheus monitoring support are added. Monitoring is enabled by default, along with StatsD monitoring that comes with the Airflow chart.
 * Default StatsD monitoring mappings are edited.
 * Using internal Redis/PG is not supported.
-* webserver_config.py example is included for integration with Keycloak.
-* Additional python logging config Airflow configuration is included. It is used by default and can be disabled by specifying the related parameters during the installation.
+* webserver_config.py example is included for integration with Keycloak in API server.
+* AAdditional python logging config Airflow configuration is included. It is used by default and can be disabled by specifying the related parameters during the installation.
 * By default, Airflow deploys with celery executor without persistence.
 * Triggerer is disabled by default.
 * It is possible to specify the number of Flower pods. (**Note**: This change was only made for DR support - specifying more than one flower pod would work incorrectly.)
@@ -417,12 +424,12 @@ By default with Qubership changes, Airflow deployment uses DBaaS integration. To
 Airflow supports deployment in the active-standby DR scheme. [Airflow Site Manager](/docs/public/airflow-site-manager.md) is used for the DR deployment. 
 
 * On an active site,  
-  * Airflow components such as Web Server, Scheduler, Workers, Flower are scaled up and should be deployed with replicas>0. The Flower component can be skipped.  
+  * Airflow components such as API Server, Scheduler, Workers, Flower are scaled up and should be deployed with replicas>0. The Flower component can be skipped.  
     Replicas' count should be the same as specified in the Airflow Site Manager's deployment parameters, namely, `FLOWER_REPLICAS`, `SCHEDULER_REPLICAS`, `API_SERVER_REPLICAS`, `DAG_PROCESSOR_REPLICAS` and `WORKER_REPLICAS`.
   * `airflow-site-manager.dr.mode` should be set to `active`.  
  
 * On a standby site,   
-  * Airflow components such as Web Server, Scheduler, Workers, Flower are scaled down and should be deployed with replicas=0.
+  * Airflow components such as API Server, Scheduler, Workers, Flower are scaled down and should be deployed with replicas=0.
   * The PostgreSQL database creation job should be switched off:
 
 ```yaml
@@ -1048,7 +1055,7 @@ volumes:
 
 ## Enabling TLS on airflow UI inside kubernetes
 
-It is possible to enable TLS on airflow web UI directly inside kubernetes. For this, airflow webserver needs TLS key and certificate. TLS key and certificate can be requested from cert-manager using `certManagerInegration.enabled` parameter. By default, it will create secret `airflow-services-tls-certificate` with TLS certificate, TLS key and CA certificate. Alternatively, TLS key and certificate can be specified using `extraSecrets` parameter. After this, it is necessary to mount the certificates into webserver pod and specify the certificates in webserver using `config.webserver.web_server_ssl_cert` and `config.webserver.web_server_ssl_key`. Also it is necessary to specify HTTPS scheme for webserver liveness, readiness and startup probes. If using kubernetes with NGINX ingress controller, it is possible to pass annotations for ingress controller to work with TLS backend, for example:
+It is possible to enable TLS on airflow web UI directly inside kubernetes. For this, airflow API server needs TLS key and certificate. TLS key and certificate can be requested from cert-manager using `certManagerInegration.enabled` parameter. By default, it will create secret `airflow-services-tls-certificate` with TLS certificate, TLS key and CA certificate. Alternatively, TLS key and certificate can be specified using `extraSecrets` parameter. After this, it is necessary to mount the certificates into webserver pod and specify the certificates in API server using `config.webserver.web_server_ssl_cert` and `config.webserver.web_server_ssl_key` (or `config.api.ssl_cert` and `config.api.ssl_key`). Also it is necessary to specify HTTPS scheme for API server liveness, readiness and startup probes. Since in airflow 3 workers go to airflow API server, workers must also have access to tls certificate and `execution_api_server_url` must be redirected to https. If using kubernetes with NGINX ingress controller, it is possible to pass annotations for ingress controller to work with TLS backend, for example:
 
 ```yaml
 # airflow-install-namespace here should be replaced with the namespace where airflow is installed.
@@ -1059,7 +1066,23 @@ ingress:
       nginx.ingress.kubernetes.io/proxy-ssl-verify: 'on'
       nginx.ingress.kubernetes.io/proxy-ssl-name: airflow-webserver.airflow-install-namespace # airflow-webserver must be replaced with ${{airflowname}}-webserver.
       nginx.ingress.kubernetes.io/proxy-ssl-secret: airflow-install-namespace/airflow-services-tls-certificate
-webserver:
+workers:
+  extraVolumeMounts:
+    - name: certs
+      mountPath: /home/airflow/certs/
+      readOnly: true
+  extraVolumes:
+    - name: certs
+      projected:
+        sources:
+          - secret:
+              name: airflow-services-tls-certificate
+  env:
+   - name: REQUESTS_CA_BUNDLE
+     value: /home/airflow/certs/ca.crt
+   - name: SSL_CERT_FILE
+     value: /home/airflow/certs/ca.crt
+apiServer:
   extraVolumeMounts:
     - name: certs
       mountPath: /home/airflow/certs/
@@ -1077,6 +1100,8 @@ webserver:
   startupProbe:
     scheme: HTTPS
 config:
+  core:
+    execution_api_server_url:  https://airflow-api-server:8080/execution/
   webserver:
     web_server_ssl_cert: /home/airflow/certs/tls.crt
     web_server_ssl_key: /home/airflow/certs/tls.key
@@ -1268,6 +1293,8 @@ logs:
 **Note**: With this, the configuration scheduler must also have access to the readwritemany PVC.
 
 ### Enabling Custom Logging Config Class
+
+**WARNING: Writing task logs to stdout at the moment is not supported for airflow 3.**.
 
 It is possible to enable the `QS_DEFAULT_LOGGING_CONFIG` logging config class, which comes with the qubership chart: 
 
@@ -1634,7 +1661,7 @@ It is possible to use custom TLS certificate to connect to endpoint using Rclone
 [can be requested from cert-manager](#getting-ca-certificate-from-cert-manager)(ca.crt in the secret). To mount the secret inside the pod, you can use `*.extraVolumes` and `gitSync.extraVolumeMounts` parameters. To specify the file with the certificate inside the pod, you can use `SSL_CERT_FILE` environment variable. For example, for certificate with name `defaultsslcertificate`:
 
 ```yaml
-scheduler:
+dagProcessor:
 ...
   extraVolumes:
 ...
@@ -1686,7 +1713,7 @@ It is also necessary to enable GitSync and set dags_folder to `/opt/airflow/dags
 
 ```yaml
 ...
-scheduler:
+dagProcessor:
 ...
   extraVolumes:
 ...
@@ -1887,6 +1914,14 @@ To get base64 keytab file content, you can use the `base64 $KEYTAB_FILENAME` com
 
 ## LDAP Support for Web UI
 
+**Note:** This section assumes that FAB auth manager is used. Airflow FAB provider is present in the image by default. To enable FAB auth manager in the config, it is necessary to set:
+
+```yaml
+config:
+  core:
+    auth_manager: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+```
+
 You can enable LDAP integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/2.10.5/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/2.10.5/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `web.webserverConfig` parameter.
 
 The following is an example for enabling LDAP without group mapping and with pre-created Admin user. 
@@ -1904,7 +1939,7 @@ webserver:
     from airflow import configuration as conf
     from flask_appbuilder.security.manager import AUTH_LDAP
     basedir = os.path.abspath(os.path.dirname(__file__))
-    SQLALCHEMY_DATABASE_URI = conf.get('core', 'SQL_ALCHEMY_CONN')
+    SQLALCHEMY_DATABASE_URI = conf.get('database', 'SQL_ALCHEMY_CONN')
     CSRF_ENABLED = True
     AUTH_TYPE = AUTH_LDAP
     AUTH_ROLE_ADMIN = 'Admin'
@@ -1935,7 +1970,7 @@ webserver:
     from airflow import configuration as conf
     from flask_appbuilder.security.manager import AUTH_LDAP
     basedir = os.path.abspath(os.path.dirname(__file__))
-    SQLALCHEMY_DATABASE_URI = conf.get('core', 'SQL_ALCHEMY_CONN')
+    SQLALCHEMY_DATABASE_URI = conf.get('database', 'SQL_ALCHEMY_CONN')
     CSRF_ENABLED = True
     AUTH_TYPE = 2
     AUTH_LDAP_SERVER = 'ldap://openldap.qubership.com:18224'
@@ -1978,7 +2013,7 @@ webserver:
     from airflow import configuration as conf
     from flask_appbuilder.security.manager import AUTH_LDAP
     basedir = os.path.abspath(os.path.dirname(__file__))
-    SQLALCHEMY_DATABASE_URI = conf.get('core', 'SQL_ALCHEMY_CONN')
+    SQLALCHEMY_DATABASE_URI = conf.get('database', 'SQL_ALCHEMY_CONN')
     CSRF_ENABLED = True
     AUTH_TYPE = 2
     AUTH_LDAP_SERVER = 'ldap://openldap.qubership.com:18224'
@@ -2002,6 +2037,14 @@ webserver:
 **Note**: Currently, the flower pod does not support LDAP integration.
 
 ## Keycloak Web UI Integration
+
+**Note:** This section assumes that FAB auth manager is used. Airflow FAB provider is present in the image by default. To enable FAB auth manager in the config, it is necessary to set:
+
+```yaml
+config:
+  core:
+    auth_manager: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+```
 
 As with LDAP, it is possible to enable Keycloak Web UI integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/2.10.5/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/2.10.5/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `web.webserverConfig` parameter. 
 
@@ -2342,7 +2385,7 @@ statusProvisioner:
 config:
   ...
   api:
-    auth_backend: airflow.api.auth.backend.basic_auth
+    auth_backend: airflow.providers.fab.auth_manager.api.auth.backend.basic_auth
   ...
 ```
 
@@ -2407,7 +2450,7 @@ This section contains information about integration test tags that can be used t
     * `ha` tag runs all tests connected to the HA scenarios.
       * `worker` tag runs `Test HA Case With Worker Pods Sleep Dag` and `Test HA Case With Worker Pods Sleep Dag With Retries` tests.
       * `scheduler` tag runs `Test HA Case With Scheduler Pod Sleep Dag With Retries` test.
-      * `web` tag runs `Test HA Case With WEB pod` test.
+      * `api` tag runs `Test HA Case With API pod` test.
     * `alert` tag runs all tests connected to Monitoring scenarios.
       * `worker_degraded` tag runs `Test Alert Worker Statefulset/Deployment Is Degraded` test.
       * `worker_down` tag runs `Test Alert Worker Error` test.
@@ -2459,7 +2502,7 @@ The information for On-Prem is specified below.
 
 For HA scheme, it is necessary to have more than one scheduler and worker (for Celery executor). If Web UI is important in your case, it is possible to have more than one Web UI too. 
 The parameters responsible for it are:
-`scheduler.replicas`,`workers.replicas`, and `webserver.replicas`.
+`scheduler.replicas`,`workers.replicas`, `dagProcessor.replicas` and `apiServer.replicas`.
 
 For providing high availability in case of accessing task logs, refer to the [Airflow Logging Config Classes](#airflow-logging-config-classes) section.
 
