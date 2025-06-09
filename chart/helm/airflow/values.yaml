@@ -2817,8 +2817,7 @@ config:
     auth_manager: '{{ ternary "airflow.api_fastapi.auth.managers.simple.simple_auth_manager.SimpleAuthManager" "airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager" (semverCompare ">=3.0.0" .Values.airflowVersion) }}'
   logging:
     logging_config_class: airflow_local_settings.QS_DEFAULT_LOGGING_CONFIG
-    qs_logging_type: stdout
-    task_log_reader: stdout_task
+    qs_logging_type: filesystem
     task_log_prefix_template: "[DAG_ID]:'{{ \"{{ ti.dag_id }}\" }}' [TASK_ID]:'{{ \"{{ ti.task_id }}\" }}' [TIMESTAMP]:'{{ \"{{ ts }}\" }}' [TRY_NUMBER]:'{{ \"{{ ti.try_number }}\" }}'"
     remote_logging: '{{- ternary "True" "False" (or .Values.elasticsearch.enabled .Values.opensearch.enabled) }}'
     colored_console_log: 'False'
