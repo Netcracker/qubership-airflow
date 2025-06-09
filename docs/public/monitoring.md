@@ -20,9 +20,9 @@ The following is a list of dashboard variables:
 
 This section is based on the third party Airflow plugin and shows the status of the Airflow pods and resources used. The following panels are available:
 
-* `Airflow State` - Displays the Airflow status. If no scheduler/api/worker/DAG processor pod is available it displays the `DOWN` status. If at least one pod of each type (scheduler/api/worker/DAG processor) is available, but some scheduler/web/worker pods are in other states than `running`, it displays `DEGRADED` status, otherwise displays `UP` status.
+* `Airflow State` - Displays the Airflow status. If no scheduler/api/worker/DAG processor pod is available it displays the `DOWN` status. If at least one pod of each type (scheduler/api/worker/DAG processor) is available, but some scheduler/api/worker pods are in other states than `running`, it displays `DEGRADED` status, otherwise displays `UP` status.
 * `Unavailable Pods Count` - Displays the number of cheduler/api/worker/DAG processorunavailable pods in Airflow namespace.
-* `Available Scheduler/Worker/Web/Flower Pods Count` - Displays the number of available Scheduler/Worker/Web/Flower Pods.
+* `Available Scheduler/Worker/API/Flower Pods Count` - Displays the number of available Scheduler/Worker/API/Flower Pods.
 * `CPU/Memory usage` - Displays CPU/memory usages per pod.
 * `CPU/Memory limits usage` - Displays CPU/memory limits usages per pod.
 * `Receive/Transmit Bandwidth` - Displays network statistics in the namespace.
@@ -131,13 +131,13 @@ Check the scheduler state and logs to determine the error.
 
 Increase the memory resources for the scheduler.
 
-|Alert|Possible Reason|
-|---|---|
-|Web UI error|Web UI is down.|
+| Alert     | Possible Reason     |
+|-----------|---------------------|
+| API error | API server is down. |
 
 **Solution**:
 
-Check the Web UI state and logs to determine the error.
+Check the API server state and logs to determine the error.
 
 |Alert|Possible Reason|
 |---|---|
