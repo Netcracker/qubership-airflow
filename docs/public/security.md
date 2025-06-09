@@ -1,4 +1,4 @@
-This guide provides information about the main security parameters and its configuration in platform airflow service.
+This guide provides information about the main security parameters and its configuration in Qubership Platform Airflow service.
 
 ## Direct access to KubeAPI from pods with justification and goal of this connection
 
@@ -6,15 +6,15 @@ When deployed with kubernetes executor, airflow can access KubeAPI to create wor
 
 Airflow platform custom preinstall job can use KubeAPI to remove some deprecated secrets from older airflow versions.
 
-Additionally, when writing DAGs, product and project can access KubeAPI in order to execute the product/project logic.
+Additionally, when writing DAGs, users can access KubeAPI in order to execute custom DAG logic.
 
 ## Exposed Ports
 
-* Airflow UI port - Only on webserver pods, by default 8080. Airflow user interface, API and metrics plugin use this port.
+* Airflow UI port - Only on API server pods, by default 8080. Airflow user interface, API and metrics plugin use this port.
 * workerLogs port - Only on worker pods, by default 8793. Used by webserver to retrieve task logs from workers.
 * Statsd exporter ports - Only on statsd exporter pod, by default 9125(ingest) and 9102(scrape). Used for airflow prometheus metrics.
 
-**Note**: Ports can be changed in the installation parameters. Additional ports will be present, if not tested by platform airflow components are deployed, for example, triggerer or rpcServer.
+**Note**: Ports can be changed in the installation parameters. Additional ports will be present, if not tested by Qubership Platform airflow components are deployed, for example, triggerer or rpcServer.
 
 ## Secure Protocols
 
@@ -32,11 +32,11 @@ When configuring TLS for manually created connections, refer to the _Official Ai
 
 ## Local Accounts
 
-By default, Airflow deploys without IDP and creates the Admin user. It is configured by `webserver.defaultUser` parameter. The user creation can be disabled or it is possible to assign another role to this user. When using IDP, the creation of this user should be disabled.
+By default, Airflow deploys without IDP and creates the Admin user (using [Airflow FAB provider](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/index.html)). It is configured by `webserver.defaultUser` parameter. The user creation can be disabled or it is possible to assign another role to this user. When using IDP, the creation of this user should be disabled.
 
 ### Changing Credentials
 
-**Note**: Changing credentials is only possible when using Airflow local management and not remote IDP (or LDAP).
+**Note**: Changing credentials is only possible when using Airflow local management and not remote IDP/Keycloak (or LDAP).
 
 Credentials can be changed in the Airflow Web user interface on the `Your Profile` page.
 
@@ -48,19 +48,19 @@ For the list of airflow roles and information about configuring Airflow roles, r
 
 **Note**: This list includes a list of webserver security events for IDP and database web users authentication.
 
-| event | example |
-|---|---|
-|access to web UI address|`10.236.211.162 - - [19/Dec/2024:05:33:33 +0000] "GET / HTTP/1.1" 302 197 "https://dashboard.custom.cloud.qubership.com/" "Mozilla/5.0...`|
-|failed login attempt with database authentication|`[2024-12-19T05:34:28.225+0000] {override.py:2214} INFO - [AUDIT] Login Failed for user: ...`|
-|User info when received from IDP|[`2024-12-20T11:19:45.068+0000] {webserver_config.py:112} INFO - user info: {'username': 'airflow_test_user_1703', 'email': 'airflow_test_user_1703@qubership.com', 'first_name': 'airflow_test_user_1703', 'last_name': 'airflow_test_user_1703', 'role_keys': ['airflow_admin']`}|
-|User add events after receiving user from IDP |`[2024-12-20T11:19:46.100+0000] {override.py:1596} INFO - [AUDIT] Added user airflow_test_user_1703`|
-|User modification events after receiving user from IDP |`[2024-12-20T11:19:46.124+0000] {override.py:1678} INFO - [AUDIT] Updated user airflow_test_user_1703 airflow_test_user_1703`|
+| event                                                  | example |
+|--------------------------------------------------------|---|
+| access to API UI address                               |`10.236.211.162 - - [19/Dec/2024:05:33:33 +0000] "GET / HTTP/1.1" 302 197 "https://dashboard.custom.cloud.qubership.com/" "Mozilla/5.0...`|
+| failed login attempt with database authentication      |`[2024-12-19T05:34:28.225+0000] {override.py:2214} INFO - [AUDIT] Login Failed for user: ...`|
+| User info when received from IDP                       |[`2024-12-20T11:19:45.068+0000] {webserver_config.py:112} INFO - user info: {'username': 'airflow_test_user_1703', 'email': 'airflow_test_user_1703@qubership.com', 'first_name': 'airflow_test_user_1703', 'last_name': 'airflow_test_user_1703', 'role_keys': ['airflow_admin']`}|
+| User add events after receiving user from IDP          |`[2024-12-20T11:19:46.100+0000] {override.py:1596} INFO - [AUDIT] Added user airflow_test_user_1703`|
+| User modification events after receiving user from IDP |`[2024-12-20T11:19:46.124+0000] {override.py:1678} INFO - [AUDIT] Updated user airflow_test_user_1703 airflow_test_user_1703`|
 
-**Note**: For Airflow audit logs that are accessible in the Airflow Web user interface, refer to [https://airflow.apache.org/docs/apache-airflow/stable/security/audit_logs.html](https://airflow.apache.org/docs/apache-airflow/stable/security/audit_logs.html).
+**Note**: For Airflow audit logs that are accessible in the Airflow API user interface, refer to [https://airflow.apache.org/docs/apache-airflow/stable/security/audit_logs.html](https://airflow.apache.org/docs/apache-airflow/stable/security/audit_logs.html).
 
 ## Session Management
 
-By default, (Or using default IDP integration) the session timeout can not be customized and uses airflow/Flask_appbuilder default value. However, airflow (and airflow helm chart) allows to pass the custom python configuration file as an installation parameter(`webserver.webserverConfig`). Hence, it is possible to write the custom comfig and add session management if needed. For more information, refer to the _Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/webserver-authentication.html](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/webserver-authentication.html) and _Flask-Appbuilder Docnumentation_ at [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html).
+By default, (Or using default Keycloak/IDP integration) the session timeout can not be customized and uses airflow/Flask_appbuilder default value. However, airflow (and airflow helm chart) allows to pass the custom python configuration file as an installation parameter(`apiServer.apiServerConfig`). Hence, it is possible to write the custom config and add session management if needed. For more information, refer to the _Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/webserver-authentication.html](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/webserver-authentication.html) and _Flask-Appbuilder Docnumentation_ at [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html).
 
 ## Password Requirements and Restrictions
 
