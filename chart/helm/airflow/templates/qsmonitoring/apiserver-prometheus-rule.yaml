@@ -120,7 +120,7 @@ spec:
         annotations:
           description: "There are problem pods in the namespace"
           summary: Problematic pods are present
-        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-dag-processor}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-worker"})) != 0
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-dag-processor"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-worker"})) != 0
         for: "1m"
         labels:
           severity: warning
