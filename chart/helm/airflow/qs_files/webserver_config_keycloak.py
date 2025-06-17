@@ -6,7 +6,7 @@ from flask_appbuilder import expose
 from flask_appbuilder.security.manager import AUTH_OAUTH
 from flask_appbuilder.security.views import AuthOAuthView
 from airflow.providers.fab.auth_manager.security_manager.override import FabAirflowSecurityManagerOverride
-from airflow import configuration as conf
+from airflow.configuration import conf
 
 logging.basicConfig(format='[%(asctime)s] [%(levelname)s] [%(filename)s] [thread=%(threadName)s] %(message)s',
                     level=logging.DEBUG)
