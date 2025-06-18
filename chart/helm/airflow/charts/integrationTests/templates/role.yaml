@@ -1,0 +1,54 @@
+{{- if .Values.serviceAccount.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: {{ .Values.serviceAccount.name }}
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - statefulsets
+      - statefulsets/scale
+      - deployments/scale
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+      - delete
+  {{- if .Values.statusWritingEnabled }}
+  - apiGroups:
+      - apps
+    resources:
+      - deployments/status
+    verbs:
+      - get
+      - list
+      - update
+      - patch
+  {{- end }}
+{{- end }}

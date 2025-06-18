@@ -1,0 +1,10 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+ name: airflow-dr-state
+data:
+ mode: {{ .Values.dr.mode | default "standby" }}
+ noWait: '{{ .Values.dr.noWait | default false }}'
+ status_comment: ''
+ status_mode: ''
+ status_status: ''

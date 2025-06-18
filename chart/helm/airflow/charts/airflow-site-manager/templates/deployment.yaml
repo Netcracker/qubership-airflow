@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "airflow-site-manager.fullname" . }}
+  labels:
+    {{- include "airflow-site-manager.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "airflow-site-manager.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "airflow-site-manager.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "airflow-site-manager.serviceAccountName" . }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.securityContexts.pod | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContexts.container | nindent 12 }}
+          image: {{ template "airflow_site_manager_image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: START_TIMEOUT
+              value: '{{ .Values.START_TIMEOUT }}'
+            - name: SHUTDOWN_TIMEOUT
+              value: '{{ .Values.SHUTDOWN_TIMEOUT }}'
+            - name: FLOWER_REPLICAS
+              value: '{{ .Values.FLOWER_REPLICAS }}'
+            - name: DAG_PROCESSOR_REPLICAS
+              value: '{{ .Values.DAG_PROCESSOR_REPLICAS }}'
+            - name: WORKER_REPLICAS
+              value: '{{ .Values.WORKER_REPLICAS }}'
+            - name: SCHEDULER_REPLICAS
+              value: '{{ .Values.SCHEDULER_REPLICAS }}'
+            - name: API_SERVER_REPLICAS
+              value: '{{ .Values.API_SERVER_REPLICAS }}'
+            - name: RESOURCE_FOR_DR
+              value: '{{ .Values.RESOURCE_FOR_DR }}'
+            - name: USE_DEFAULT_PATHS
+              value: '{{ .Values.USE_DEFAULT_PATHS }}'
+            - name: DISASTER_RECOVERY_MODE_PATH
+              value: '{{ .Values.DISASTER_RECOVERY_MODE_PATH }}'
+            - name: DISASTER_RECOVERY_NOWAIT_PATH
+              value: '{{ .Values.DISASTER_RECOVERY_NOWAIT_PATH }}'
+            - name: DISASTER_RECOVERY_STATUS_MODE_PATH
+              value: '{{ .Values.DISASTER_RECOVERY_STATUS_MODE_PATH }}'
+            - name: DISASTER_RECOVERY_STATUS_STATUS_PATH
+              value: '{{ .Values.DISASTER_RECOVERY_STATUS_STATUS_PATH }}'
+            - name: DISASTER_RECOVERY_STATUS_COMMENT_PATH
+              value: '{{ .Values.DISASTER_RECOVERY_STATUS_COMMENT_PATH }}'
+            - name: DISASTER_RECOVERY_NOWAIT_AS_STRING
+              value: '{{ .Values.DISASTER_RECOVERY_NOWAIT_AS_STRING }}'
+            - name: TREAT_STATUS_AS_FIELD
+              value: '{{ .Values.TREAT_STATUS_AS_FIELD }}'
+            - name: HEALTH_MAIN_SERVICES_ACTIVE
+              value: '{{ .Values.HEALTH_MAIN_SERVICES_ACTIVE }}'
+            {{- if .Values.HTTP_AUTH_ENABLED}}
+            - name: SITE_MANAGER_NAMESPACE
+              value: {{ .Values.SITE_MANAGER_NAMESPACE | quote }}
+            - name: SITE_MANAGER_SERVICE_ACCOUNT_NAME
+              value: {{ include "disasterRecovery.siteManagerServiceAccount" . }}
+            {{- if .Values.SM_SECURE_AUTH }}
+            - name: SITE_MANAGER_CUSTOM_AUDIENCE
+              value: {{ .Values.SITE_MANAGER_CUSTOM_AUDIENCE }}
+            {{- end }}
+            {{- end }}
+          args:
+            - -v={{ .Values.logLevel }}
+            - -logtostderr=true

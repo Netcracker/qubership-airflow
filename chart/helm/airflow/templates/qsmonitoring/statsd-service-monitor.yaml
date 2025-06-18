@@ -1,0 +1,30 @@
+{{- if .Values.serviceMonitorStatsd.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: statsd-airflow
+  labels:
+    tier: airflow
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+    {{- if .Values.serviceMonitorStatsd.selector }}
+    {{- toYaml .Values.serviceMonitorStatsd.selector | nindent 4 }}
+    {{- end }}
+    {{- with .Values.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/processed-by-operator: prometheus-operator
+spec:
+  selector:
+    matchLabels:
+      component: statsd
+      release: {{ .Release.Name }}
+  endpoints:
+  - port: statsd-scrape
+    path: {{ .Values.serviceMonitorStatsd.path }}
+    interval: {{ .Values.serviceMonitorStatsd.interval }}
+    {{- if .Values.serviceMonitorStatsd.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.serviceMonitorStatsd.scrapeTimeout }}
+    {{- end }}
+{{ end }}

@@ -1,0 +1,81 @@
+{{- if .Values.statusProvisioner.enabled }}
+# status-provisioner job provides status about cluster state
+{{- $securityContext := include "airflowPodSecurityContext" (list . .Values.statusProvisioner) }}
+{{- $containerSecurityContext := include "containerSecurityContext" (list . .Values.statusProvisioner) }}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "airflow.fullname" . }}-status-provisioner
+  labels:
+    tier: airflow
+    component: status-provisioner
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+    {{- with .Values.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+#---Qubership custom change: Labels for Qubership release---
+    {{- include "deployment_only_labels_status_provisioner" . | nindent 4 }}
+#---Qubership custom change: Labels for Qubership release---
+  annotations:
+    "argocd.argoproj.io/hook": "PostSync"
+    "argocd.argoproj.io/hook-delete-policy": "HookSucceeded"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+    "helm.sh/hook": "post-install,post-upgrade"
+    "helm.sh/hook-weight": "10"
+spec:
+  {{- if or (gt .Capabilities.KubeVersion.Major "1") (ge .Capabilities.KubeVersion.Minor "12") }}
+  ttlSecondsAfterFinished: {{ .Values.statusProvisioner.lifetimeAfterCompletion | default 600 }}
+  {{- end }}
+  template:
+    metadata:
+      name: {{ template "airflow.fullname" . }}-status-provisioner
+      labels:
+        tier: airflow
+        component: status-provisioner
+        release: {{ .Release.Name }}
+        {{- with .Values.labels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+#---Qubership custom change: Labels for Qubership release---
+        {{- include "deployment_only_labels_status_provisioner" . | nindent 8 }}
+#---Qubership custom change: Labels for Qubership release---
+    spec:
+      securityContext: {{ $securityContext | nindent 8 }}
+      restartPolicy: Never
+      serviceAccountName: {{ .Release.Name }}-status-provisioner
+      {{- if .Values.statusProvisioner.priorityClassName }}
+      priorityClassName: {{ .Values.statusProvisioner.priorityClassName }}
+      {{- end }}
+      containers:
+        - name: status-provisioner
+          image: {{ template "deployment-status-provisioner.image" . }}
+          imagePullPolicy: "Always"
+          securityContext: {{ $containerSecurityContext | nindent 12 }}
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MONITORED_RESOURCES
+              value: "{{ include "airflow.monitoredResources" . | trim | trimSuffix "," }}"
+            - name: RESOURCE_TO_SET_STATUS
+              value: {{ printf "batch v1 jobs %s-status-provisioner" (include "airflow.fullname" .) }}
+            - name: CONDITION_REASON
+              value: "AirflowServiceReadinessStatus"
+            - name: POD_READINESS_TIMEOUT
+              value: "{{ .Values.statusProvisioner.podReadinessTimeout | default 300 }}"
+          {{- if index .Values "integrationTests" "enabled" }}
+            - name: INTEGRATION_TESTS_RESOURCE
+              value: {{ printf "apps v1 deployments %s-integration-tests" (include "airflow.fullname" .) }}
+            - name: INTEGRATION_TESTS_CONDITION_REASON
+              value: "IntegrationTestsExecutionStatus"
+            - name: INTEGRATION_TESTS_SUCCESSFUL_CONDITION_TYPE
+              value: "Ready"
+            - name: INTEGRATION_TESTS_TIMEOUT
+              value: "{{ .Values.statusProvisioner.integrationTestsTimeout | default 300 }}"
+          {{- end }}
+          resources: {{- toYaml .Values.statusProvisioner.resources | nindent 12 }}
+{{- end }}

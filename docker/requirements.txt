@@ -1,0 +1,5 @@
+apache-airflow[celery,kerberos,ldap,statsd,redis,rabbitmq,postgres,cncf.kubernetes]==3.0.2
+apache-airflow-providers-fab
+# Monitoring
+airflow-exporter
+Authlib

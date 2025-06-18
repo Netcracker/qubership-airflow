@@ -1,0 +1,98 @@
+{{/* User defined Airflow environment for custom preinstall job */}}
+{{- define "custom_job_custom_airflow_environment_from" }}
+  {{- $Global := . }}
+  {{- with .Values.customPreinstallJob.extraEnvFrom }}
+  {{- tpl . $Global | nindent 2 }}
+  {{- end }}
+{{- end }}
+
+{{- $securityContext := include "airflowPodSecurityContext" (list . .Values.customPreinstallJob) }}
+{{- $containerSecurityContext := include "containerSecurityContext" (list . .Values.customPreinstallJob) }}
+
+{{/* User defined Airflow environment variables for custom preinstall job */}}
+{{- define "custom_job_custom_airflow_environment" }}
+  {{- range $i, $config := .Values.customPreinstallJob.env }}
+  - name: {{ $config.name }}
+    value: {{ $config.value | quote }}
+  {{- end }}
+{{- end }}
+
+{{ if .Values.customPreinstallJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    job-name: {{ include "airflow.fullname" . }}-custom-preinstall-job
+    {{- with .Values.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+#---Qubership custom change: Labels for Qubership release---
+    {{- include "deployment_only_labels_preinstall_job" . | nindent 4 }}
+#---Qubership custom change: Labels for Qubership release---
+  {{- $annotations := dict }}
+  {{- if .Values.customPreinstallJob.useHelmHooks }}
+    {{- $_ := set $annotations "helm.sh/hook" "pre-install" }}
+    {{- $_ := set $annotations "helm.sh/hook-weight" "-10" }}
+    {{- $_ := set $annotations "helm.sh/hook-delete-policy" "before-hook-creation,hook-succeeded" }}
+  {{- end }}
+  {{- with $annotations := merge $annotations .Values.customPreinstallJob.jobAnnotations }}
+  annotations: {{- $annotations | toYaml | nindent 4 }}
+  {{- end }}
+  name: {{ include "airflow.fullname" . }}-custom-preinstall-job
+spec:
+  activeDeadlineSeconds: 600
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        job-name: {{ include "airflow.fullname" . }}-custom-preinstall-job
+        {{- if or (.Values.labels) (.Values.customPreinstallJob.labels) }}
+          {{- mustMerge .Values.customPreinstallJob.labels .Values.labels | toYaml | nindent 8 }}
+        {{- end }}
+#---Qubership custom change: Labels for Qubership release---
+        {{- include "deployment_only_labels_preinstall_job" . | nindent 8 }}
+#---Qubership custom change: Labels for Qubership release---
+    spec:
+      securityContext: {{ $securityContext | nindent 8 }}
+      activeDeadlineSeconds: 600
+{{- if and .Values.customPreinstallJob.enabled .Values.customPreinstallJob.serviceAccount.create }}
+      serviceAccountName: custom-preinstall-job-service-account
+{{- end }}
+{{- if .Values.customPreinstallJob.extraVolumes }}
+      volumes:
+{{ toYaml .Values.customPreinstallJob.extraVolumes | indent 8 }}
+{{- end }}
+      containers:
+        - envFrom:
+          {{- include "custom_job_custom_airflow_environment_from" . | default "\n  []" | indent 10 }}
+          env:
+          {{- include "custom_job_custom_airflow_environment" . | indent 10 }}
+          image: {{ template "airflow_image" . }}
+          imagePullPolicy: {{ .Values.images.airflow.pullPolicy }}
+          securityContext: {{ $containerSecurityContext | nindent 12 }}
+          name: {{ include "airflow.fullname" . }}-custom-preinstall-job
+            {{- if .Values.customPreinstallJob.extraVolumeMounts }}
+          volumeMounts:
+            {{ toYaml .Values.customPreinstallJob.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+          resources:
+{{ toYaml .Values.customPreinstallJob.resources | indent 12 }}
+          {{- if .Values.customPreinstallJob.command }}
+          command: {{ tpl (toYaml .Values.customPreinstallJob.command) . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.customPreinstallJob.args }}
+          args: {{ tpl (toYaml .Values.customPreinstallJob.args) . | nindent 12 }}
+          {{- end }}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: OnFailure
+      {{- if .Values.customPreinstallJob.priorityClassName }}
+      priorityClassName: {{ .Values.customPreinstallJob.priorityClassName }}
+      {{- end }}
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+{{ end }}

@@ -1,0 +1,259 @@
+{{- $persistence := .Values.workers.persistence.enabled }}
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "airflow.fullname" . }}
+  labels:
+    tier: airflow
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+    {{- if .Values.prometheusRule.additionalLabels }}
+    {{- toYaml .Values.prometheusRule.additionalLabels | nindent 4 }}
+    {{- end }}
+    {{- with .Values.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/processed-by-operator: prometheus-operator
+spec:
+  groups:
+{{- if index .Values "airflow-site-manager" "enabled" }}
+    - name: {{ .Release.Namespace }}-{{ .Release.Name }}-general.rules
+      rules:
+      - alert: AirflowDRState
+        annotations:
+          summary: Verify that Airflow is scaled to 0
+          description: This alert verifies the state of metrics collection for "Airflow" and is used for other alerts suppression if the service is scaled to 0.
+        expr: ((sum(kube_deployment_status_replicas_available{exported_namespace="{{ .Release.Namespace }}", deployment!~".*site-manager"}) or on() vector(0)) and (sum(kube_statefulset_status_replicas_available{exported_namespace="{{ .Release.Namespace }}", deployment!~".*site-manager" }) or on() vector(0))) == 0
+        for: "1m"
+        labels:
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+          severity: none
+{{ end }}
+
+{{- if .Values.prometheusRule.dagAlerts.enabled }}
+    - name: {{ .Release.Namespace }}-{{ .Release.Name }}-general.dagRules
+      rules:
+      - alert: SomeDAGRunsLongerThan{{ .Values.prometheusRule.dagAlerts.maxDagRunDuration }}Seconds
+        annotations:
+          description: "There is a DAG that runs for longer than {{ .Values.prometheusRule.dagAlerts.maxDagRunDuration }} seconds"
+          summary: DAG runs longer than {{ .Values.prometheusRule.dagAlerts.maxDagRunDuration }} seconds
+        expr: max(airflow_dag_run_duration{namespace="{{ .Release.Namespace }}"}) > {{ .Values.prometheusRule.dagAlerts.maxDagRunDuration }}
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: SomeDAGfailed
+        annotations:
+          description: "Some DAGs are in failed state"
+          summary: Some DAGs are in failed state
+        expr: sum(airflow_dag_status{namespace="{{ .Release.Namespace }}",status="failed"}) > 0
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{- if .Values.prometheusRule.dagAlerts.taskFailed }}
+      - alert: SomeTaskFailed
+        annotations:
+          description: "Some tasks are in failed state"
+          summary: Some tasks are in failed state
+        expr: sum(airflow_task_status{namespace="{{ .Release.Namespace }}",status="failed"}) > 0
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{ end }}
+{{ end }}
+
+
+  {{- if .Values.prometheusRule.kubeAlerts }}
+    - name: {{ .Release.Namespace }}-{{ .Release.Name }}-general.kubeRules
+      rules:
+      - alert: SchedulerError
+        annotations:
+          description: "Scheduler is unavailable for some reason"
+          summary: There is no scheduler available
+        expr: sum(kube_deployment_status_replicas_available{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) == 0
+        for: "1m"
+        labels:
+          severity: critical
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{ if and ($persistence) (eq "CeleryExecutor" .Values.executor) }}
+      - alert: ProblematicPods
+        annotations:
+          description: "There are problem pods in the namespace"
+          summary: Problematic pods are present
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-dag-processor"})+ sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_statefulset_status_replicas_current{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"}) - sum(kube_statefulset_status_replicas_ready{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"})) != 0
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: WorkerError
+        annotations:
+          description: "All workers are unavailable for some reason"
+          summary: There is no worker available
+        expr: sum(kube_statefulset_status_replicas_ready{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"}) == 0
+        for: "1m"
+        labels:
+          severity: critical
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: WorkerStatefulsetIsDegraded
+        annotations:
+          description: "There are unavailable workers"
+          summary: There are unavailable workers
+        expr: kube_statefulset_status_replicas_ready{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"} != kube_statefulset_status_replicas{exported_namespace="{{ .Release.Namespace }}", statefulset=~".*-worker"}
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{ else if (eq .Values.executor "CeleryExecutor") }}
+      - alert: ProblematicPods
+        annotations:
+          description: "There are problem pods in the namespace"
+          summary: Problematic pods are present
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-dag-processor"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-worker"})) != 0
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: WorkerError
+        annotations:
+          description: "All workers are unavailable for some reason"
+          summary: There is no worker available
+        expr: sum(kube_deployment_status_replicas_available{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-worker"}) == 0
+        for: "1m"
+        labels:
+          severity: critical
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: ThereAreUnavailableWorkers
+        annotations:
+          description: "There are unavailable workers"
+          summary: There are unavailable workers
+        expr: sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-worker"}) > 0
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{ else }}
+      - alert: ProblematicPods
+        annotations:
+          description: "There are problem pods in the namespace"
+          summary: Problematic pods are present
+        expr: (sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-scheduler"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-dag-processor"}) + sum(kube_deployment_status_replicas_unavailable{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-flower"})) != 0
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{ end }}
+{{ if (eq "CeleryExecutor" .Values.executor) }}
+      - alert: WorkerCPUload
+        annotations:
+          description: "Worker CPU load is over 95%"
+          summary: Some worker has CPU load over 95%
+        expr: max(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}",pod=~".*-worker-.*"}[1m])) / max(kube_pod_container_resource_limits_cpu_cores{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*-worker-.*"}) > 0.95
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: WorkerMemoryLoad
+        annotations:
+          description: "Worker memory load is over 95%"
+          summary: Some worker has memory load over 95%
+        expr: max(container_memory_usage_bytes{namespace="{{ .Release.Namespace }}",pod=~".*-worker-.*"}) / max(kube_pod_container_resource_limits_memory_bytes{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*-worker-.*"}) > 0.95
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{ end }}
+      - alert: SchedulerCPUload
+        annotations:
+          description: "Scheduler CPU load is over 95%"
+          summary: Scheduler has CPU load over 95%
+        expr: max(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}",pod=~".*-scheduler-.*"}[1m])) / max(kube_pod_container_resource_limits_cpu_cores{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*-scheduler-.*"}) > 0.95
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: SchedulerMemoryLoad
+        annotations:
+          description: "Scheduler memory load is over 95%"
+          summary: Scheduler has memory load over 95%
+        expr: max(container_memory_usage_bytes{namespace="{{ .Release.Namespace }}",pod=~".*-scheduler-.*"}) / max(kube_pod_container_resource_limits_memory_bytes{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*-scheduler-.*"}) > 0.95
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: DagProcessorCPUload
+        annotations:
+          description: "DAG Processor CPU load is over 95%"
+          summary: DAG Processor has CPU load over 95%
+        expr: max(rate(container_cpu_usage_seconds_total{namespace="{{ .Release.Namespace }}",pod=~".*-dag-processor-.*"}[1m])) / max(kube_pod_container_resource_limits_cpu_cores{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*-dag-processor-.*"}) > 0.95
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: DagProcessorMemoryLoad
+        annotations:
+          description: "DAG Processor memory load is over 95%"
+          summary: DAG Processor has memory load over 95%
+        expr: max(container_memory_usage_bytes{namespace="{{ .Release.Namespace }}",pod=~".*-dag-processor-.*"}) / max(kube_pod_container_resource_limits_memory_bytes{exported_namespace="{{ .Release.Namespace }}",exported_pod=~".*-dag-processor-.*"}) > 0.95
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: APIerror
+        annotations:
+          description: "API server is unavailable for some reason"
+          summary: There is no airflow API server available
+        expr: sum(kube_deployment_status_replicas_available{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-api-server"}) == 0
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{- if .Values.statsd.enabled }}
+      - alert: StatsdPrometheusExporterIsNotAvailable
+        annotations:
+          description: "Statsd prometheus exporter pod is not available for some reason"
+          summary: There is no statsd prometheus exporter pod available
+        expr: sum(kube_deployment_status_replicas_available{exported_namespace="{{ .Release.Namespace }}", deployment=~".*-statsd"}) == 0
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{ end }}
+      - alert: NoKubeMetricsForAirflowNamespace
+        annotations:
+          description: "No kube metrics is sent for airflow namespace"
+          summary: No kube metrics is sent
+        expr: absent(kube_deployment_status_replicas_available{exported_namespace="{{ .Release.Namespace }}"})
+        for: "1m"
+        labels:
+          severity: high
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+  {{- end }}
+{{- if .Values.prometheusRule.groups }}
+    {{- toYaml .Values.prometheusRule.groups | nindent 4 }}
+{{- end }}
+{{- end }}

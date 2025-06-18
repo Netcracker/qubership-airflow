@@ -1,0 +1,104 @@
+#Note: this file is modified from hive provider examples.
+
+from airflow.utils.dates import days_ago
+
+from airflow.models import DAG
+from airflow.providers.apache.hive.operators.hive import HiveOperator
+from airflow.sensors.base import BaseSensorOperator
+from airflow.providers.apache.hive.hooks.hive import HiveMetastoreHook
+from airflow.utils.decorators import apply_defaults
+
+DB_NAME = 'testdb'
+HIVE_CONN_NAME = 'hive_cli_default'
+
+args = {
+    'owner': 'Airflow',
+    'start_date': days_ago(2),
+}
+
+dag_hive = DAG(
+    dag_id='hive_conn_test',
+    default_args=args,
+    schedule_interval=None,
+    tags=['check_hive'],
+    is_paused_upon_creation=True
+)
+
+hql_query_db = f"CREATE DATABASE IF NOT EXISTS {DB_NAME};\n"
+
+hql_query_table = f"""use {DB_NAME};\n
+create table if not exists airflow_hive (id int, name string);\n
+insert into airflow_hive values (1, "testData");\n"""
+
+hql_query_drop_db = f"DROP DATABASE {DB_NAME} CASCADE;\n"
+
+hive_task1 = HiveOperator(hql=hql_query_db,
+                          task_id="hive_task1",
+                          hive_cli_conn_id=HIVE_CONN_NAME,
+                          dag=dag_hive)
+
+hive_task2 = HiveOperator(hql=hql_query_table,
+                          task_id="hive_task2",
+                          hive_cli_conn_id=HIVE_CONN_NAME,
+                          dag=dag_hive)
+
+hive_task3 = HiveOperator(hql=hql_query_drop_db,
+                          task_id="hive_task3",
+                          hive_cli_conn_id=HIVE_CONN_NAME,
+                          dag=dag_hive)
+
+
+class HiveTableSensor(BaseSensorOperator):
+    """
+    Checks for the existence of tables in a Hive cluster.
+
+    For example, if you want to wait for a tables called 't1' and 't2' to be created
+    in a database 'db' of Hive, instantiate it as follows:
+
+    >>> hive_sensor = HiveTableSensor(tables=["db.t1", "db.t2"],
+    ...                               conn_id="metastore_default",
+    ...                               task_id="table_sensor")
+    """
+
+    @apply_defaults
+    def __init__(self, tables, cluster_conn_id, *args, **kwargs):
+        """
+        Create a new TableSensor
+
+        :param tables: Target tables.
+                       Use dot notation to target a specific database.
+        :type tables: list
+        :param cluster_conn_id: The connection ID to use
+                                when connecting to cluster
+        :type cluster_conn_id: str
+        """
+        super(HiveTableSensor, self).__init__(*args, **kwargs)
+        self.cluster_conn_id = cluster_conn_id
+        self.tables = tables
+
+    def poke(self, context):
+        self.log.info('Sensor check existence of tables: %s in Hive cluster', self.tables)
+
+        fl_table_exists = True
+
+        hook = HiveMetastoreHook(self.cluster_conn_id)
+        for table_el in self.tables:
+            if '.' in table_el:
+                db, table = table_el.split('.', 1)
+                self.log.info(f"Tables in DB are: {str(hook.get_databases())}")
+                if not hook.table_exists(table, db):
+                    self.log.info("Table: %s does not exist in the Hive cluster", table_el)
+                    fl_table_exists = False
+            else:
+                raise ValueError("Database name didn't defined in the table name {0}. "
+                                 "Use dot notation to target a specific database".format(table_el))
+
+        return fl_table_exists
+
+
+# this task checks if table created by the task hive_task2 is actually in hive DB
+hive_sensor = HiveTableSensor(dag=dag_hive, tables=[f"{DB_NAME}.airflow_hive"],
+                              cluster_conn_id="metastore_default", task_id="table_sensor")
+
+hive_task1 >> hive_task2 >> hive_task3
+hive_sensor >> hive_task3

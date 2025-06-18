@@ -1,0 +1,26 @@
+{{ if .Values.siteManager.cr.install }}
+apiVersion: {{ .Values.siteManager.apiGroup }}/v3
+kind: SiteManager
+metadata:
+  name: {{ .Release.Namespace }}-site-manager
+  labels:
+    app: {{ .Release.Namespace }}-site-manager
+spec:
+  sitemanager:
+    module: "stateful"
+    {{- with .Values.siteManager.startAfter }}
+    after:
+      {{- range . }}
+      - {{ . }}
+      {{- end }}
+    {{- else }}
+    after: []
+    {{- end }}
+    before: []
+    sequence: ["standby", "active"]
+    timeout: {{ .Values.siteManager.timeout | default 180 }}
+    allowedStandbyStateList: ["down", "degraded"]
+    parameters:
+      serviceEndpoint: {{ include "airflow-site-manager.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8080/sitemanager
+      healthzEndpoint: {{ include "airflow-site-manager.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8080/healthz
+  {{ end }}

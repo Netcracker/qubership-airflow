@@ -1,0 +1,29 @@
+{{- if and (.Values.prometheusRule.enabled) (index .Values "airflow-site-manager" "enabled") }}
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: airflow-alert-manager-config
+  labels:
+    {{- with .Values.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/processed-by-operator: prometheus-operator
+    app.kubernetes.io/component: monitoring  # Mandatory label
+spec:
+  inhibitRules:
+    - sourceMatch:
+      - name: alertname
+        matchType: =
+        value: AirflowDRState
+      - name: severity
+        matchType: =
+        value: "none"
+      targetMatch:
+      - name: service
+        matchType: =
+        value: {{ .Release.Name }}
+      - name: severity
+        matchType: =~
+        value: (high|warning|critical)
+      equal: [ 'namespace', 'service' ]
+{{ end }}

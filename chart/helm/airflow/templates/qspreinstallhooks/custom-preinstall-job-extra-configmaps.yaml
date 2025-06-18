@@ -1,0 +1,30 @@
+{{ if .Values.customPreinstallJob.enabled }}
+
+{{- $Global := . }}
+{{- range $configMapName, $configMapContent := .Values.customPreinstallJob.extraConfigMaps }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ tpl $configMapName $Global | quote }}
+  labels:
+    release: {{ $Global.Release.Name }}
+    chart: "{{ $Global.Chart.Name }}-{{ $Global.Chart.Version }}"
+    heritage: {{ $Global.Release.Service }}
+{{- with $Global.Values.labels }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+  annotations:
+    "helm.sh/hook": "pre-install"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+    "helm.sh/hook-weight": "-11"
+{{- if $configMapContent.data }}
+data:
+  {{- with $configMapContent.data }}
+  {{- tpl . $Global | nindent 2 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+
+{{ end }}
