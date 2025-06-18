@@ -574,7 +574,7 @@ webserverSecretKey: ~
 webserverSecretAnnotations: {}
 webserverSecretKeySecretName: ~
 
-# Secret key used to encode and decode JWTs: `[api_auth] jwt_secret` in airflow.cfgAdd commentMore actions
+# Secret key used to encode and decode JWTs: `[api_auth] jwt_secret` in airflow.cfg
 jwtSecret: ~
 jwtSecretName: ~
 
@@ -835,7 +835,7 @@ workers:
     #   cpu: 100m
     #   memory: 128Mi
 
-    # Detailed default security context for kerberos init container on container levelAdd commentMore actions
+    # Detailed default security context for kerberos init container on container level
     securityContexts:
       container: {}
 
@@ -868,7 +868,7 @@ workers:
   # and pods created with pod-template-file (templated).
   extraInitContainers: []
 
- # Additional volumes and volume mounts attached to theAdd commentMore actions
+ # Additional volumes and volume mounts attached to the
   # Airflow Celery workers and pods created with pod-template-file
   extraVolumes: []
   extraVolumeMounts: []

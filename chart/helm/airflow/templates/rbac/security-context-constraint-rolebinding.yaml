@@ -91,7 +91,7 @@ subjects:
     namespace: "{{ .Release.Namespace }}"
   {{- end }}
   {{- if .Values.dagProcessor.enabled }}
-  - kind: ServiceAccountAdd commentMore actions
+  - kind: ServiceAccount
     name: {{ include "dagProcessor.serviceAccountName" . }}
     namespace: "{{ .Release.Namespace }}"
   {{- end }}
