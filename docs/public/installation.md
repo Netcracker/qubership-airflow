@@ -1936,7 +1936,7 @@ webserver:
 ...
   webserverConfig: |
     import os
-    from airflow import configuration as conf
+    from airflow.configuration import conf
     from flask_appbuilder.security.manager import AUTH_LDAP
     basedir = os.path.abspath(os.path.dirname(__file__))
     SQLALCHEMY_DATABASE_URI = conf.get('database', 'SQL_ALCHEMY_CONN')
