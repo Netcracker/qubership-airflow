@@ -1,6 +1,6 @@
-This section covers the details about how to run the Spark Apps.
+This section covers the details about how to run the Spark applications.
 
-It covers the following:
+It covers the following topics:
 
 * [Overview](#overview)
 * [Prerequisites](#prerequisites)  
@@ -14,7 +14,7 @@ This section provides information about how to submit Spark applications to Spar
 
 # Prerequisites
 
-Before you begin, ensure you have the following:
+Before you begin, ensure that you have the following:
 
 * Spark Operator deployed on Kubernetes.
 * Airflow service account granted with proper permissions to submit Spark applications to the dedicated namespace. For more information, see [Set Up RBAC](#set-up-rbac).
@@ -76,16 +76,16 @@ subjects:
 
 # Submit Spark Applications Using spark_kubernetes Airflow Operator
 
-To submit the Spark Applications:
+To submit the Spark Applications, perform the following steps:
 
-1. Prepare the SparkApplication yaml files. For more information, refer to [Spark Operator documentation](https://kubeflow.github.io/spark-operator/) and to [qubership-spark-on-k8s project](https://github.com/Netcracker/qubership-spark-on-k8s).  
+1. Prepare the SparkApplication yaml files. For more information, refer to the _Spark Operator Documentation_ at [[Spark Operator documentation](https://kubeflow.github.io/spark-operator/)](https://kubeflow.github.io/spark-operator/) and to _qubership-spark-on-k8s project_ at [https://github.com/Netcracker/qubership-spark-on-k8s](https://github.com/Netcracker/qubership-spark-on-k8s).  
 1. Prepare a DAG to submit SparkApplication files:
    1. [airflow.providers.cncf.kubernetes.operators.spark_kubernetes](https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/_api/airflow/providers/cncf/kubernetes/operators/spark_kubernetes/index.html) can be used to create a task for Spark application submission.  
    1. [airflow.providers.cncf.kubernetes.sensors.spark_kubernetes](https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/_api/airflow/providers/cncf/kubernetes/sensors/spark_kubernetes/index.html) can be used to add a monitoring task to monitor the application status.  
-      **Note** that it is recommended to set `reschedule` mode to a sensor that is used to monitor long-running applications, such as streaming. In this mode the sensor instead of holding a worker slot for its whole execution time, releases the worker resources and reschedules at a later time while the Spark application is running.  
+      **Note**: It is recommended to set `reschedule` mode to a sensor that is used to monitor long-running applications, such as streaming. In this mode, the sensor instead of holding a worker slot for its whole execution time releases the worker resources and reschedules at a later time while the Spark application is running.  
       Refer to [airflow.sensors.base](https://airflow.apache.org/docs/apache-airflow/stable/_api/airflow/sensors/base/index.html) for details.  
    
-   See an example of Spark DAGs at [/tests_dags_image/dags/spark-pi-dag.py](../../tests_dags_image/dags/spark-pi-dag.py), [/tests_dags_image/dags/spark-pi-dag.py](../../tests_dags_image/dags/spark-streaming-kafka-dag.py). In thees DAGs the Spark applications namespace can be set by Airflow Variable with `spark_app_namespace` key. The variable can be added using Airflow UI Admin -> Variables menu.
+   See an example of Spark DAGs at [/tests_dags_image/dags/spark-pi-dag.py](../../tests_dags_image/dags/spark-pi-dag.py), [/tests_dags_image/dags/spark-pi-dag.py](../../tests_dags_image/dags/spark-streaming-kafka-dag.py). In these DAGs the Spark applications namespace can be set by Airflow Variable with `spark_app_namespace` key. The variable can be added using Airflow UI Admin -> Variables menu.
 1. Prepare a new docker image of Airflow. You can extend Qubership airflow release image for it.
 1. Copy Spark application DAGs to `${AIRFLOW_USER_HOME}/dags/` in the Docker file. SparkApplication yaml files should be added to the directory as they are specified in the DAG.
 1. Add Kubernetes connection to Airflow. For more information, see [Adding Kubernetes Connection](#adding-kubernetes-connection).
@@ -98,9 +98,9 @@ Airflow _spark_kubernetes_ operator uses a connection of type Kubernetes to crea
 You can add the connection using any one of the following ways:
 
 * Using Airflow UI 
-  * Login to the Airflow UI and navigate to the Admin > Connections menu.
+  1. Login to the Airflow UI and navigate to the Admin > Connections menu.
     ![alt text](/docs/public/images/airflow-connections-menu.png "Airflow Connections")
-  * Add a connection of the `Kubernetes Cluster Connection` type.
+  2. Add a connection of the `Kubernetes Cluster Connection` type.
     The connection name should be `kubernetes_default`.  
     The checkbox **In cluster configuration** should be checked if airflow and Spark operator are deployed on the same Kubernetes. Otherwise, the Kubernetes connection parameters should be specified.
     ![alt text](/docs/public/images/airflow-kubernetes-connection.png "Airflow Kubernetes Connection")
