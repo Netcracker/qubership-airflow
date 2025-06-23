@@ -17,7 +17,7 @@ The following topics describe the architectural features of the Airflow service.
     * [Non-HA Deployment Scheme](#non-ha-deployment-scheme)
     * [HA Deployment Scheme](#ha-deployment-scheme)
     * [DR Deployment Schema](#dr-deployment-schema)
-  * [Integration With Managed Services](#integration-with-managed-services)
+  * [Integration with Managed Services](#integration-with-managed-services)
     * [Google Cloud](#google-cloud)
     * [AWS](#aws)
     * [Azure](#azure)
@@ -25,7 +25,7 @@ The following topics describe the architectural features of the Airflow service.
 
 # Overview
 
-Airflow can be described as a workflow engine, where workflows are direct acyclic graphs or DAGs. Airflow is commonly used to orchestrate big data and machine learning workflows. For a complete Airflow overview, refer to the official Airflow documentation at [https://airflow.apache.org/docs/apache-airflow/stable/index.html#](https://airflow.apache.org/docs/apache-airflow/stable/index.html#).
+Airflow can be described as a workflow engine, where workflows are direct acyclic graphs or DAGs. Airflow is commonly used to orchestrate big data and machine learning workflows. For a complete Airflow overview, refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/stable/index.html#](https://airflow.apache.org/docs/apache-airflow/stable/index.html#).
 
 ## Qubership Version Modifications and Additional Features
 
@@ -53,7 +53,9 @@ technologies being used by this application.
 
 ## Overview of Airflow Components
 
-![alt text](/docs/public/images/airflow_hl_overview.drawio.png "High Level Airflow Overview")
+The following image shows high level overview of Airflow.
+
+![High Level Airflow Overview](/docs/public/images/airflow_hl_overview.drawio.png)
 
 For more information, refer to [https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html).
 
@@ -67,7 +69,7 @@ This mandatory Airflow component is responsible for running tasks. In K8s deploy
 
 ## DAG Processor
 
-Since Airflow 3.0 this is a mandatory Airflow component that is responsible for parsing DAGs.
+Since Airflow 3.0, this is a mandatory Airflow component that is responsible for parsing DAGs.
 
 ## Workers
 
@@ -79,7 +81,7 @@ This Airflow component provides the UI for monitoring and managing DAGs. With an
 
 ## DAG Storage
 
-The DAG storage is responsible for storing DAGs. In the current Qubership deployments DAGs can be stored in the following:
+The DAG storage is responsible for storing DAGs. In the current Qubership deployments, DAGs can be stored in the following:
 
 * Airflow docker image
 * Remote Git repository (when using GitSync)
@@ -96,7 +98,11 @@ It is an optional service provided by Qubership. It is responsible for managing 
 
 # Supported Deployment Schemas
 
+The supported deployment schemas are described below. 
+
 ## On-Prem
+
+The deployment information on On-Prem is given below.
 
 ### What Does Airflow Look Like in Kubernetes?
 
@@ -108,7 +114,7 @@ The Qubership version supports two executors for the Airflow deployment: `celery
 
 **Kubernetes executor**:
 
-![alt text](/docs/public/images/airflow_arch_kubernetes.drawio.png "Airflow Kubernetes Executor Kubernetes deployment")
+![Airflow Kubernetes Executor Kubernetes deployment](/docs/public/images/airflow_arch_kubernetes.drawio.png)
 
 Following the above pictures, let us describe the main parts of the Airflow K8s deployment:
 
@@ -139,11 +145,13 @@ For HA deployment, it is possible to deploy multiple scheduler/webserver/worker 
 
 In DR deployment, Airflow uses the same database on both sides, but on one side, Airflow pods are scaled down (PG database is replicated using PG mechanisms). For DR deployment, the sitemanager Airflow pod is used. After PG switchover, the DR sitemanager downscales Airflow pods on one side and upscales it on the other. The deployment schema is as shown in the following image:
 
-![alt text](/docs/public/images/dr_design.drawio.png "DR airflow schema")
+![DR airflow schema](/docs/public/images/dr_design.drawio.png)
 
 For more information, refer to the qubership [Airflow Site Manager](/docs/public/airflow-site-manager.md) section.
 
-## Integration With Managed Services
+## Integration with Managed Services
+
+Tnformation about Intergration with managed services is provided below.
 
 ### Google Cloud
 
@@ -163,7 +171,7 @@ For more information about Google Cloud operators, refer to [https://airflow.apa
 
 It is possible to deploy Qubership Airflow version to AWS Kubernetes. ElasticCache (non-HA) for Redis and/or Amazon RDS PG (including Aurora PostgreSQL) for metadata database is supported.
 
-AWS offers Amazon Managed Workflows for Apache Airflow. For more information, refer to the official AWS documentation at [https://aws.amazon.com/managed-workflows-for-apache-airflow/](https://aws.amazon.com/managed-workflows-for-apache-airflow/).
+AWS offers Amazon Managed Workflows for Apache Airflow. For more information, refer to the _Official AWS Documentation_ at [https://aws.amazon.com/managed-workflows-for-apache-airflow/](https://aws.amazon.com/managed-workflows-for-apache-airflow/).
 
 **Functionality Integration**
 
@@ -175,7 +183,7 @@ For more information about AWS operators, refer to [https://airflow.apache.org/d
 
 **Deployment Integration**
 
-Microsoft Azure offers Azure Data Factory Managed Airflow. For more information, refer to the official Microsoft documentation at [https://learn.microsoft.com/en-us/azure/data-factory/concept-managed-airflow](https://learn.microsoft.com/en-us/azure/data-factory/concept-managed-airflow).
+Microsoft Azure offers Azure Data Factory Managed Airflow. For more information, refer to the _Official Microsoft Documentation_ at [https://learn.microsoft.com/en-us/azure/data-factory/concept-managed-airflow](https://learn.microsoft.com/en-us/azure/data-factory/concept-managed-airflow).
 
 **Functionality Integration**
 
