@@ -1,4 +1,4 @@
-The following topics are described in this section.
+The following topics are described in this section:
 
 * [Overview](#overview)
 * [Design](#design)
@@ -20,10 +20,11 @@ The Airflow site manager is responsible for the disaster recovery management.
 It handles REST requests from the Platform site manager.
 For more details, refer to [site manager](https://github.com/Netcracker/DRNavigator).
 
-
 ## Design
 
-![alt text](/docs/public/images/airflow_switchover.png "Scale up/down scheme")
+The following image shows the architecture, scaling, and flow for Airflow site manager.
+
+![Scale up/down scheme](/docs/public/images/airflow_switchover.png)
 
 In the active mode, Airflow is scaled up.  
 In the standby mode, Airflow is scaled down to 0 replicas.
@@ -31,14 +32,16 @@ In the standby mode, Airflow is scaled down to 0 replicas.
 Airflow depends on PostgreSQL and Redis. DR scheme including RabbitMQ is not supported. Redis does not support the DR scheme deployment, and independent instances are deployed on each site.  
 Airflows on both sites use the same database in PostgreSQL. It is replicated by Postgres.  
 When site-manager switches an active site to standby, PostgreSQL is moved before Airflow. As a result, an active Airflow refers to PostgreSQL in the standby mode. 
-It makes the Airflow status `down`. Site-manager (SM) does not move services with the `down` status. A special parameter `allowedStandbyStateList` has been added to the SM CR file to handle such cases. 
+It makes the Airflow status `down`. Site-manager (SM) does not move services with the `down` status. A special parameter `allowedStandbyStateList` is available in the SM CR file to handle such cases. 
 A service is moved from `active` to `standby` if its status, before the move process, is included in the `allowedStandbyStateList`.
 The `down` and  `degraded` statuses are included in `allowedStandbyStateList` for Airflow. 
 
 ### Switch from Active to Standby Mode
 
+Switching from Active to Standby mode uses the following procedure:
+
 1. First, the site-manager switches an active PostgreSQL to the standby mode, as Airflow depends on PostgreSQL. 
-   Note that Airflow when an active site becomes `down`, it cannot work with a standby PostgreSQL.
+   Note that Airflow cannot work with a standby PostgreSQL when an active site becomes `down`.
 2. Site-manager switches a standby PostgreSQL on a standby site to the active mode. 
 3. Site-manager forces switch of active Airflow in the down state to the standby mode. 
 4. Airflow components like Api Server, Scheduler, Workers, DAG processor, Flower (if deployed), and StatsD (if deployed) are scaled to 0 replicas.
@@ -46,6 +49,8 @@ The `down` and  `degraded` statuses are included in `allowedStandbyStateList` fo
 6. Airflow DAGs stop. The tasks' queue in Redis is removed.
 
 ### Switch from Standby to Active Mode
+
+Switching from Standby to Active mode uses the following procedure:
 
 1. By the time site-manager gets to Airflow on a standby site, PostgreSQL is already in the active mode on that site.
 2. Site-manager switches standby Airflow on a standby site to the active mode.
@@ -60,7 +65,7 @@ Disable and Standby modes are the same for Airflow.
 
 DAGs run only on an active site. When the Airflow mode changes to standby, the DAGs stop. The tasks' queue gets cleaned up as well.
 On a new active site, the DAGs run according to the schedule.   
-If retry arguments are set for the DAG, the tasks are run on a new active site later. For more information about the retry parameters, refer to the Airflow documentation at [https://airflow.apache.org/docs/apache-airflow/3.0.2/_api/airflow/models/baseoperator/index.html](https://airflow.apache.org/docs/apache-airflow/3.0.2/_api/airflow/models/baseoperator/index.html).
+If retry arguments are set for the DAG, the tasks are run on a new active site later. For more information about the retry parameters, refer to the _Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/3.0.2/_api/airflow/models/baseoperator/index.html](https://airflow.apache.org/docs/apache-airflow/3.0.2/_api/airflow/models/baseoperator/index.html).
 
 ```python
 ... 
@@ -94,6 +99,8 @@ data:
 
 ## REST API 
 
+The REST API information is given below.
+
 ### Security
 
 If `SITE_MANAGER_SERVICE_ACCOUNT_NAME` and `SITE_MANAGER_NAMESPACE` are enabled, the Airflow Site-Manager endpoints are secured using Kubernetes JWT Service Account Tokens.
@@ -109,16 +116,14 @@ Airflow Site Manager supports the following REST API:
   **Method**: /GET  
   **Content**: {"mode": "active|standby|disable", "status": "running|done|failed"}
   
-  Currently, Airflow Site Manager supports active and standby modes.
-
+  Currently, Airflow Site Manager supports `active` and `standby` modes.
 
 * Set a new mode for the service.  
   **URL**: <service>.<namespace>.svc.cluster.local/sitemanager  
   **Method**: /POST  
   **Data Params**: {"mode": "active|standby|disable"}
 
-  Currently, Airflow Site Manager supports active and standby modes.
-
+  Currently, Airflow Site Manager supports `active` and `standby` modes.
 
 * Get Airflow health.   
   **URL**: <service>.<namespace>.svc.cluster.local/healthz   
@@ -131,8 +136,8 @@ Airflow Site Manager supports the following REST API:
 
   - Flower component can only change the status to `degraded` if it is installed and unhealthy.
   - StatsD component can only change the status to `degraded` if it is installed and unhealthy.
-  - Airflow is considered `down` if at least one of the components (Scheduler, Api Server, DAG processor, Worker) is unhealthy.
-  - Airflow is considered `degraded` if at least one of the components (Scheduler, Api Server, Worker, DAG Processor, Flower) has fewer replicas than specified in the Airflow Site Manager's deployment parameters - `SCHEDULER_REPLICAS`, `DAG_PROCESSOR_REPLICAS`, `API_SERVER_REPLICAS`, `WORKER_REPLICAS`, and `FLOWER_REPLICAS`.
+  - Airflow is considered `down`, if at least one of the components (Scheduler, Api Server, DAG processor, Worker) is unhealthy.
+  - Airflow is considered `degraded`, if at least one of the components (Scheduler, Api Server, Worker, DAG Processor, Flower) has fewer replicas than specified in the Airflow Site Manager's deployment parameters - `SCHEDULER_REPLICAS`, `DAG_PROCESSOR_REPLICAS`, `API_SERVER_REPLICAS`, `WORKER_REPLICAS`, and `FLOWER_REPLICAS`.
   - In other cases, Airflow is `up`
   - KubernetesExecutor pods do not impact health of Airflow.   
   - CeleryExecutor impacts the health only if it is installed.
