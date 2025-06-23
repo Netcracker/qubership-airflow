@@ -6,7 +6,7 @@ DR DAG consists of three parts: The HDFS part, responsible for copying HDFS file
 
 ## HDFS Part
 
-![alt text](/docs/public/images/DRscheme.drawio.png "HDFS sync scheme for a folder")
+![HDFS sync scheme for a folder](/docs/public/images/DRscheme.drawio.png)
 
 DR synchronization works based on HDFS snapshots and is performed by Airflow DAG tasks. 
 
@@ -14,7 +14,7 @@ DR synchronization works based on HDFS snapshots and is performed by Airflow DAG
 2. The content of this snapshot is copied on the DR site to a folder using distcp.
 3. For the folder on the DR site, a snapshot is created. Note that since no one is writing to the DR site apart from the distcp process, the contents of the snapshot on the main site is the same as on the DR site.
 
-The following steps are executed in the cycle.
+The following steps are executed in the cycle:
 
 4. A new snapshot is created on the main site.
 5. The difference between the snapshots is copied from the main site to the DR site.
@@ -51,17 +51,19 @@ The DAG consists of the following tasks:
 
 # Prerequisites
 
+The prerequisites are specified below.
+
 ## HDFS Tasks
 
 * Ensure that Airflow installation has [ssh](https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/index.html) and [hdfs](https://airflow.apache.org/docs/apache-airflow-providers-apache-hdfs/stable/index.html) providers installed.
 * Ensure that both Hadoop installations (main/DR) use the same LDAP/Kerberos.
 * Add nodes for both Hadoop sites to all Hadoop nodes in /etc/hosts.
-* Enable the SSH login for the Airflow user (preferably Airflow HDFS user created with inv_airflow_user, but also can be some other user with necessary permissions) on the DR site where namenodes are installed. Note that the SSH connection configuration must be the same for the nodes. For more information, refer to this [example](#example-of-enabling-ssh-login-for-airflow-user-on-hadoop-vm). 
+* Enable the SSH login for the Airflow user (preferably Airflow HDFS user created with inv_airflow_user, but also can be some other user with necessary permissions) on the DR site, where namenodes are installed. Note that the SSH connection configuration must be the same for the nodes. For more information, refer to this [example](#example-of-enabling-ssh-login-for-airflow-user-on-hadoop-vm). 
 * On the same nodes, in the home directory of the SSH user, add keytab for the HDFS user (`AIRFLOW_SSH_USER_FOR_KINIT` environment variable) with the airflow.keytab name and with necessary permissions. For more information, refer to this [example](#adding-keytab-for-airflow-hdfs-user).
 * Add the SSH connection with the ssh_dr name in Airflow. For more information, see [https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/connections/ssh.html](https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/connections/ssh.html). Note that for connecting, one of the namenode hosts is used.
 * On the main site, make folders to backup snapshottable. For more information, refer to this [example](#making-a-folder-snapshottable).
 * On the DR site, create folders with the same addresses and make them snapshottable.
-* Give the Airflow HDFS user full permissions for folders to backup on both sites (can be done using ranger, for example, add the Airflow user to all-path HDFS policy).
+* Give the Airflow HDFS user full permissions for the folders to backup on both sites. This can be done using ranger, for example, add the Airflow user to all-path HDFS policy.
 * Add the Airflow DAG to the Airflow image.
 * Add webhdfs connections for both `webhdfs_default` and `webhdfs_dr` clusters.
 * Specify the following environment variables for Airflow: `DR_FOLDER_LIST` (a comma separated list of folders to backup), `AIRFLOW_SSH_USER_FOR_KINIT` (Kerberos user for kinit on VMs). `AIRFLOW_SSH_USER_FOR_KINIT` here is the LDAP HDFS user for backup. 
@@ -101,7 +103,7 @@ For Hive tasks to work, it is necessary to specify the following environment var
 * `DRAIRFLOWPGHOSTRESTORE` - The address of the PG instance containing the DR site Airflow DATA.
 * `DRAIRFLOWPGHOSTRESTOREOWNER` - The owner user of the DR site Airflow DB. It is recommended for this user to be the same as on the main site.
 
-## Installation parts
+## Installation Parts
 
 Following is an example of Airflow installation parameters example, including parameters required for the DR configuration.
 
@@ -204,6 +206,8 @@ DR DAG is located at https://github.com/Netcracker/qubership-airflow/blob/main/t
 
 # Possible DAG Errors and Fixes
 
+This section provides information on the possible DAG errors and fixes.
+
 **find_correct_ssh_host**:
 
 If an error occurs during this task, check the HDFS connection parameters for both sites (`webhdfs_default` and `webhdfs_dr` connections and Kerberos/hostaliases configuration).
@@ -226,7 +230,7 @@ If an error occurs during these tasks, roll back to the latest snapshot or clear
 **Note**: Airflow pod restart might leave distcp command running on the node. To avoid any interfering with subsequent DAG runs, kill this process before restoring the latest snapshot. 
 To find on which node distcp is running, it is possible to go to the failed task log and check the latest address in the distcp command, for example, it would be addr2 for the command, ```INFO - Running command: hadoop distcp -pugpax -update hdfs://addr1/dr2/.snapshot/snapshot_70 hdfs://addr2/dr2```. You can find running distcp processes with the following command: `ps aux | grep distcp`.
 
-The following error indicates that some other process is being written to the DR site.
+The following error indicates that some other process is being written to the DR site:
 
 ```
 [2022-03-28 09:06:34,206] {ssh.py:477} WARNING - 22/03/28 09:06:34 WARN tools.DistCp: The target has been modified since snapshot snapshot_3
@@ -240,7 +244,7 @@ java.lang.Exception: DistCp sync failed, input options: DistCpOptions{atomicComm
 	at org.apache.hadoop.tools.DistCp.main(DistCp.java:432)
 ```
 
-In this case also ensure that no processes is being written to the DR folders.
+In this case, also ensure that no processes is being written to the DR folders.
 
 The following error indicates that a HDFS user does not have enough permissions to do the distcp operation with ownership rights:
 
@@ -249,11 +253,11 @@ The following error indicates that a HDFS user does not have enough permissions 
 [2022-06-02, 10:33:19 UTC] {ssh.py:477} WARNING - Error: org.apache.hadoop.security.AccessControlException: User airflowdrdaguser is not a super user (non-super user cannot change owner).
 ```
 
-To fix it, it is possible to use the HDFS system user. For more information, refer to [Prerequisites](#prerequisites).
+To fix it, it is possible to use the HDFS system user. For more information, see [Prerequisites](#prerequisites).
 
 **post_update_folder**:
 
-* `Content is different after the copy!` - For some reason, the content is different after the copy. In this case it is possible to roll back to the latest snapshot on the DR site.
+`Content is different after the copy!` - For some reason, the content is different after the copy. In this case, it is possible to roll back to the latest snapshot on the DR site.
 
 In case of SSH copy fail, restore the backup folder to the latest snapshot and try again.
 
@@ -279,6 +283,8 @@ If an error occurs during this task, verify the following:
 * Check errors in the latest Ambari requests.
 
 # Useful Commands and Examples
+
+Some useful commands and examples are specified below.
 
 ## Example of Enabling SSH Login for Airflow User on Hadoop VM
 
@@ -333,14 +339,14 @@ Keytab must be located in the home directory (/home/airflowdrdaguser) and must h
 
 ## Restoring from Snapshot
 
-Login to the Hadoop VM. You can get the list of available snapshots with the following command.
+Login to the Hadoop VM. You can get the list of available snapshots with the following command:
 
 ```yaml
 sudo -u hdfs kinit -kt  /etc/security/keytabs/hdfs.headless.keytab hdfs-your-dr-cluster-name@ldap.realm
 sudo -u hdfs hdfs dfs -ls /path/to/backup/folder/.snapshot/
 ```
 
-To restore, you should pick the snapshot with the latest number. Note that if you are planning on running the DAG again (not Switchover/Failover case), you should check that the main site has snapshot with the same number (and also delete snapshots with larger numbers if they are present).
+To restore, you should pick the snapshot with the latest number. Note that if you are planning on running the DAG again (not Switchover/Failover case), check that the main site has snapshot with the same number (and also delete snapshots with larger numbers if they are present).
 
 There are two possible ways of restoring a snapshot:
 
