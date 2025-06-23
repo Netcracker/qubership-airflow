@@ -6,12 +6,12 @@ Topics covered in this section:
 * [Example of Audit Logs](#example-of-audit-logs)
 * [Audit Logs Formatting](#audit-logs-formatting)
 * [Audit Logs Configuration](#audit-logs-configuration)
-* [Audit in Airflow API server](#audit-in-airflow-web-ui)
+* [Audit in Airflow API Server](#audit-in-airflow-web-ui)
 
 # Audit Logs
 
 Airflow logs the following audit events:
-- Successful login(only Kerberos)
+- Successful login (only Kerberos)
 - Failed login
 - User profiles updates such as when the user resets password or updates the first or last name
 
@@ -100,14 +100,14 @@ airflowLocalSettings:  |-
 
   For more information, see [Enabling Custom Logging Configurations](installation.md#enabling-custom-logging-configurations).
 * Set `config.logging.audit_log_level`. It should at least be set to its default value of 'INFO', else some audit logs are lost. 
-* Configure Graylog rules for Audit Logs stream to filter messages that contain '[AUDIT]'
+* Configure Graylog rules for Audit Logs stream to filter messages that contain '[AUDIT]'.
 
 In case of Qubership Graylog:
 
 1. Log in to Graylog.
 1. Navigate to **System > Pipelines**.
-1. Click **Manage rules** on **Pipelines overview** panel.
-1. Edit the 'Route Audit logs' rule to filer messages with `[AUDIT]`
+1. Click **Manage rules** on the **Pipelines overview** panel.
+1. Edit the 'Route Audit logs' rule to filer messages with `[AUDIT]`.
     
 ```
 rule "Route Audit logs"
@@ -132,7 +132,7 @@ route_to_stream(id: "60a7c56b425a052b6d8e67e4", remove_from_default: true);
 end
 ```
 
-# Audit in Airflow API server
+# Audit in Airflow API Server
 
 Airflow WAPI server provides the following pages with audit information:
 
@@ -141,7 +141,7 @@ Airflow WAPI server provides the following pages with audit information:
 Log in to Airflow API server and navigate to **Security** -> **User's Statistics** tab.  
 This tab provides the user's login count and the failed login count.
 
-![alt text](/docs/public/images/airflow-ui-user-stat.png "User Statistics")
+![User Statistics](/docs/public/images/airflow-ui-user-stat.png)
 
 ## Logs
 
@@ -152,4 +152,4 @@ This tab contains events such as:
 * cli_delete_user
 * cli_create_user
 
-![alt text](/docs/public/images/airflow-ui-logs.png "Logs")
+![Logs](/docs/public/images/airflow-ui-logs.png)
