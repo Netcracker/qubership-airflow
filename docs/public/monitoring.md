@@ -40,7 +40,7 @@ This section is based on the third party Airflow plugin and shows status of Airf
 * `Airflow  task runs per second` - Displays the Airflow task status `successful`, `failed`, `upstream failed`, `skipped task` runs per second.
 * `Airflow active tasks` - Displays the number of current Airflow tasks in `running`, `queued`, `scheduled`, `up for retry` and `none` states.
 
-## StatsD Scheduler and executor metrics
+## StatsD Scheduler and Executor Metrics
 
 This section is based on the official Airflow metrics and shows metrics related to scheduler and executor. The following panels are available:
 
