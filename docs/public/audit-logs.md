@@ -134,18 +134,11 @@ end
 
 # Audit in Airflow API Server
 
-Airflow WAPI server provides the following pages with audit information:
-
-## User's Statistics
-
-Log in to Airflow API server and navigate to **Security** -> **User's Statistics** tab.  
-This tab provides the user's login count and the failed login count.
-
-![User Statistics](/docs/public/images/airflow-ui-user-stat.png)
+Airflow API server provides the following pages with audit information:
 
 ## Logs
 
-Log in to the Airflow API server and navigate to **Browse** -> **Logs** tab.  
+Log in to the Airflow API server and navigate to **Browse** -> **Audit Log** tab.  
 
 This tab contains events such as:
 
