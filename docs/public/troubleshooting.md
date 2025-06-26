@@ -27,8 +27,8 @@ To retry a failed DAG:
 
 * Check if there are active workers.
 * Check if Redis is alive.
-* Check if workers and scheduler are using the same queue.
-* If current DAG has specific queue to execute then check if there is any active worker to match this.
+* Check if the workers and scheduler are using the same queue.
+* If the current DAG has specific queue to execute, then check if there is any active worker to match this.
 
 # DAGs are Stuck in Running State
 
@@ -53,7 +53,7 @@ If api server pod keeps restarting, it indicates a problem with the database and
 
 # Airflow Pods Restart Multiple Times
 
-If any of Airflow's services restart frequently after some time of work, or if it does not start, check if there are enough resources for Airflow pods. For more information on the minimal amount of resources, refer to the **Hardware Requirements** section in the _Airflow Service Installation_.
+If any of Airflow's services restart frequently after some time of work, or if it does not start, check if there are enough resources for Airflow pods. For more information on the minimal amount of resources, refer to the **Hardware Requirements** section in the _Airflow Service Installation Procedure_.
 
 # Task does not Execute and Worker Logs are Stuck in Celery Executor
 
@@ -189,7 +189,7 @@ class CustomAuthRemoteUserView(AuthOAuthView):
 
 # Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries 
 
-This issue can be observed in airflow setups with multiple workers and with log stored on workers. In this case, airflow logs are present in the airflow user interface for the latest try of a task with multpile tries but are missing for some of other tries. The issue happens because airflow task log reader tries to find the logs only on the worker, where the latest attempt was executed. So if previous tries were executed on different workers, the logs will not be visible in airflow user interface. The logs for the previous attemts can be found on other workers in the **/opt/airflow/logs** folder. To check on what worker previous attempts were executed, it is possible to check `Details` tab of a task and pick required Task Try on this tab. If it is critical to view the task logs in the user interface, it is recommended to configure the remote logging storage. It can be done similarly to [logging configuration for kubernetes executor workers](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor).
+This issue can be observed in airflow setups with multiple workers and with log stored on workers. In this case, airflow logs are present in the airflow user interface for the latest try of a task with multpile tries but are missing for some of other tries. The issue happens because airflow task log reader tries to find the logs only on the worker, where the latest attempt was executed. Hence, if previous tries were executed on different workers, the logs will not be visible in airflow user interface. The logs for the previous attemts can be found on other workers in the **/opt/airflow/logs** folder. To check on what worker previous attempts were executed, it is possible to check `Details` tab of a task and pick required Task Try on this tab. If it is critical to view the task logs in the user interface, it is recommended to configure the remote logging storage. It can be done similarly to [logging configuration for kubernetes executor workers](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor).
 
 # Error Codes
 

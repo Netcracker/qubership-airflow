@@ -1,4 +1,4 @@
-**Note** The information in this section is applicable for Airflow version  1.10.x.
+**Note** The information in this section is applicable for Airflow version 1.10.x.
 
 Airflow performance can be affected by Airflow inner parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/1.10.15/faq.html#how-can-my-airflow-dag-run-faster](https://airflow.apache.org/docs/apache-airflow/1.10.15/faq.html#how-can-my-airflow-dag-run-faster).
 
@@ -23,4 +23,4 @@ Changing the above parameters along with the number of workers can influence the
 |parallelism=4, dag_concurrency=4, max_active_runs_per_dag=4, worker_concurrency=4|1|1.1 GiB, 1.4 CPU|350 MiB, 0.85 CPU|2.5 GiB, 2.5 CPU|28:32|
 |parallelism=20, dag_concurrency=20, max_active_runs_per_dag=20, worker_concurrency=4|5|1.1 GiB, 1.5 CPU|350 MiB, 0.85 CPU|6.6 GiB, 6.5 CPU|6:39|
 
-When working with Airflow one must take into account Redis and Postgres resources. Too many workers and processes per worker can require a lot of PostgreSQL connections. Also not enough resources limits on Airflow worker pods might result in Airflow workers restarting under load, so the limits must be set accordingly.
+When working with Airflow, one must take into account Redis and Postgres resources. Too many workers and processes per worker can require a lot of PostgreSQL connections. Also, not enough resources limits on Airflow worker pods might result in Airflow workers restarting under load. Hence, the limits must be set accordingly.
