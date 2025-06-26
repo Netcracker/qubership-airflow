@@ -1176,7 +1176,9 @@ to
 
 For more information, refer to [https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#extra-loggers](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#extra-loggers).
 
-**Note**: The gunicorn access logs can be modified by adding `--access-logformat` to webserver arguments. For example:
+**Note**: The gunicorn access logs can be modified by adding `--access-logformat` to webserver arguments. 
+
+For example:
 
 ```yaml
 webserver:
@@ -1190,7 +1192,7 @@ webserver:
 
 With the default Airflow logging config class and with default Airflow configuration, the root logs are written to stdout. The task logs, DAG parsing, and processing logs are written to the filesystem. 
 By default, with **celery executor**, `workers.persistence.enabled` is set to `true` and Airflow workers are deployed as a statefulset and require storage class for logs. Otherwise, the task logs are not available in the Airflow Web UI.
-By default, with **Kubernetes executor**, task logs are stored in task worker pods and are available in the Web UI only during the task execution. So to persist the logs, an additional configuration is required. The following two options are available and tested. 
+By default, with **Kubernetes executor**, task logs are stored in task worker pods and are available in the Web UI only during the task execution. Hence, to persist the logs, an additional configuration is required. The following two options are available and tested. 
 
 To enable the default logging configuration, it is necessary to specify the following:
 
@@ -1252,7 +1254,7 @@ After this, the Airflow task logs are added to the /source bucket in S3 and the 
 
 **Note**: [delete_local_logs](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#delete-local-logs) configuration parameter can be used to remove local logs.
 
-**Note**: For S3 connection is possible to use https address. For additional TLS certificate validation configuration, it is possible to use extra `verify` field: it is possible to set it to `false` to ignore certificate validation, or to `/path/to/your/ca.pem` in order to use custom CA cert bundle. Here is an example of such connection in URI format: `aws://user:pwd@/?region_name=eu-central-1&endpoint_url=https%3A%2F%2Fmy.s3.addr%3A443&verify=%2Fpath%2Fto%2Fmy.cert.pem`. If needed, you can mount the custom secret with a CA cert using `extraSecrets`, `extraVolumes`, `extraVolumeMounts` parameters. It is done in the similar way as in [Keycloak With TLS](#keycloak-with-tls) , however you will need to mount certificates both in webserver and in workers.
+**Note**: For S3 connection, is possible to use https address. For additional TLS certificate validation configuration, it is possible to use extra `verify` field: it is possible to set it to `false` to ignore certificate validation, or to `/path/to/your/ca.pem` in order to use custom CA cert bundle. Here is an example of such connection in URI format: `aws://user:pwd@/?region_name=eu-central-1&endpoint_url=https%3A%2F%2Fmy.s3.addr%3A443&verify=%2Fpath%2Fto%2Fmy.cert.pem`. If needed, you can mount the custom secret with a CA cert using `extraSecrets`, `extraVolumes`, `extraVolumeMounts` parameters. It is done in the similar way as in [Keycloak With TLS](#keycloak-with-tls) , however, you will need to mount certificates both in webserver and in workers.
 
 #### Storing Task Logs with Kubernetes Executor in Read Write Many PVC
 
@@ -1317,7 +1319,7 @@ airflowLocalSettings:  |-
 ...
 ```
 
-It can be used to propagate the logs to stdout. It also allows to set custom logging formatting for task logs.
+It can be used to propagate the logs to stdout. It also allows to set the custom logging formatting for task logs.
 
 For **celery executor**, custom logging config class allows:
 
@@ -1415,13 +1417,15 @@ The other prefixes that cannot be changed for other file-written logs in this ca
 * `[DAG Processing filename:/opt/airflow/dags/test_dag.py]` - For processing of custom DAG
 * `[dag_processor_manager.log]` - For general DAG processing
 
-With the `QS_DEFAULT_LOGGING_CONFIG` logging config class it is also possible to use `config.logging.qs_processor_logging_level` and `config.logging.qs_dag_parsing_logging_level` to set logging levels for DAG processing and parsing separately.
+With the `QS_DEFAULT_LOGGING_CONFIG` logging config class, it is also possible to use `config.logging.qs_processor_logging_level` and `config.logging.qs_dag_parsing_logging_level` to set logging levels for DAG processing and parsing separately.
 
 ### Audit Logs
 
 When the `QS_DEFAULT_LOGGING_CONFIG` logging config class is used, the events related to audit are logged with the '[AUDIT]' mark.
 
-For more information about audit logs, refer to [Airflow Audit Logs](/docs/public/audit-logs.md). Note that it is possible to configure the audit log level and format. For example:
+For more information about audit logs, refer to [Airflow Audit Logs](/docs/public/audit-logs.md). Note that it is possible to configure the audit log level and format. 
+
+For example:
 
 ```yaml
   logging:
@@ -1580,7 +1584,7 @@ dags:
         allowPrivilegeEscalation: false
 ```
 
-**Note**: For airflow qubership releases 2.10.5.* and above it is possible to pass the SSH key using `dags.gitSync.sshKey` parameter instead of using `extraSecrets`.
+**Note**: For Airflow qubership releases 2.10.5.* and above, it is possible to pass the SSH key using `dags.gitSync.sshKey` parameter instead of using `extraSecrets`.
 
 ### Using GitSync With Custom Mount Path
 
@@ -1645,7 +1649,9 @@ Due to similarity, the Rclone synchronization approach uses the same configurati
 |dags.gitSync.rev|Specifies the URL to download the zip archive with DAGs from the cloud storage or a folder within the cloud storage.|
 |dags.gitSync.period|Specifies the time period between DAGs' updating.|
 
-**Note**: It is possible to pass the `GITSYNC_VERBOSE` environment to Rclone in order to set the Rclone logging level. For example:
+**Note**: It is possible to pass the `GITSYNC_VERBOSE` environment to Rclone in order to set the Rclone logging level. 
+
+For example:
 
 ```yaml
 dags:
@@ -1790,7 +1796,9 @@ config:
 
 ### Using Downloadable ZIP Archive with DAGs
 
-To download DAGs' ZIP archive from URL, it is necessary to set `dags.gitSync.repo` to `urlzip` and `dags.gitsync.rev` to the required URL. It is also necessary to set dags_folder to `/opt/airflow/dags`. For example:
+To download DAGs' ZIP archive from URL, it is necessary to set `dags.gitSync.repo` to `urlzip` and `dags.gitsync.rev` to the required URL. It is also necessary to set dags_folder to `/opt/airflow/dags`. 
+
+For example:
 
 ```yaml
 dags:
@@ -2080,7 +2088,7 @@ Also, it is necessary to specify the following environment variables for Airflow
 
 ### Keycloak With TLS
 
-It is possible to use an https address for `PRIVATE_GATEWAY_EXTERNAL_URL`. If custom certificate (including the ones from cert-manager) or self-signed certificate are used, it is possible to mount these certificates into the pod and to set `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` environment varibles to point to this file, for example:
+It is possible to use an https address for `PRIVATE_GATEWAY_EXTERNAL_URL`. If the custom certificate (including the ones from cert-manager) or self-signed certificate are used, it is possible to mount these certificates into the pod and to set `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` environment varibles to point to this file, for example:
 
 ```yaml
 extraEnv: >-
@@ -2113,7 +2121,6 @@ webserver:
         secretName: mysslcert
 ```
 If needed, as CA certificate it is possible to use pre-created secret with certificate, `defaultsslcertificate`(ca-bundle.crt in the secret) or [CA Certificate From Cert-Manager](#getting-ca-certificate-from-cert-manager)(ca.crt in the secret). 
-I
 
 ## Enabling HTTPS for Airflow Ingresses
 
@@ -2213,7 +2220,7 @@ workers:
             averageUtilization: 50
 ```
 
-For more information, please refer to [Kubernetes official documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) .
+For more information, please refer to the _Kubernetes Official Documentation_ at [https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) .
 
 ## Prometheus Monitoring and Alerts
 
@@ -2539,7 +2546,6 @@ You can also refer to Amazon MWAA in AWS at [https://docs.aws.amazon.com/mwaa/la
 ## Manual Helm Installation
 
 For the Airflow installation, preinstall Helm 3 referring to [https://github.com/helm/helm/releases/tag/v3.0.0](https://github.com/helm/helm/releases/tag/v3.0.0). Download the helm chart from the [chart/helm/airflow](/chart/helm/airflow) folder and configure the [values.yaml](/chart/helm/airflow/values.yaml) file. 
-
 
 After you configure the [values.yaml](/chart/helm/airflow/values.yaml) file parameters, you can deploy Airflow using the following command:
 
