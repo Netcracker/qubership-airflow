@@ -65,7 +65,7 @@ This section provides information about the Airflow installation using [slightly
 
 # General Information
 
-For more information about Airflow Service, refer to the Airflow Repository at [https://github.com/apache/airflow](https://github.com/apache/airflow).
+For more information about Airflow Service, refer to the _Airflow Repository_ at [https://github.com/apache/airflow](https://github.com/apache/airflow).
 For more information about Airflow Helm parameters and configuration, refer to the _Official Airflow Helm Documentation_ at [https://airflow.apache.org/docs/helm-chart/stable/index.html](https://airflow.apache.org/docs/helm-chart/stable/index.html).
 
 ## Image Changes from Community Version
@@ -106,7 +106,7 @@ The main Airflow deployment units are as follows:
 
 * Airflow scheduler deployment deploys the Airflow scheduler pods
 * Airflow API Server deployment deploys the Airflow UI
-* Airflow DAG Processor deployment deploys DAG processor.
+* Airflow DAG Processor deployment deploys DAG processor
 * Airflow worker statefulset (deployment in case of stdout logging configuration) deploys Celery workers (only for Celery executor)
 * Airflow flower deployment deploys a Web UI built on top of Celery to monitor Celery workers (only for Celery executor, deprecated)
 * (optional) Ingress/route that exposes the service outside of the cloud.
@@ -121,9 +121,11 @@ The common prerequisites are specified below.
 
 * External PostgreSQL server 
 * External Redis (or external RabbitMQ)
-* Precreated secrets/configmaps with additional configurations if required
+* Precreated secrets/configmaps with additional configurations, if required
 
-For integration with Qubership Monitoring, ensure that Qubership Monitoring is installed in the cluster and the cluster has monitoring entities defined CRDs for ServiceMonitor, PrometheusRule, and GrafanaDashboard. When deploying with a restricted user, check that the user has permissions for monitoring entities. For example:
+For integration with Qubership Monitoring, ensure that Qubership Monitoring is installed in the cluster and the cluster has monitoring entities defined CRDs for ServiceMonitor, PrometheusRule, and GrafanaDashboard. When deploying with a restricted user, check that the user has permissions for monitoring entities. 
+
+For example:
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -201,11 +203,11 @@ subjects:
   namespace: {{ .Release.Namespace }}
 ```
 
-In the above example, you should replace:
+In the above example, you should replace the following:
 
 * `{{ .Release.Namespace }}` with the installation namespace 
 * `{{- include "airflow-site-manager.labels" . | nindent 4 }}` with the site-manager labels (`airflow-site-manager.labels` installation parameter)
-* `{{ include "airflow-site-manager.serviceAccountName" . }}` with the site manager service account name(`airflow-site-manager.serviceAccountName` installation parameter, by default `airflow-site-manager`)
+* `{{ include "airflow-site-manager.serviceAccountName" . }}` with the site manager service account name (`airflow-site-manager.serviceAccountName` installation parameter, by default `airflow-site-manager`)
 
 After manually creating the role binding, during the installation, it is necessary to set `airflow-site-manager.siteManager.clusterRoleBinding.install` to "false".
 
@@ -220,7 +222,9 @@ oc annotate --overwrite namespace airflow openshift.io/sa.scc.supplemental-group
 
 **Note**: When using restricted SCC, do not change the minimal number of supplemental-groups annotation. If you have other services installed in the Airflow installation namespace that require different minimal number in supplemental-groups annotation, you can set the `securityContexts.pod.fsGroup` and `statsd.securityContexts.pod.fsGroup` Airflow installation parameters to this minimal number and Airflow should work with different annotation.
 
-**Note**: It is possible to deploy Airflow in the namespace without these annotations. In this case, it is necessary to overwrite the security context in deployment parameters. In the security context, `runAsUser` and `fsGroup` must be set to null. For example:
+**Note**: It is possible to deploy Airflow in the namespace without these annotations. In this case, it is necessary to overwrite the security context in deployment parameters. In the security context, `runAsUser` and `fsGroup` must be set to null. 
+
+For example:
 
 ```yaml
 securityContexts:
@@ -239,7 +243,7 @@ securityContexts:
 
 ## AWS
 
-If required, create ElasticCache and/or Amazon RDS PG (it is possible to use Aurora PostgreSQL) instances for Airflow. Note that HA is not supported for ElasticCache (it should be possible to specify custom [celery config](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#celery-config-options) for HA ElasticCache, but this is not tested by the platform).
+If required, create the ElasticCache and/or Amazon RDS PG (it is possible to use Aurora PostgreSQL) instances for Airflow. Note that HA is not supported for ElasticCache (it should be possible to specify custom [celery config](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#celery-config-options) for HA ElasticCache, but this is not tested by the platform).
 
 # Best Practices and Recommendations
 
@@ -257,7 +261,7 @@ The recommended configurations that are tested are as follows:
 
 ## HWE
 
-When configuring resources in Airflow, remember that resource usage in Airflow might depend on the number of DAGs, the complexity of the DAG structure, the DAG schedule and Airflow configuration parameters, for example, `workers.celery.instances`. Also, it is necessary to ensure that services on which Airflow depends (Postgres/Redis/RabbitMQ) have enough resources.
+When configuring resources in Airflow, remember that resource usage in Airflow might depend on the number of DAGs, the complexity of the DAG structure, the DAG schedule and Airflow configuration parameters, for example, `workers.celery.instances`. Also, it is necessary to ensure that the services on which Airflow depends (Postgres/Redis/RabbitMQ) have enough resources.
 
 Aside from container resources and pod replicas, main parameters that also affect the airflow performance are as follows:
 
@@ -276,9 +280,9 @@ Aside from container resources and pod replicas, main parameters that also affec
 |`config.celery.worker_autoscale`|The maximum and minimum number of pool processes that will be used to dynamically resize the pool based on load. Enable autoscaling by providing max_concurrency, min_concurrency with the airflow celery worker command (always keep minimum processes, but grow to maximum if necessary). Pick these numbers based on resources on worker box and the nature of the task. If autoscale option is available, worker_concurrency are ignored. https://docs.celeryq.dev/en/latest/reference/celery.bin.worker.html#cmdoption-celery-worker-autoscale .|None|
 |`config.database.sql_alchemy_pool_size`|The SqlAlchemy pool size is the maximum number of database connections in the pool. 0 indicates no limit.|5|
 |`config.database.sql_alchemy_pool_recycle`|The SqlAlchemy pool recycle is the number of seconds a connection can be idle in the pool before it is invalidated. This config does not apply to sqlite. If the number of DB connections is ever exceeded, a lower config value will allow the system to recover faster.|1800|
-|`config.database.sql_alchemy_max_overflow`|The maximum overflow size of the pool. When the number of checked-out connections reaches the size set in pool_size, additional connections are returned up to this limit. When those additional connections are returned to the pool, they are disconnected and discarded. It follows then that the total number of simultaneous connections the pool allows is pool_size + max_overflow, and the total number of “sleeping” connections the pool allows is `pool_size`. `max_overflow` can be set to -1 to indicate no overflow limit; no limit is placed on the total number of concurrent connections.|10|
+|`config.database.sql_alchemy_max_overflow`|The maximum overflow size of the pool. When the number of checked-out connections reaches the size set in pool_size, additional connections are returned up to this limit. When those additional connections are returned to the pool, they are disconnected and discarded. It follows, then the total number of simultaneous connections the pool allows is pool_size + max_overflow, and the total number of “sleeping” connections the pool allows is `pool_size`. `max_overflow` can be set to -1 to indicate no overflow limit; no limit is placed on the total number of concurrent connections.|10|
 
-Another thing that can affect resources is logging configuration.Too many log messages can affect scheduler and worker container resources. What's more, when deploying airflow with logging configuration, that also writes to filesystem, scheduler, and container pods include log groomer sidecars that are responsible for cleaning logs. The resource usage of these sidecars is also affected by logging configuration. Resource usage for the containers can be configured using `workers.logGroomerSidecar.resources` and `scheduler.logGroomerSidecar.resources parameters.`
+Another thing that can affect resources is logging configuration. Too many log messages can affect the scheduler and worker container resources. What's more, when deploying Airflow with logging configuration, that also writes to filesystem, scheduler, and container pods include log groomer sidecars that are responsible for cleaning logs. The resource usage of these sidecars is also affected by logging configuration. Resource usage for the containers can be configured using `workers.logGroomerSidecar.resources` and `scheduler.logGroomerSidecar.resources parameters.`
 
 Qubership platform provides 3 different reference resource profiles, but these profiles should be adjusted per project based on the number of DAGs, structure of DAGs, DAG schedule, and configuration options. 
 
@@ -286,7 +290,7 @@ Qubership platform provides 3 different reference resource profiles, but these p
 
 ### Small
 
-`Small` profile specifies the resources enough to start airflow with no DAGs and with the following parameters set:
+`Small` profile specifies the resources enough to start Airflow with no DAGs and with the following parameters set:
 
 `config.core.parallelism`=8
 `config.scheduler.max_tis_per_query`=4
@@ -318,7 +322,7 @@ Here `*` - optional container based on configuration, `**` - temporary container
 
 ## Medium
 
-`Medium` profile specifies the approximate resources enough to run airflow for dev purposes or for prod non-HA purposes with a small number of simple DAGs with the following parameters set to default values:
+`Medium` profile specifies the approximate resources enough to run Airflow for dev purposes or for prod non-HA purposes with a small number of simple DAGs with the following parameters set to default values:
 
 `config.core.parallelism`=32
 `config.scheduler.max_tis_per_query`=16
@@ -348,7 +352,7 @@ Here `*` - optional container based on configuration, `**` - temporary container
 
 ## Large
 
-`Large` profile specifies the approximate resources enough to run airflow for prod-HA purposes with the following parameters set to default values:
+`Large` profile specifies the approximate resources enough to run Airflow for prod-HA purposes with the following parameters set to default values:
 
 `config.core.parallelism`=24
 `config.scheduler.max_tis_per_query`=12
@@ -380,7 +384,7 @@ Here `*` - optional container based on configuration, `**` - temporary container
 
 Airflow platform uses community Airflow chart with some changes. The parameters for community chart can be found at [https://airflow.apache.org/docs/helm-chart/stable/parameters-ref.html](https://airflow.apache.org/docs/helm-chart/stable/parameters-ref.html).
 
-List of modified/added files can be found at [README.md](/README.md)The changes from the community chart version are described below.
+List of modified/added files can be found at [README.md](/README.md). The changes from the community chart version are described below.
 
 ## Helm Parameter Configuration Changes from Community Version
 
@@ -396,7 +400,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * Default StatsD monitoring mappings are edited.
 * Using internal Redis/PG is not supported.
 * webserver_config.py example is included for integration with Keycloak in API server.
-* AAdditional python logging config Airflow configuration is included. It is used by default and can be disabled by specifying the related parameters during the installation.
+* Additional python logging config Airflow configuration is included. It is used by default and can be disabled by specifying the related parameters during the installation.
 * By default, Airflow deploys with celery executor without persistence.
 * Triggerer is disabled by default.
 * It is possible to specify the number of Flower pods. (**Note**: This change was only made for DR support - specifying more than one flower pod would work incorrectly.)
@@ -547,13 +551,13 @@ airflow-site-manager:
               servicePort: 8080
 ```
 
-**Note**: There is another option for PG replication that can be used with Hadoop deployments. For more information, see [DR Sync DAG](/docs/public/dr-sync-dag.md).
+**Note**: There is another option for PG replication that can be used with Hadoop deployments. For more information, see [Airflow HDFS DR Sync DAG](/docs/public/dr-sync-dag.md).
 
 ## Custom Preinstall Job
 
 **Note**: To disable the job, set `customPreinstallJob.enabled` to false.
 
-In addition to official airflow helm chart, this helm chart provides a custom preinstall job that is based on helm pre-install hook and can execute custom command before the Airflow installation. For more information, refer to [https://helm.sh/docs/topics/charts_hooks/](https://helm.sh/docs/topics/charts_hooks/). 
+In addition to official Airflow helm chart, this helm chart provides a custom preinstall job that is based on helm pre-install hook and can execute custom command before the Airflow installation. For more information, refer to [https://helm.sh/docs/topics/charts_hooks/](https://helm.sh/docs/topics/charts_hooks/). 
 It is possible to add custom permissions using a Kubernetes role for this job if needed (for example, if the job is used to create Kubernetes objects). The job supports the following parameters:
 
 |Name|Description|
@@ -748,11 +752,11 @@ config:
 
 ```
 
-In the above example, MAAS parameters are not needed if MAAS integration is not used.
+In the above example, MAAS parameters are not needed, if MAAS integration is not used.
 
 **Note**: By default, the `DBAAS_PG_DB_NAME_PREFIX` environment variable is not set. This means that the database name is provided by the DBaaS aggregator. The `DBAAS_PG_DB_NAME_PREFIX` environment variable can be used to set the prefix for the PG database name.
 
-**Note**: For SSL configuration, refer to [Specifying SSL Connections to Redis and Postgres](#specifying-ssl-connections-to-redis-and-postgres).
+**Note**: For SSL configuration, see [Specifying SSL Connections to Redis and Postgres](#specifying-ssl-connections-to-redis-and-postgres).
 
 **Note**: When DBAAS/MAAS has TLS enabled on API, it is possible to use `DBAAS_API_VERIFY` environment variable for preinstall job and airflow containers to configure TLS verification. By default, it is enabled, but it is possible to set it to `False` in order to disable cert verification. It is also possible to set it to custom path in order to use custom certificate for verification. Alternatively, it is possible to use `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` envs, but it will affect all python requests.
 
@@ -796,7 +800,9 @@ config:
 
 ### MaaS Integration for Airflow Connections
 
-[Platform-provided DBaaS integration package for Airflow](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) also allows to get Kafka connections from MaaS. The approach works mostly the same as with DBaaS connection, but the structure of JSON connection config is a bit different. To get Kafka connection, it is necessary to specify the data [for MaaS request](https://github.com/Netcracker/qubership-maas/blob/main/docs/rest-api.md#get-or-create-kafka-topic) to `{maas_host}/api/v1/kafka/topic` in the `maas_request_data` field, additional properties for connection in the `connection_properties` field (is used to fill the extra field of the connection, can be used to overwrite the properties received from MaaS) and the connection type in the `maas_type` field. All these three field should be added to the field with "${connection_name}_maas" name. Following is an example for connection with name `kafka_test_conn`:
+[Platform-provided DBaaS integration package for Airflow](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) also allows to get Kafka connections from MaaS. The approach works mostly the same as with DBaaS connection, but the structure of JSON connection config is a bit different. To get Kafka connection, it is necessary to specify the data [for MaaS request](https://github.com/Netcracker/qubership-maas/blob/main/docs/rest-api.md#get-or-create-kafka-topic) to `{maas_host}/api/v1/kafka/topic` in the `maas_request_data` field, additional properties for connection in the `connection_properties` field (is used to fill the extra field of the connection, can be used to overwrite the properties received from MaaS) and the connection type in the `maas_type` field. All these three fields should be added to the field with "${connection_name}_maas" name. 
+
+Following is an example for connection with name `kafka_test_conn`:
 
 ```yaml
 qs_secrets_backend_params:
@@ -829,7 +835,9 @@ Since Airflow Kafka connection does not include topic, the topic name is not pas
 
 ## Creating a Secret for Custom Keycloak Client Registration
 
-If you have a custom Keycloak that creats clients based on kubernetes secrets, it can be done using the `extraSecrets` parameter. For example,
+If you have a custom Keycloak that creates clients based on kubernetes secrets, it can be done using the `extraSecrets` parameter. 
+
+For example,
 
 ```yaml
 extraSecrets:
@@ -842,7 +850,7 @@ extraSecrets:
       password: 'airflow_password'
 ```
 
-Note that the `extraSecrets` parameter supports templating, so it is possible to generate a random password.
+**Note**: The `extraSecrets` parameter supports templating, so it is possible to generate a random password.
 
 ```yaml
 extraSecrets:
@@ -972,7 +980,7 @@ certManagerInegration:
   clusterIssuerName: ~
 ```
 
-Note that in this case, cert-manager must be installed in the cluster. In case `certManagerIntegration.enabled` is set to `true`, the cert manager creates a secret containing ca-cert from clusterIssuer with `certManagerInegration.clusterIssuerName`  in the ca.crt field with the name, `certManagerInegration.secretName`. For example, to create a secret with `ca.crt` and use it for Redis connection certificate verification, you must specify the the following parameters:
+Note that in this case, cert-manager must be installed in the cluster. In case `certManagerIntegration.enabled` is set to `true`, the cert manager creates a secret containing ca-cert from clusterIssuer with `certManagerInegration.clusterIssuerName` in the ca.crt field with the name, `certManagerInegration.secretName`. For example, to create a secret with `ca.crt` and use it for Redis connection certificate verification, you must specify the the following parameters:
 
 ```yaml
 ...
@@ -1055,7 +1063,7 @@ volumes:
 
 ## Enabling TLS on airflow UI inside kubernetes
 
-It is possible to enable TLS on airflow web UI directly inside kubernetes. For this, airflow API server needs TLS key and certificate. TLS key and certificate can be requested from cert-manager using `certManagerInegration.enabled` parameter. By default, it will create secret `airflow-services-tls-certificate` with TLS certificate, TLS key and CA certificate. Alternatively, TLS key and certificate can be specified using `extraSecrets` parameter. After this, it is necessary to mount the certificates into webserver pod and specify the certificates in API server using `config.webserver.web_server_ssl_cert` and `config.webserver.web_server_ssl_key` (or `config.api.ssl_cert` and `config.api.ssl_key`). Also it is necessary to specify HTTPS scheme for API server liveness, readiness and startup probes. Since in airflow 3 workers go to airflow API server, workers must also have access to tls certificate and `execution_api_server_url` must be redirected to https. If using kubernetes with NGINX ingress controller, it is possible to pass annotations for ingress controller to work with TLS backend, for example:
+It is possible to enable TLS on Airflow web UI directly inside kubernetes. For this, Airflow API server needs TLS key and certificate. TLS key and certificate can be requested from cert-manager using `certManagerInegration.enabled` parameter. By default, it creates the secret `airflow-services-tls-certificate` with TLS certificate, TLS key and CA certificate. Alternatively, TLS key and certificate can be specified using `extraSecrets` parameter. After this, it is necessary to mount the certificates into webserver pod and specify the certificates in API server using `config.webserver.web_server_ssl_cert` and `config.webserver.web_server_ssl_key` (or `config.api.ssl_cert` and `config.api.ssl_key`). Also, it is necessary to specify the HTTPS scheme for API server liveness, readiness, and startup probes. Since in Airflow 3 workers go to airflow API server, workers must also have access to the TLS certificate and `execution_api_server_url` must be redirected to https. If using kubernetes with NGINX ingress controller, it is possible to pass annotations for ingress controller to work with TLS backend, for example:
 
 ```yaml
 # airflow-install-namespace here should be replaced with the namespace where airflow is installed.
@@ -1145,12 +1153,10 @@ Automatic re-encrypt Route creation is not supported out of box, need to perform
    ```
 
 **Note**: If you can't access the webserver host after Route creation because of "too many redirects" error, then one of the possible root
-causes is there is HTTP traffic between balancers and the cluster. To resolve that issue it's necessary to add the Route name to
+causes is, there is HTTP traffic between balancers and the cluster. To resolve that issue it is necessary to add the Route name to
 the exception list at the balancers.
 
 **Note** It might be possible to create the route in openshift automatically using annotations like `route.openshift.io/destination-ca-certificate-secret` and `route.openshift.io/termination: "reencrypt"` but this approach was not tested.
-
-
 
 ## Airflow Logging Config Classes
 
