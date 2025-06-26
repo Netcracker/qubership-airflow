@@ -43,6 +43,9 @@ metadata:
     {{- with .Values.labels }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
+#---Qubership custom change: Labels for Qubership release---
+    {{- include "deployment_only_labels_api_server" . | nindent 4 }}
+#---Qubership custom change: Labels for Qubership release---
   {{- if .Values.apiServer.annotations }}
   annotations: {{- toYaml .Values.apiServer.annotations | nindent 4 }}
   {{- end }}
@@ -51,6 +54,11 @@ spec:
   {{- if $revisionHistoryLimit }}
   revisionHistoryLimit: {{ $revisionHistoryLimit }}
   {{- end }}
+#---Qubership custom change: Use custom update strategies \/\/\/---
+{{- if .Values.useQubershipDeployerUpdateStrategies }}
+  {{- include "qubership_update_strategy" . | nindent 2 }}
+{{- else }}
+#---Qubership custom change: Use custom update strategies /\/\/\---
   strategy:
     {{- if .Values.apiServer.strategy }}
     {{- toYaml .Values.apiServer.strategy | nindent 4 }}
@@ -67,6 +75,9 @@ spec:
       maxSurge: 1
       maxUnavailable: 0
     {{- end }}
+#---Qubership custom change: Use custom update strategies \/\/\/---
+{{- end }}
+#---Qubership custom change: Use custom update strategies /\/\/\---
   selector:
     matchLabels:
       tier: airflow
@@ -81,6 +92,9 @@ spec:
         {{- if or (.Values.labels) (.Values.apiServer.labels) }}
           {{- mustMerge .Values.apiServer.labels .Values.labels | toYaml | nindent 8 }}
         {{- end }}
+#---Qubership custom change: Labels for Qubership release---
+        {{- include "deployment_only_labels_api_server" . | nindent 8 }}
+#---Qubership custom change: Labels for Qubership release---
       annotations:
         checksum/metadata-secret: {{ include (print $.Template.BasePath "/secrets/metadata-connection-secret.yaml") . | sha256sum }}
         checksum/pgbouncer-config-secret: {{ include (print $.Template.BasePath "/secrets/pgbouncer-config-secret.yaml") . | sha256sum }}
