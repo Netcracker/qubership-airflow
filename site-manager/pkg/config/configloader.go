@@ -12,10 +12,10 @@ func GetEnvConfig() types.Config {
 	return types.Config{
 		ReplicaMap: map[string]int{
 			"flower":       getEnvInt("FLOWER_REPLICAS", 1),
-			"dagprocessor": getEnvInt("DAG_PROCESSOR_REPLICAS", 1),
+			"dag-processor": getEnvInt("DAG_PROCESSOR_REPLICAS", 1),
 			"worker":       getEnvInt("WORKER_REPLICAS", 1),
 			"scheduler":    getEnvInt("SCHEDULER_REPLICAS", 1),
-			"apiserver":    getEnvInt("API_SERVER_REPLICAS", 1),
+			"api-server":    getEnvInt("API_SERVER_REPLICAS", 1),
 			"statsd":       getEnvInt("STATSD_REPLICAS", 1),
 		},
 		StartTimeout:    getEnvInt("START_TIMEOUT", 60),

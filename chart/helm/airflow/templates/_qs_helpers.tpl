@@ -123,6 +123,12 @@ app.kubernetes.io/component: {{ .Values.componentLabel | default "airflow-webser
 app.kubernetes.io/technology: python
 {{- end }}
 
+{{- define "deployment_only_labels_api_server" -}}
+{{ include "deployment_only_labels" . }}
+app.kubernetes.io/component: {{ .Values.componentLabel | default "airflow-api-server" }}
+app.kubernetes.io/technology: python
+{{- end }}
+
 {{/*
 Additional Service only labels for Qubership Release
 */}}
