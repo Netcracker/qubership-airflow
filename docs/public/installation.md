@@ -255,9 +255,8 @@ The recommended configurations that are tested are as follows:
 * Persistence storage for logs is used.
 * Triggerer is disabled.
 
-**Note**: When installing Airflow, consider the `fernetKey` parameter. For more information, see [https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/fernet.html](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/fernet.html). This parameter is used for the database encryption. When not specified in the **values.yaml** file, it is automatically generated as a random value by helm during the installation. In this case, after uninstalling Airflow, the key is lost and it would be impossible to recover the database. Hence, it is recommended to specify this parameter during the installation. It is also recommended to specify the `webserverSecretKey` parameter during the installation to avoid unnecessary pod restarts during chart upgrades.
+**Note**: When installing Airflow, consider the `fernetKey` parameter. For more information, see [https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/fernet.html](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/fernet.html). This parameter is used for the database encryption. When not specified in the **values.yaml** file, it is automatically generated as a random value by helm during the installation. In this case, after uninstalling Airflow, the key is lost and it would be impossible to recover the database. Hence, it is recommended to specify this parameter during the installation. It is also recommended to specify the `jwtSecret` parameter during the installation to avoid unnecessary pod restarts during chart upgrades.
 
-**Note**: Another similar parameter to consider is `webserverSecretKey`. For more information, refer to the _Official Airflow Helm Chart Documentation_ at [https://airflow.apache.org/docs/helm-chart/stable/production-guide.html#webserver-secret-key](https://airflow.apache.org/docs/helm-chart/stable/production-guide.html#webserver-secret-key).
 
 ## HWE
 
@@ -409,7 +408,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * Default security context is set to be in line with the restricted Pod Security Standards. For more information, refer to [https://kubernetes.io/docs/concepts/security/pod-security-standards/](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
 * Added labels required by Qubership release.
 * Status provisioner job and parameters for it are added.
-* For scheduler and webserver deployments support of custom Qubership rolling update deployment strategies were added. The `useQubershipDeployerUpdateStrategies` parameter is added that can be used to disable Qubership update strategies (must be set to `false`).
+* For scheduler, webserver and api-server deployments support of custom Qubership rolling update deployment strategies were added. The `useQubershipDeployerUpdateStrategies` parameter is added that can be used to disable Qubership update strategies (must be set to `false`).
 * `rbac.create` parameter is set to `false` to avoid unnecessary for celery executor roles creation.
 
 ### Using Non-DBaaS Airflow Installation
@@ -1068,7 +1067,7 @@ It is possible to enable TLS on Airflow web UI directly inside kubernetes. For t
 ```yaml
 # airflow-install-namespace here should be replaced with the namespace where airflow is installed.
 ingress:
-  web:
+  apiServer:
     annotations:
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
       nginx.ingress.kubernetes.io/proxy-ssl-verify: 'on'
@@ -1124,9 +1123,9 @@ For enabling TLS on ingress itself, please refer to [Enabling HTTPS for Airflow 
 
 Automatic re-encrypt Route creation is not supported out of box, need to perform the following steps:
 
-1. Disable Ingress in deployment parameters: `ingress.web.enabled: false`.
+1. Disable Ingress in deployment parameters: `ingress.apiServer.enabled: false`.
 
-   Deploy with enabled web Ingress leads to incorrect Ingress and Route configuration.
+   Deploy with enabled apiServer Ingress leads to incorrect Ingress and Route configuration.
 
 2. Create Route manually. You can use the following template as an example:
 
@@ -1142,17 +1141,17 @@ Automatic re-encrypt Route creation is not supported out of box, need to perform
      host: <specify-your-target-host-here>
      to:
        kind: Service
-       name: <airflow-webserver-service-name-for-example-airflow-webserver>
+       name: <airflow-api-server-service-name-for-example-airflow-webserver>
        weight: 100
      port:
        targetPort: http
      tls:
        termination: reencrypt
-       destinationCACertificate: <place-CA-certificate-here-from-airflow-webserver-TLS-secret>
+       destinationCACertificate: <place-CA-certificate-here-from-airflow-api-server-TLS-secret>
        insecureEdgeTerminationPolicy: Redirect
    ```
 
-**Note**: If you can't access the webserver host after Route creation because of "too many redirects" error, then one of the possible root
+**Note**: If you can't access the apiserver host after Route creation because of "too many redirects" error, then one of the possible root
 causes is, there is HTTP traffic between balancers and the cluster. To resolve that issue it is necessary to add the Route name to
 the exception list at the balancers.
 
@@ -1176,14 +1175,14 @@ to
 
 For more information, refer to [https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#extra-loggers](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#extra-loggers).
 
-**Note**: The gunicorn access logs can be modified by adding `--access-logformat` to webserver arguments. 
+**Note**: The gunicorn access logs can be modified by adding `--access-logformat` to apiserver arguments. 
 
 For example:
 
 ```yaml
 webserver:
 ...
-  args: ["bash", "-c", "exec airflow webserver --access-logformat '%(t)s %(h)s %(l)s %(u)s
+  args: ["bash", "-c", "exec airflow api-server --access-logformat '%(t)s %(h)s %(l)s %(u)s
               \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\"'"]
 ...
 ```
@@ -1254,7 +1253,7 @@ After this, the Airflow task logs are added to the /source bucket in S3 and the 
 
 **Note**: [delete_local_logs](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#delete-local-logs) configuration parameter can be used to remove local logs.
 
-**Note**: For S3 connection, is possible to use https address. For additional TLS certificate validation configuration, it is possible to use extra `verify` field: it is possible to set it to `false` to ignore certificate validation, or to `/path/to/your/ca.pem` in order to use custom CA cert bundle. Here is an example of such connection in URI format: `aws://user:pwd@/?region_name=eu-central-1&endpoint_url=https%3A%2F%2Fmy.s3.addr%3A443&verify=%2Fpath%2Fto%2Fmy.cert.pem`. If needed, you can mount the custom secret with a CA cert using `extraSecrets`, `extraVolumes`, `extraVolumeMounts` parameters. It is done in the similar way as in [Keycloak With TLS](#keycloak-with-tls) , however, you will need to mount certificates both in webserver and in workers.
+**Note**: For S3 connection, is possible to use https address. For additional TLS certificate validation configuration, it is possible to use extra `verify` field: it is possible to set it to `false` to ignore certificate validation, or to `/path/to/your/ca.pem` in order to use custom CA cert bundle. Here is an example of such connection in URI format: `aws://user:pwd@/?region_name=eu-central-1&endpoint_url=https%3A%2F%2Fmy.s3.addr%3A443&verify=%2Fpath%2Fto%2Fmy.cert.pem`. If needed, you can mount the custom secret with a CA cert using `extraSecrets`, `extraVolumes`, `extraVolumeMounts` parameters. It is done in the similar way as in [Keycloak With TLS](#keycloak-with-tls) , however, you will need to mount certificates both in apiserver and in workers.
 
 #### Storing Task Logs with Kubernetes Executor in Read Write Many PVC
 
@@ -1936,19 +1935,19 @@ config:
     auth_manager: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
 ```
 
-You can enable LDAP integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.0.2/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/3.0.2/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `web.webserverConfig` parameter.
+You can enable LDAP integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.0.2/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/3.0.2/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter.
 
 The following is an example for enabling LDAP without group mapping and with pre-created Admin user. 
 
 ```yaml
-webserver:
+apiServer:
 ...
   defaultUser:
     enabled: true
     role: Admin
     username: ldap_admin_username
 ...
-  webserverConfig: |
+  apiServerConfig: |
     import os
     from airflow.configuration import conf
     from flask_appbuilder.security.manager import AUTH_LDAP
@@ -1978,8 +1977,9 @@ webserver:
 ...
   defaultUser:
     enabled: false
+apiServer:
 ...
-  webserverConfig: |
+  apiServerConfig: |
     import os
     from airflow import configuration as conf
     from flask_appbuilder.security.manager import AUTH_LDAP
@@ -2005,7 +2005,7 @@ webserver:
     AUTH_LDAP_USE_TLS = False
 ```
 
-**Note**: If required, it is possible to store the `AUTH_LDAP_BIND_PASSWORD` in a secret created using the `extraSecrets` parameter. Load it into the pod using the `extraEnvFrom` parameter and use `os.getenv` in `webserverConfig`. For example:
+**Note**: If required, it is possible to store the `AUTH_LDAP_BIND_PASSWORD` in a secret created using the `extraSecrets` parameter. Load it into the pod using the `extraEnvFrom` parameter and use `os.getenv` in `apiServerConfig`. For example:
 
 ```yaml
 extraSecrets:
@@ -2021,8 +2021,9 @@ webserver:
 ...
   defaultUser:
     enabled: false
+apiServer:
 ...
-  webserverConfig: |
+  apiServerConfig: |
     import os
     from airflow import configuration as conf
     from flask_appbuilder.security.manager import AUTH_LDAP
@@ -2060,17 +2061,17 @@ config:
     auth_manager: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
 ```
 
-As with LDAP, it is possible to enable Keycloak Web UI integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/2.10.5/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/2.10.5/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `web.webserverConfig` parameter. 
+As with LDAP, it is possible to enable Keycloak Web UI integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/2.10.5/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/2.10.5/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter. 
 
 The qubership chart distribution includes a [webserver_config.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py) example file that can be used for the integration with IDP.
 
-This file can be loaded in the `webserver.webserverConfig` parameter, for example:
+This file can be loaded in the `apiServer.apiServerConfig` parameter, for example:
 
 ```yaml
-webserver:
+apiServer:
   defaultUser:
     enabled: false
-  webserverConfig: |-
+  apiServerConfig: |-
     {{ .Files.Get "qs_files/webserver_config_keycloak.py" }}
 ...
 ```
@@ -2109,7 +2110,7 @@ extraSecrets:
                      goes here
 
                      -----END CERTIFICATE-----
-webserver:
+apiServer:
   extraVolumeMounts:
     - name: mysslcert
       mountPath: /opt/airflow/mysslcert.crt
@@ -2126,12 +2127,12 @@ If needed, as CA certificate it is possible to use pre-created secret with certi
 
 Some ingress providers allow setting default certificates and forcing HTTPS for all ingresses in a cluster. For example, refer to nginx ingress details at [https://kubernetes.github.io/ingress-nginx/user-guide/tls/#default-ssl-certificate](https://kubernetes.github.io/ingress-nginx/user-guide/tls/#default-ssl-certificate). In this case, all ingresses in the k8s cluster are using the same default certificate.
 
-However, it is possible to use TLS for Airflow ingresses (web/flower) separately using a custom certificate. For example, for Web ingress:
+However, it is possible to use TLS for Airflow ingresses (API/flower) separately using a custom certificate. For example, for API server ingress:
 
 ```yaml
 ingress:
   enabled: true
-  web:
+  apiServer:
     tls:
       enabled: true
       secretName: ingresscerts
@@ -2169,7 +2170,7 @@ extraSecrets:
                  -----END RSA PRIVATE KEY-----
 ```
 
-To use the default Kubernetes secret, do not specify `ingress.web.secretName`.
+To use the default Kubernetes secret, do not specify `ingress.apiServer.secretName`.
 
 ### Using Cert-manager to Get Certificate for Ingress
 
@@ -2180,7 +2181,7 @@ Cert-manager has support for providing https for ingresses by providing addition
 ```yaml
 ingress:
   enabled: true
-  web:
+  apiServer:
     annotations:
       cert-manager.io/cluster-issuer: qa-issuer-self
     tls:
@@ -2412,10 +2413,10 @@ config:
 |integrationTests.serviceAccount.name|Specifies the name of the service account that is used to deploy Airflow integration tests.|
 |integrationTests.image|Specifies the Docker image of Airflow integration tests.|
 |integrationTests.tags|Specifies the tags combined together with `AND`, `OR`, and `NOT` operators that select test cases to run.|
-|integrationTests.airflowHost|Specifies the host name of the Airflow WEB server.|
+|integrationTests.airflowHost|Specifies the host name of the Airflow API server.|
 |integrationTests.airflowPort|Specifies the port of Airflow.|
 |integrationTests.workerServiceName|Specifies the name of the Airflow Worker service.|
-|integrationTests.apiServiceName|Specifies the name of the Airflow Web service.|
+|integrationTests.apiServiceName|Specifies the name of the Airflow API service.|
 |integrationTests.schedulerDeployment|Specifies the name of the Airflow Scheduler deployment.|
 |integrationTests.prometheusHost|Specifies the host name of the Prometheus service.|
 |integrationTests.prometheusPort|Specifies the port of the Prometheus service.|
@@ -2438,10 +2439,10 @@ integrationTests:
     name: "airflow-integration-tests"
   image: "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
   tags: "smoke"
-  airflowHost: "airflow-webserver"
+  airflowHost: "airflow-api-server"
   airflowPort: 8080
   workerServiceName: "airflow-worker"
-  apiServiceName: "airflow-webserver"
+  apiServiceName: "airflow-api-server"
   schedulerDeployment: "airflow-scheduler"
   prometheusHost: ""
   prometheusPort: 9090
@@ -2469,7 +2470,7 @@ This section contains information about integration test tags that can be used t
       * `worker_down` tag runs `Test Alert Worker Error` test.
       * `worker_down_firing` tag runs `Test Alert Worker Error With Firing State` test.
       * `scheduler_down` tag runs `Test Alert Scheduler error` test.
-      * `api_down` tag runs `Test Alert Web error` test.
+      * `api_down` tag runs `Test Alert API error` test.
     * `airflow_images` tag runs all tests connected to check pod images' scenarios.
       * `airflow_images_worker` tag runs `Test Hardcoded Images In Worker` test.
       * `airflow_images_scheduler` tag runs `Test Hardcoded Images In Scheduler` test.
