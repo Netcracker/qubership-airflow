@@ -579,6 +579,7 @@ jwtSecret: ~
 # Add custom annotations to the JWT secret
 jwtSecretAnnotations: {}
 jwtSecretName: ~
+
 # In order to use kerberos you need to create secret containing the keytab file
 # The secret name should follow naming convention of the application where resources are
 # name {{ .Release-name }}-<POSTFIX>. In case of the keytab file, the postfix is "kerberos-keytab"
