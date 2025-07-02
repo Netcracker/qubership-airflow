@@ -24,7 +24,7 @@ For more details, refer to [site manager](https://github.com/Netcracker/DRNaviga
 
 The following image shows the architecture, scaling, and flow for Airflow site manager.
 
-![Scale up/down scheme](/docs/public/images/airflow_switchover.png)
+![Scale up/down scheme](/docs/public/images/dr_design.drawio.png)
 
 In the active mode, Airflow is scaled up.  
 In the standby mode, Airflow is scaled down to 0 replicas.
