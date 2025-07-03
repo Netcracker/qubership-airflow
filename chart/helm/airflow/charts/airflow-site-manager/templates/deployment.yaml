@@ -28,15 +28,26 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.securityContexts.pod | nindent 8 }}
+      {{- if eq (include "disasterRecovery.enableTls" .) "true" }}
+      volumes:
+        - name: airflow-services-tls-certificate
+          secret:
+            secretName: airflow-services-tls-certificate
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContexts.container | nindent 12 }}
           image: {{ template "airflow_site_manager_image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if eq (include "disasterRecovery.enableTls" .) "true" }}
+          volumeMounts:
+            - name: airflow-services-tls-certificate
+              mountPath: /tls
+          {{- end }}
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: {{ template "disasterRecovery.port" . }}
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -45,6 +56,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            {{- if eq (include "disasterRecovery.enableTls" .) "true" }}
+            - name: TLS_ENABLED
+              value: "true"
+            - name: CERTS_PATH
+              value: "/tls/"
+            {{- end }}
             - name: START_TIMEOUT
               value: '{{ .Values.START_TIMEOUT }}'
             - name: SHUTDOWN_TIMEOUT

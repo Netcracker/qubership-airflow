@@ -1,5 +1,5 @@
 {{- define "certDnsNames" -}}
-  {{- $dnsNames := list "localhost" (printf "%s-api-server" (include "airflow.fullname" .)) (printf "%s-api-server.%s" (include "airflow.fullname" .) .Release.Namespace) (printf "%s-api-server.%s.svc" (include "airflow.fullname" .) .Release.Namespace) -}}
+  {{- $dnsNames := list "localhost" (printf "%s-site-manager" (include "airflow-site-manager.fullname" .)) (printf "%s-site-manager.%s" (include "airflow-site-manager.fullname" .) .Release.Namespace) (printf "%s-site-manager.%s.svc" (include "airflow-site-manager.fullname" .) .Release.Namespace) (printf "%s-api-server" (include "airflow.fullname" .)) (printf "%s-api-server.%s" (include "airflow.fullname" .) .Release.Namespace) (printf "%s-api-server.%s.svc" (include "airflow.fullname" .) .Release.Namespace) -}}
     {{- $dnsNames = concat $dnsNames .Values.certManagerInegration.subjectAlternativeName.additionalDnsNames -}}
   {{- $dnsNames | toYaml -}}
 {{- end -}}

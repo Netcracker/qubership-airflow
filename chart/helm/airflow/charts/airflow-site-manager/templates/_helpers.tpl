@@ -93,3 +93,32 @@ Additional Service only labels for Qubership Release
 name: {{ include "airflow.fullname" . }}
 app.kubernetes.io/name: {{ include "airflow.fullname" . }}
 {{- end }}
+
+{{/*
+Whether Disaster recovery TLS enabled
+*/}}
+{{- define "disasterRecovery.enableTls" -}}
+  {{- .Values.siteManager.tls.enabled -}}
+{{- end -}}
+
+{{/*
+Protocol for DRD
+*/}}
+{{- define "disasterRecovery.protocol" -}}
+{{- if eq (include "disasterRecovery.enableTls" .) "true" -}}
+  {{- "https://" -}}
+{{- else -}}
+  {{- "http://" -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Port for DRD
+*/}}
+{{- define "disasterRecovery.port" -}}
+{{- if eq (include "disasterRecovery.enableTls" .) "true" -}}
+  {{- "8443" -}}
+{{- else -}}
+  {{- "8080" -}}
+{{- end -}}
+{{- end -}}

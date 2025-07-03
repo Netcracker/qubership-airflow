@@ -2,9 +2,9 @@
 apiVersion: {{ .Values.siteManager.apiGroup }}/v3
 kind: SiteManager
 metadata:
-  name: {{ .Release.Namespace }}-site-manager
+  name: {{ include "airflow-site-manager.fullname" . }}
   labels:
-    app: {{ .Release.Namespace }}-site-manager
+    app: {{ include "airflow-site-manager.fullname" . }}
 spec:
   sitemanager:
     module: "stateful"
@@ -21,6 +21,6 @@ spec:
     timeout: {{ .Values.siteManager.timeout | default 180 }}
     allowedStandbyStateList: ["down", "degraded"]
     parameters:
-      serviceEndpoint: {{ include "airflow-site-manager.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8080/sitemanager
-      healthzEndpoint: {{ include "airflow-site-manager.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:8080/healthz
+      serviceEndpoint: {{ template "disasterRecovery.protocol" . }}{{ include "airflow-site-manager.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ template "disasterRecovery.port" . }}/sitemanager
+      healthzEndpoint: {{ template "disasterRecovery.protocol" . }}{{ include "airflow-site-manager.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ template "disasterRecovery.port" . }}/healthz
   {{ end }}

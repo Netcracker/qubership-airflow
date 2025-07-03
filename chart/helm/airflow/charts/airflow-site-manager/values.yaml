@@ -24,6 +24,8 @@ siteManager:
     install: false
   startAfter: ["pg"]
   timeout: 180
+  tls:
+    enabled: false
 
 dr:
   mode: 'standby'
