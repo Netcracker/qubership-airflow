@@ -1,8 +1,8 @@
 {
-    "threshold": 2,
-    "ignore": [
-        "**/.git/**",
-        "**/chart/**",
-        "**/docs/examples/**"
-    ]
+  "threshold": 2,
+  "ignore": [
+    "**/.git/**",
+    "**/chart/**",
+    "**/docs/examples/**"
+  ]
 }
