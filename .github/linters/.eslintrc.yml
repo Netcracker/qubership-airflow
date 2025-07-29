@@ -17,4 +17,4 @@ globals:
   module: "writable"
 
 ignorePatterns:
-  - ".github/linters/"
+  - ".github/linters/*"
