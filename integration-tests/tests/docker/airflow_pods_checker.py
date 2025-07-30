@@ -34,7 +34,7 @@ if __name__ == "__main__":
             worker_stateful = k8s_lib.get_stateful_set_replicas_count(
                 worker_service, namespace
             )
-    except:
+    except: # noqa E722
         print("Deployment or stateful set for worker is not found")
     while time.time() < timeout_start + timeout:
         try:
@@ -58,7 +58,8 @@ if __name__ == "__main__":
                 )
             )
             print(
-                f"[Check status] Scheduler deployments: {scheduler_deployments}, ready deployments: {scheduler_ready_deployments}"
+                f"[Check status] Scheduler deployments: {scheduler_deployments},"
+                f" ready deployments: {scheduler_ready_deployments}"
             )
             dag_processor_deployments = (
                 k8s_lib.get_deployment_entities_count_for_service(
@@ -71,7 +72,8 @@ if __name__ == "__main__":
                 )
             )
             print(
-                f"[Check status] DAG processor deployments: {dag_processor_deployments}, ready deployments: {dag_processor_ready_deployments}"
+                f"[Check status] DAG processor deployments: {dag_processor_deployments},"
+                f" ready deployments: {dag_processor_ready_deployments}"
             )
             if worker_deployments:
                 worker_count = k8s_lib.get_deployment_entities_count_for_service(

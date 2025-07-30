@@ -66,7 +66,7 @@ OAUTH_PROVIDERS = [
             "api_base_url": f"{PRIVATE_GATEWAY_INTERNAL_URL}/auth/realms/{REALM_ID}/protocol/openid-connect",
             "access_token_url": f"{PRIVATE_GATEWAY_INTERNAL_URL}/auth/realms/{REALM_ID}/protocol/openid-connect/token",
             "authorize_url": f"{PRIVATE_GATEWAY_EXTERNAL_URL}/auth/realms/{REALM_ID}/protocol/openid-connect/auth",
-            "logout_redirect_url": f"{PRIVATE_GATEWAY_EXTERNAL_URL}/auth/realms/{REALM_ID}/protocol/openid-connect/logout?redirect_uri={APP_URL_LOGOUT}",
+            "logout_redirect_url": f"{PRIVATE_GATEWAY_EXTERNAL_URL}/auth/realms/{REALM_ID}/protocol/openid-connect/logout?redirect_uri={APP_URL_LOGOUT}",  # noqa E501
             "request_token_url": None,
         },
     }
