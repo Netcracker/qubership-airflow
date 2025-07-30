@@ -34,7 +34,7 @@ if __name__ == "__main__":
             worker_stateful = k8s_lib.get_stateful_set_replicas_count(
                 worker_service, namespace
             )
-    except: # noqa E722
+    except:  # noqa E722
         print("Deployment or stateful set for worker is not found")
     while time.time() < timeout_start + timeout:
         try:
