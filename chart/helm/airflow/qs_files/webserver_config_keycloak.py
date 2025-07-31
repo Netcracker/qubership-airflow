@@ -10,8 +10,7 @@ from airflow.providers.fab.auth_manager.security_manager.override import (
 )
 from airflow.configuration import conf
 
-logging.basicConfig(
-    format="[%(asctime)s] [%(levelname)s] [%(filename)s] [thread=%(threadName)s] %(message)s",
+logging.basicConfig(format="[%(asctime)s] [%(levelname)s] [%(filename)s] [thread=%(threadName)s] %(message)s",
     level=logging.DEBUG,
 )
 
