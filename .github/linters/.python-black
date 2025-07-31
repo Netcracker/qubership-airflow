@@ -1,0 +1,6 @@
+[tool.black]
+force-exclude = '''
+/(
+    chart/helm/airflow/qs_files/webserver_config_keycloak\.py
+# )/
+'''
