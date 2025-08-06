@@ -12,6 +12,7 @@ serviceAccount:
 
 image: "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
 tags: "smoke"
+
 airflowHost: "airflow-api-server"
 airflowPort: 8080
 workerServiceName: "airflow-worker"
