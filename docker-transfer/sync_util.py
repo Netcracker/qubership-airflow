@@ -8,8 +8,9 @@ yaml.preserve_quotes = True
 yaml.indent(mapping=2, sequence=4, offset=2)
 
 yaml.representer.add_representer(
-    type(None), lambda self, _: self.represent_scalar('tag:yaml.org,2002:null', '~')
+    type(None), lambda self, _: self.represent_scalar("tag:yaml.org,2002:null", "~")
 )
+
 
 def parse_release_images_yaml(file_path):
     with open(file_path) as f:
@@ -22,6 +23,7 @@ def parse_release_images_yaml(file_path):
             image_name, tag = match.groups()
             image_versions[image_name] = tag
     return image_versions
+
 
 def update_node(node, image_versions):
     if isinstance(node, dict):
@@ -37,7 +39,9 @@ def update_node(node, image_versions):
                     print(f"No change needed for {repo}: already {new_tag}")
 
         if "registry" in node and "repository" in node and "tag" in node:
-            full_image = f"{node['registry'].rstrip('/')}/{node['repository'].lstrip('/')}"
+            full_image = (
+                f"{node['registry'].rstrip('/')}/{node['repository'].lstrip('/')}"
+            )
             old_tag = node["tag"]
             if full_image in image_versions:
                 new_tag = image_versions[full_image]
@@ -56,7 +60,7 @@ def update_node(node, image_versions):
                     print(f"Updating tag for {full_image}: {old_tag} → {new_tag}")
                     node["tag"] = new_tag
                 else:
-                    print(f"No change needed for {full_image}: already {new_tag}")            
+                    print(f"No change needed for {full_image}: already {new_tag}")
 
         for key, value in node.items():
             node[key] = update_node(value, image_versions)
@@ -77,6 +81,7 @@ def update_node(node, image_versions):
 
     return node
 
+
 def update_values_yaml(values_path, image_versions):
     if not os.path.exists(values_path):
         print(f"File not found: {values_path}")
@@ -90,11 +95,10 @@ def update_values_yaml(values_path, image_versions):
     with open(values_path, "w") as f:
         yaml.dump(updated, f)
 
+
 if __name__ == "__main__":
 
     releases_file = sys.argv[1]
     values_file = sys.argv[2]
     image_versions = parse_release_images_yaml(releases_file)
-    update_values_yaml(values_file, image_versions)  
-
-    
+    update_values_yaml(values_file, image_versions)
