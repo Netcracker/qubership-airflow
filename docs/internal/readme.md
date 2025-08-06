@@ -147,23 +147,24 @@ When troubleshooting task logs in airflow webUI with celery executor, it is nece
 3) Update [qs_platform_logging_config.py](/chart/helm/airflow/qs_files/qs_platform_logging_config.py) based on community logging config from https://github.com/apache/airflow/blob/main/airflow/config_templates/airflow_local_settings.py .
 4) Check that airflow platform image and airflow test DAG image can still be built without issues.
 5) Update airflow helm chart based on https://github.com/apache/airflow/tree/main/chart while keeping qubership changes.
-6) Check that airflow can still be deployed.
-7) Check that DBAAS/IDP integrations still work.
-8) Check that test DAGs in test DAG image still work.
-9) Update gitSync image based on community recommended image (`images.gitSync.tag` parameter in community helm chart).
-10) Check that gitSync still works
-11) Update community rclone image to the [latest released](https://github.com/rclone/rclone/releases): https://github.com/Netcracker/qubership-airflow/blob/main/rclone-image/Dockerfile .
-12) Check that rclone still works
-13) Update status provisioner image to the [latest released](https://github.com/Netcracker/qubership-deployment-status-provisioner/releases).
-14) Update [integration-tests base image](https://github.com/Netcracker/qubership-airflow/blob/main/integration-tests/tests/docker/Dockerfile) based on the [latest released](https://github.com/Netcracker/qubership-docker-integration-tests/releases).
-15) Update sitemanager base linux image to the latest released https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/docker/Dockerfile#L1 and https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/docker/Dockerfile#L23 .
-16) Update go version in https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/go.mod#L3 . It should be the same as in dockerfile.
-17) Update [disaster recovery daemon version](https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/go.mod#L8) to the [latest released](https://github.com/Netcracker/qubership-disaster-recovery-daemon/releases)
-18) If there are specific Golang library vulnerabilities, address them in https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/go.mod .
-19) Let GoLand/PyCharm update go.mod/go.sum files of status provisioner based on your previous changes
-20) Check that sitemanager still can be built and works
-21) Check remaining vulnerabilities and address them.
-22) Update the documentation with the new version (places for replacing can be found by the old airflow version).
+6) Update the chart_version in the pipeline .github/workflows/helm-charts-release.yaml when the chart is upgraded.
+7) Check that airflow can still be deployed.
+8) Check that DBAAS/IDP integrations still work.
+9) Check that test DAGs in test DAG image still work.
+10) Update gitSync image based on community recommended image (`images.gitSync.tag` parameter in community helm chart).
+11) Check that gitSync still works
+12) Update community rclone image to the [latest released](https://github.com/rclone/rclone/releases): https://github.com/Netcracker/qubership-airflow/blob/main/rclone-image/Dockerfile .
+13) Check that rclone still works
+14) Update status provisioner image to the [latest released](https://github.com/Netcracker/qubership-deployment-status-provisioner/releases).
+15) Update [integration-tests base image](https://github.com/Netcracker/qubership-airflow/blob/main/integration-tests/tests/docker/Dockerfile) based on the [latest released](https://github.com/Netcracker/qubership-docker-integration-tests/releases).
+16) Update sitemanager base linux image to the latest released https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/docker/Dockerfile#L1 and https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/docker/Dockerfile#L23 .
+17) Update go version in https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/go.mod#L3 . It should be the same as in dockerfile.
+18) Update [disaster recovery daemon version](https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/go.mod#L8) to the [latest released](https://github.com/Netcracker/qubership-disaster-recovery-daemon/releases)
+19) If there are specific Golang library vulnerabilities, address them in https://github.com/Netcracker/qubership-airflow/blob/main/site-manager/go.mod .
+20) Let GoLand/PyCharm update go.mod/go.sum files of status provisioner based on your previous changes
+21) Check that sitemanager still can be built and works
+22) Check remaining vulnerabilities and address them.
+23) Update the documentation with the new version (places for replacing can be found by the old airflow version).
 
 
 
