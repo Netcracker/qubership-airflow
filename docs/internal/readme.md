@@ -147,7 +147,7 @@ When troubleshooting task logs in airflow webUI with celery executor, it is nece
 3) Update [qs_platform_logging_config.py](/chart/helm/airflow/qs_files/qs_platform_logging_config.py) based on community logging config from https://github.com/apache/airflow/blob/main/airflow/config_templates/airflow_local_settings.py .
 4) Check that airflow platform image and airflow test DAG image can still be built without issues.
 5) Update airflow helm chart based on https://github.com/apache/airflow/tree/main/chart while keeping qubership changes.
-6) Update the chart_version in the pipeline .github/workflows/helm-charts-release.yaml when the chart is upgraded.
+6) Update the chart-version in the pipeline .github/workflows/helm-charts-release.yaml when the chart is upgraded.
 7) Check that airflow can still be deployed.
 8) Check that DBAAS/IDP integrations still work.
 9) Check that test DAGs in test DAG image still work.
