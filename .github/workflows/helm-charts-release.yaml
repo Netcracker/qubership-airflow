@@ -30,7 +30,9 @@ concurrency:
   cancel-in-progress: true
 env:
   sp_release: ${{ inputs.sp_release }}
-  oauth2_proxy_release: ${{ inputs.oauth2_proxy_release }}
+  statsd-exporter_release: ${{ inputs.statsd_exporter_release }}
+  git_sync_release: ${{ inputs.git_sync_release }}
+
 jobs:
   check-tag:
     runs-on: ubuntu-latest
