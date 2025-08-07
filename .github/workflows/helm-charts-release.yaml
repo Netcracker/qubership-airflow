@@ -12,7 +12,7 @@ on:
         description: 'Status Provisioner Release version'
         required: true
         type: string
-      statsd-exporter_release:
+      statsd_exporter_release:
         description: 'StatsD Exporter Release version'
         required: true
         type: string
@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: true
 env:
   sp_release: ${{ inputs.sp_release }}
-  statsd-exporter_release: ${{ inputs.statsd_exporter_release }}
+  statsd_exporter_release: ${{ inputs.statsd_exporter_release }}
   git_sync_release: ${{ inputs.git_sync_release }}
 
 jobs:
