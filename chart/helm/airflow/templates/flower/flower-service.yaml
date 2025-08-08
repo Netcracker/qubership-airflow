@@ -35,8 +35,7 @@ metadata:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: {{ .Release.Service }}
 #---Qubership custom change: Labels for Qubership release---
-    name: '{{ .Values.SERVICE_NAME }}'
-    app.kubernetes.io/name: '{{ .Values.SERVICE_NAME }}'
+    {{- include "service_only_labels" . | nindent 4 }}
 #---Qubership custom change: Labels for Qubership release---
     {{- if or (.Values.labels) (.Values.flower.labels) }}
       {{- mustMerge .Values.flower.labels .Values.labels | toYaml | nindent 4 }}
