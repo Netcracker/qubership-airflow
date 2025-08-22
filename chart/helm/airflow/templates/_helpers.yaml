@@ -346,6 +346,12 @@ extraEnv: |-
     {{- toYaml . | nindent 4 }}
     {{- end }}
   resources: {{ toYaml .Values.dags.gitSync.resources | nindent 4 }}
+  {{- if and .Values.dags.gitSync.livenessProbe (not .is_init) }}
+  livenessProbe: {{ tpl (toYaml .Values.dags.gitSync.livenessProbe) . | nindent 4 }}
+  {{- end }}
+  {{- if and .Values.dags.gitSync.readinessProbe (not .is_init) }}
+  readinessProbe: {{ tpl (toYaml .Values.dags.gitSync.readinessProbe) . | nindent 4 }}
+  {{- end }}
   volumeMounts:
   - name: dags
     mountPath: /git
@@ -663,7 +669,18 @@ server_tls_key_file = /etc/pgbouncer/server.key
   {{- end }}
 {{- end }}
 
-{{/* Helper to generate service account name respecting .Values.$section.serviceAccount flags */}}
+{{/* Helper for service account name generation */}}
+{{- define "_serviceAccountNameGen" -}}
+  {{- if .subKey }}
+    {{- $sa := get (get (get .Values .key) .subKey) "serviceAccount" -}}
+    {{- include "_serviceAccountNameGen" (merge (dict "sa" $sa "key" .key "nameSuffix" .nameSuffix) .) }}
+  {{- else }}
+    {{- $sa := get (get .Values .key) "serviceAccount" }}
+    {{- include "_serviceAccountNameGen" (merge (dict "sa" $sa "key" .key "nameSuffix" .nameSuffix) .) }}
+  {{- end }}
+{{- end }}
+
+{{/* Helper to generate service account name respecting .Values.$section.serviceAccount or .Values.$section.$subSection.serviceAccount flags */}}
 {{- define "_serviceAccountName" -}}
   {{- $sa := get (get .Values .key) "serviceAccount" }}
   {{- if $sa.create }}
@@ -717,6 +734,16 @@ server_tls_key_file = /etc/pgbouncer/server.key
 {{/* Create the name of the worker service account to use */}}
 {{- define "worker.serviceAccountName" -}}
   {{- include "_serviceAccountName" (merge (dict "key" "workers" "nameSuffix" "worker") .) -}}
+{{- end }}
+
+{{/* Create the name of the worker celery service account to use */}}
+{{- define "worker.celery.serviceAccountName" -}}
+  {{- include "_serviceAccountName" (merge (dict "key" "workers" "subKey" "celery" "nameSuffix" "worker-celery") .) -}}
+{{- end }}
+
+{{/* Create the name of the worker kubernetes service account to use */}}
+{{- define "worker.kubernetes.serviceAccountName" -}}
+  {{- include "_serviceAccountName" (merge (dict "key" "workers" "subKey" "kubernetes" "nameSuffix" "worker-kubernetes") .) -}}
 {{- end }}
 
 {{/* Create the name of the triggerer service account to use */}}

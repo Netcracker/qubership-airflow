@@ -5,5 +5,5 @@ qubership-airflow-sm: ghcr.io/netcracker/qubership-airflow-sm:main
 qubership-airflow-integration-tests: ghcr.io/netcracker/qubership-airflow-integration-tests:main
 qubership-deployment-status-provisioner: ghcr.io/netcracker/qubership-deployment-status-provisioner:main
 statsd-exporter: quay.io/prometheus/statsd-exporter:v0.28.0
-git-sync: registry.k8s.io/git-sync/git-sync:v4.3.0
+git-sync: registry.k8s.io/git-sync/git-sync:v4.4.2
 
