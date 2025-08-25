@@ -1,4 +1,4 @@
-FROM apache/airflow:slim-3.0.5-python3.11
+FROM apache/airflow:slim-3.0.6rc1-python3.11
 
 # Arguments
 ARG AIRFLOW_USER_HOME=/opt/airflow
