@@ -1941,12 +1941,14 @@ You can enable LDAP integration for Web UI using the installation parameters. Fo
 The following is an example for enabling LDAP without group mapping and with pre-created Admin user. 
 
 ```yaml
-apiServer:
+webserver:
 ...
   defaultUser:
     enabled: true
     role: Admin
     username: ldap_admin_username
+...
+apiServer:
 ...
   apiServerConfig: |
     import os
