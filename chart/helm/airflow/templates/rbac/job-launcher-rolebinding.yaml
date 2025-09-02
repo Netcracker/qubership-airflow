@@ -18,9 +18,9 @@
 */}}
 
 ################################
-## Airflow Pod Launcher Role Binding
+## Airflow Job Launcher Role Binding
 #################################
-{{- if and .Values.rbac.create .Values.allowPodLaunching }}
+{{- if and .Values.rbac.create .Values.allowJobLaunching }}
 {{- $schedulerLaunchExecutors := list "LocalExecutor" "LocalKubernetesExecutor" "KubernetesExecutor" "CeleryKubernetesExecutor" }}
 {{- $workerLaunchExecutors := list "CeleryExecutor" "LocalKubernetesExecutor" "KubernetesExecutor" "CeleryKubernetesExecutor" }}
 {{- $executors := split "," .Values.executor }}
@@ -33,9 +33,9 @@ kind: RoleBinding
 metadata:
   {{- if not .Values.multiNamespaceMode }}
   namespace: "{{ .Release.Namespace }}"
-  name: {{ include "airflow.fullname" . }}-pod-launcher-rolebinding
+  name: {{ include "airflow.fullname" . }}-job-launcher-rolebinding
   {{- else }}
-  name: {{ .Release.Namespace }}-{{ include "airflow.fullname" . }}-pod-launcher-rolebinding
+  name: {{ .Release.Namespace }}-{{ include "airflow.fullname" . }}-job-launcher-rolebinding
   {{- end }}
   labels:
     tier: airflow
@@ -52,10 +52,10 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   {{- if .Values.multiNamespaceMode }}
   kind: ClusterRole
-  name: {{ .Release.Namespace }}-{{ include "airflow.fullname" . }}-pod-launcher-role
+  name: {{ .Release.Namespace }}-{{ include "airflow.fullname" . }}-job-launcher-role
   {{- else }}
   kind: Role
-  name: {{ include "airflow.fullname" . }}-pod-launcher-role
+  name: {{ include "airflow.fullname" . }}-job-launcher-role
   {{- end }}
 subjects:
   {{- $schedulerAdded := false }}
@@ -68,22 +68,12 @@ subjects:
   {{- end }}
   {{- end }}
   {{- $workerAdded := false }}
-  {{- $workersDedicatedSA := .Values.workers.useWorkerDedicatedServiceAccounts -}}
   {{- range $executor := $executors }}
   {{- if and (has $executor $workerLaunchExecutors) (not $workerAdded) }}
   {{- $workerAdded = true }}
-  {{- if $workersDedicatedSA }}
-  - kind: ServiceAccount
-    name: {{ include "worker.celery.serviceAccountName" $ }}
-    namespace: "{{ $.Release.Namespace }}"
-  - kind: ServiceAccount
-    name: {{ include "worker.kubernetes.serviceAccountName" $ }}
-    namespace: "{{ $.Release.Namespace }}"
-  {{- else }}
   - kind: ServiceAccount
     name: {{ include "worker.serviceAccountName" $ }}
     namespace: "{{ $.Release.Namespace }}"
-  {{- end }}
   {{- end }}
   {{- end }}
 {{- end }}

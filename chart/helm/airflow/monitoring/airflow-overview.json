@@ -4674,14 +4674,14 @@
           "type": "prometheus",
           "uid": "$datasource"
         },
-        "definition": "label_values(airflow_dag_processing_last_duration{cluster=~\"$cluster\", namespace=\"$airflow_namespace\"}, dag_file)",
+        "definition": "label_values(airflow_dag_processing_last_run_seconds_ago{cluster=~\"$cluster\", namespace=\"$airflow_namespace\"}, dag_file)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "dag_file",
         "options": [],
         "query": {
-          "query": "label_values(airflow_dag_processing_last_duration{cluster=~\"$cluster\", namespace=\"$airflow_namespace\"}, dag_file)",
+          "query": "label_values(airflow_dag_processing_last_run_seconds_ago{cluster=~\"$cluster\", namespace=\"$airflow_namespace\"}, dag_file)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
