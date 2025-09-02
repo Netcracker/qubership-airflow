@@ -1,4 +1,4 @@
-apache-airflow[celery,kerberos,ldap,statsd,redis,rabbitmq,postgres,cncf.kubernetes]==3.0.6rc1
+apache-airflow[celery,kerberos,ldap,statsd,redis,rabbitmq,postgres,cncf.kubernetes]==3.0.6
 apache-airflow-providers-fab
 # Monitoring
 airflow-exporter
