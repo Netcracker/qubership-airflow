@@ -10,6 +10,7 @@ The topics covered in this section are as follows:
 * [Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible](#task-fails-with-error-and-no-logs-available-while-the-logs-for-other-successful-tasks-are-visible)
 * [Wrong Protocol Resolution in redirect_uri in IDP Integration](#wrong-protocol-resolution-in-redirect_uri-in-idp-integration)
 * [Airflow Logs are not Available for Some Attempts in Tasks with Multpile Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multpile-tries)
+* [Airflow api-server startup failed](#airflow-api-server-startup-failed)
 * [Error Codes](#error-codes)
 
 # Airflow DAG has Failed State
@@ -190,6 +191,18 @@ class CustomAuthRemoteUserView(AuthOAuthView):
 # Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries 
 
 This issue can be observed in airflow setups with multiple workers and with log stored on workers. In this case, airflow logs are present in the airflow user interface for the latest try of a task with multpile tries but are missing for some of other tries. The issue happens because airflow task log reader tries to find the logs only on the worker, where the latest attempt was executed. Hence, if previous tries were executed on different workers, the logs will not be visible in airflow user interface. The logs for the previous attemts can be found on other workers in the **/opt/airflow/logs** folder. To check on what worker previous attempts were executed, it is possible to check `Details` tab of a task and pick required Task Try on this tab. If it is critical to view the task logs in the user interface, it is recommended to configure the remote logging storage. It can be done similarly to [logging configuration for kubernetes executor workers](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor).
+
+# Airflow api-server startup failed
+
+In Airflow the webserver (called the API Server in Airflow 3.x+) can use multiple workers.
+This is determined by the environment variable `+AIRFLOW__API__WORKERS+` and is set by default to `4` in Airflow 2.x and `1` in Airflow 3.x. The reason for this difference is that Airflow uses a backend library to manage child processes and in 3.x+ this library can cause child processes to be killed if a hard-coded startup timeout is exceeded. For most cases with Airflow 3.x+ a default of `1` should be sufficient, but if you run into performance issues and would like to add more workers, you can either modulate multiple worker processes at the level of webserver, keeping the default of a single worker per api-server:
+
+```yaml
+config:
+  api:
+    workers: 1
+```
+Recommendation is to increase the api-server replicas, with each webapi-server running a single worker, as this removes the risk of running into timeouts or memory issues.
 
 # Error Codes
 
