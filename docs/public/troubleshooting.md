@@ -194,14 +194,14 @@ This issue can be observed in airflow setups with multiple workers and with log 
 
 # Airflow API Server startup failed due to insufficient resources
  
-By default, the API Server starts 4 worker processes. The Airflow uses a backend library to manage child processes and in 3.x+ this library can cause child processes to be killed if a hard-coded startup timeout is exceeded. 
+By default, the API Server starts 4 worker processes. The Airflow uses a backend library to manage child processes and this library can cause child processes to be killed if a hard-coded startup timeout is exceeded. 
 
 Possible solutions are described below.
 
 **Option 1**
 
 As suggested in the discussion https://github.com/apache/airflow/issues/52270
-for most cases in Airflow 3.x+, a default of `1` worker is sufficient.  
+for most cases in Airflow, a default of `1` worker is sufficient.  
 If you encounter performance issues, increase the number of **API Server replicas** instead of workers per pod
 
 Configuration for a single worker:
