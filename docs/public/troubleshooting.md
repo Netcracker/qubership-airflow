@@ -10,7 +10,7 @@ The topics covered in this section are as follows:
 * [Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible](#task-fails-with-error-and-no-logs-available-while-the-logs-for-other-successful-tasks-are-visible)
 * [Wrong Protocol Resolution in redirect_uri in IDP Integration](#wrong-protocol-resolution-in-redirect_uri-in-idp-integration)
 * [Airflow Logs are not Available for Some Attempts in Tasks with Multpile Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multpile-tries)
-* [Airflow API Server startup failed due to insufficient resources ](#airflow-api-server-startup-failed-due-to-insufficient-resources)
+* [Airflow API Server Startup Failed due to Insufficient Resources](#airflow-api-server-startup-failed-due-to-insufficient-resources)
 * [Error Codes](#error-codes)
 
 # Airflow DAG has Failed State
@@ -192,9 +192,9 @@ class CustomAuthRemoteUserView(AuthOAuthView):
 
 This issue can be observed in airflow setups with multiple workers and with log stored on workers. In this case, airflow logs are present in the airflow user interface for the latest try of a task with multpile tries but are missing for some of other tries. The issue happens because airflow task log reader tries to find the logs only on the worker, where the latest attempt was executed. Hence, if previous tries were executed on different workers, the logs will not be visible in airflow user interface. The logs for the previous attemts can be found on other workers in the **/opt/airflow/logs** folder. To check on what worker previous attempts were executed, it is possible to check `Details` tab of a task and pick required Task Try on this tab. If it is critical to view the task logs in the user interface, it is recommended to configure the remote logging storage. It can be done similarly to [logging configuration for kubernetes executor workers](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor).
 
-# Airflow API Server startup failed due to insufficient resources
+# Airflow API Server Startup Failed due to Insufficient Resources
  
-By default, the API Server starts 4 worker processes. The Airflow uses a backend library to manage child processes and this library can cause child processes to be killed if a hard-coded startup timeout is exceeded. 
+By default, the API Server starts 4 worker processes. Airflow uses a backend library to manage the child processes and this library can cause killing of child processes, if a hard-coded startup timeout is exceeded. 
 
 Possible solutions are described below.
 
@@ -202,7 +202,7 @@ Possible solutions are described below.
 
 As suggested in the discussion https://github.com/apache/airflow/issues/52270
 for most cases in Airflow, a default of `1` worker is sufficient.  
-If you encounter performance issues, increase the number of **API Server replicas** instead of workers per pod
+If you encounter the performance issues, increase the number of **API Server replicas** instead of workers per pod.
 
 Configuration for a single worker:
 ```yaml
@@ -210,7 +210,7 @@ config:
   api:
     workers: 1
 ```
-Minimum resources to start aAPI Server with a signle worker:
+Minimum resources to start a API Server with a single worker:
 
 ```yaml
 apiServer:
@@ -245,7 +245,7 @@ INFO:     Waiting for child process [16]
 INFO:     Child process [16] died 
 ```
 
-**It is generally recommended to increase API Server replicas, with each replica running a single worker. This avoids startup timeouts and memory issues that can occur when running multiple workers in a single pod.**
+**Note**: It is generally recommended to increase the API Server replicas, with each replica running a single worker. This avoids startup timeouts and memory issues that can occur when running multiple workers in a single pod.
 
 # Error Codes
 
