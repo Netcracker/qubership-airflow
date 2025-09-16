@@ -10,7 +10,7 @@ The topics covered in this section are as follows:
 * [Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible](#task-fails-with-error-and-no-logs-available-while-the-logs-for-other-successful-tasks-are-visible)
 * [Wrong Protocol Resolution in redirect_uri in IDP Integration](#wrong-protocol-resolution-in-redirect_uri-in-idp-integration)
 * [Airflow Logs are not Available for Some Attempts in Tasks with Multpile Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multpile-tries)
-* [Airflow api-server startup failed](#airflow-api-server-startup-failed)
+* [Airflow API Server startup failed due to insufficient resources ](#airflow-api-server-startup-failed-due-to-insufficient-resources)
 * [Error Codes](#error-codes)
 
 # Airflow DAG has Failed State
@@ -192,17 +192,61 @@ class CustomAuthRemoteUserView(AuthOAuthView):
 
 This issue can be observed in airflow setups with multiple workers and with log stored on workers. In this case, airflow logs are present in the airflow user interface for the latest try of a task with multpile tries but are missing for some of other tries. The issue happens because airflow task log reader tries to find the logs only on the worker, where the latest attempt was executed. Hence, if previous tries were executed on different workers, the logs will not be visible in airflow user interface. The logs for the previous attemts can be found on other workers in the **/opt/airflow/logs** folder. To check on what worker previous attempts were executed, it is possible to check `Details` tab of a task and pick required Task Try on this tab. If it is critical to view the task logs in the user interface, it is recommended to configure the remote logging storage. It can be done similarly to [logging configuration for kubernetes executor workers](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor).
 
-# Airflow api-server startup failed
+# Airflow API Server startup failed due to insufficient resources
 
-In Airflow the webserver (called the API Server in Airflow 3.x+) can use multiple workers.
-This is determined by the environment variable `+AIRFLOW__API__WORKERS+` and is set by default to `4` in Airflow 2.x and `1` in Airflow 3.x. The reason for this difference is that Airflow uses a backend library to manage child processes and in 3.x+ this library can cause child processes to be killed if a hard-coded startup timeout is exceeded. For most cases with Airflow 3.x+ a default of `1` should be sufficient, but if you run into performance issues and would like to add more workers, you can either modulate multiple worker processes at the level of webserver, keeping the default of a single worker per api-server:
+In Airflow, the webserver (called the API Server in Airflow 3.x+) can use multiple worker processes.  
+By default, the API Server starts 4 worker processes.This is determined by the environment variable `+AIRFLOW__API__WORKERS+` and is set by default to `4` in Airflow 2.x and `1` in Airflow 3.x. The reason for this difference is that Airflow uses a backend library to manage child processes and in 3.x+ this library can cause child processes to be killed if a hard-coded startup timeout is exceeded. 
 
+
+Possible solutions are described below.
+
+**Option 1**
+
+For most cases in Airflow 3.x+, a default of `1` worker is sufficient.  
+If you encounter performance issues, increase the number of **API Server replicas** instead of workers per pod
+
+Configuration for a single worker:
 ```yaml
 config:
   api:
     workers: 1
 ```
-Recommendation is to increase the api-server replicas, with each webapi-server running a single worker, as this removes the risk of running into timeouts or memory issues.
+Minimum resources to start aAPI Server with a signle worker:
+
+```yaml
+apiServer:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 300m
+      memory: 300Mi 
+```
+
+**Option 2**
+
+If you want to run with the default 4 workers, you must allocate more resources.
+
+Minimum resources to start the API Server with 4 workers:
+
+```yaml
+apiServer:
+  resources:
+    limits:
+      cpu: 800m
+      memory: 1500Mi
+    requests:
+      cpu: 800m
+      memory: 1500Mi 
+```
+You may still see log messages such as:
+```yaml
+INFO:     Waiting for child process [16]
+INFO:     Child process [16] died 
+```
+
+**It is generally recommended to increase API Server replicas, with each replica running a single worker. This avoids startup timeouts and memory issues that can occur when running multiple workers in a single pod.**
 
 # Error Codes
 
