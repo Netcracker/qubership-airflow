@@ -87,8 +87,11 @@ The base Airflow image in addition to Airflow (airflow:slim-3.0.2-python3.11) co
 
 Also, the image contains the following Python libraries/Airflow extras:
 
-* apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.0.2
+* apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.0.6
+* apache-airflow-providers-amazon
+* apache-airflow-providers-fab
 * airflow-exporter
+* Authlib
 
 The image contains Python script for the PG database creation.
 
