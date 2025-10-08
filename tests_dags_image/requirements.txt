@@ -14,7 +14,6 @@ apache-airflow-providers-apache-hdfs
 apache-airflow-providers-cncf-kubernetes
 apache-airflow-providers-apache-spark
 apache-airflow-providers-ssh
-apache-airflow-providers-amazon
 apache-airflow-providers-apache-kafka
 # Spark
 pyspark==3.5.5

@@ -35,6 +35,8 @@ This section provides information about the Airflow installation using [slightly
   - [Cleaning Airflow Logs](#cleaning-airflow-logs)
   - [Using Custom Pre-start Command for Pods](#using-custom-pre-start-command-for-pods)
   - [Creating Custom Secrets](#creating-custom-secrets)
+  - [Using S3 DAG Bundle](#using-s3-dag-bundle)
+      - [Validating DAG update](#validating-dag-update)
   - [Using Git Sync](#using-git-sync)
       - [Using Community GitSync Approach](#using-community-gitsync-approach)
       - [Using GitSync With Custom Mount Path](#using-gitsync-with-custom-mount-path)
@@ -85,8 +87,11 @@ The base Airflow image in addition to Airflow (airflow:slim-3.0.2-python3.11) co
 
 Also, the image contains the following Python libraries/Airflow extras:
 
-* apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.0.2
+* apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.0.6
+* apache-airflow-providers-amazon
+* apache-airflow-providers-fab
 * airflow-exporter
+* Authlib
 
 The image contains Python script for the PG database creation.
 
@@ -1509,6 +1514,64 @@ extraSecrets:
 extraEnvFrom: |
   - secretRef:
       name: '{{ .Release.Name }}-airflow-connections'
+```
+
+
+## Using S3 DAG Bundle
+
+Starting with Airflow 3, it is possible to use DAG bundles in Airflow. For more information about DAG Bundles, please refer to _[official airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/dag-bundles.html)_.
+
+Qubership Airflow image includes apache-airflow-providers-amazon provider, so it is possible to use S3 DAG bundle. To configure S3 DAG bundle in installation parameters, please refer to this example:
+```yaml
+dag_bundle_config_list_def:
+  - name: s3_dags
+    classpath: airflow.providers.amazon.aws.bundles.s3.S3DagBundle
+    kwargs:
+      aws_conn_id: s3_dags
+      bucket_name: airflowdags
+      prefix: dagfolder
+config:
+  dag_processor:
+    dag_bundle_config_list: "{{ .Values.dag_bundle_config_list_def | toJson }}"
+```
+
+If needed, it is also possible to use templating in `dag_bundle_config_list_def`, for example:
+
+```yaml
+dag_bundle_config_list_def:
+  - name: s3_dags
+    classpath: airflow.providers.amazon.aws.bundles.s3.S3DagBundle
+    kwargs:
+      aws_conn_id: s3_dags
+      bucket_name: airflowdags
+      prefix: '{{ .Release.Name }}/dagfolder'
+config:
+  dag_processor:
+    dag_bundle_config_list: '{{ tpl (.Values.dag_bundle_config_list_def | toJson) . }}'
+```
+
+**Note**: In this example, connection s3_dags can be specified using `AIRFLOW_CONN_S3_DAGS` environment variable.
+
+If needed, it is possible to specify multiple DAG bundles.
+
+To configure DAG bundle refresh interval, it is possible to use `refresh_interval` in `kwargs` field. If not specified, global parameter [refresh_interval](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#refresh-interval) will be used (can be specified using `config` field), by default it is set to 300 seconds. However, this parameter only affects DAG processor, workers update code on each task start.
+
+Currently, S3 DAG bundle does not support versioning (in order to support versioning, DAG Bundle must be able to fetch DAG code of certain version from any worker), meaning always the latest task code will be used.
+
+For more information about DAG bundle, you can also refer to the source code of [S3 DAG bundle](https://github.com/apache/airflow/blob/main/providers/amazon/src/airflow/providers/amazon/aws/bundles/s3.py) and [base DAG bundle](https://github.com/apache/airflow/blob/main/airflow-core/src/airflow/dag_processing/bundles/base.py#L231).
+
+### Validating DAG Update
+
+Sometimes, it might be required to validate that DAGs got updated, for example, in case there is some issue with S3 connection. This might be especially actual for S3 DAG bundle, since for the syncing `_sync_to_local_dir_if_changed` method from `airflow.providers.amazon.aws.hooks.s3.S3Hook` class is used. For each file, this method compares local modification date and size with S3 modification date and size and based on this, the update happens. In case, time is desynchronized between worker and S3 and file was updated in a way that it's size did not change, there's a chance that file will not get updated. There are several potential ways to ensure DAGs are updated:
+
+* Pod restarts. Upon pod restart, old DAG code disappears and DAG Bundle class downloads the latest DAG code during initialization. In case, if you are not worried about `_sync_to_local_dir_if_changed` method issue described above, it is enough to restart only DAG processor pods, since workers update DAG code each restart.
+* Checksum calculation using custom DAG. The drawback of this approach is that it will only check that DAGs can be updated in general (and it will be checked only on the worker pod where the DAG was run). The checksum can be put in the XCOM -this way it will be accessible through airflow API.
+* Checksum calculation using kubectl exec. With kubectl exec, it is possible to calculate checksum on any pod.
+
+**Note**: As an example for checksum calculation in airflow dag-processor/worker containers for dag bundle with name `s3_dags`, it is possible to use the following command:
+
+```bash
+find /tmp/airflow/dag_bundles/s3_dags -type f -name "*.yaml" -or -name "*.py" -or -name "*.json" -or -name "*.csv" -or -name "*.zip" -or -name "*.sql" | sort -u | xargs cat | md5sum | cut -d ' ' -f 1
 ```
 
 ## Using Git Sync
