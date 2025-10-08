@@ -1535,7 +1535,7 @@ config:
     dag_bundle_config_list: "{{ .Values.dag_bundle_config_list_def | toJson }}"
 ```
 
-It is also possible to use templating in `dag_bundle_config_list_def`, for example:
+If needed, it is also possible to use templating in `dag_bundle_config_list_def`, for example:
 
 ```yaml
 dag_bundle_config_list_def:
