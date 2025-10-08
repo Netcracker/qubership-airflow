@@ -1535,6 +1535,21 @@ config:
     dag_bundle_config_list: "{{ .Values.dag_bundle_config_list_def | toJson }}"
 ```
 
+It is also possible to use templating in `dag_bundle_config_list_def`, for example:
+
+```yaml
+dag_bundle_config_list_def:
+  - name: s3_dags
+    classpath: airflow.providers.amazon.aws.bundles.s3.S3DagBundle
+    kwargs:
+      aws_conn_id: s3_dags
+      bucket_name: airflowdags
+      prefix: {{ .Release.Name }}/dagfolder
+config:
+  dag_processor:
+    dag_bundle_config_list: '{{ tpl (.Values.dag_bundle_config_list_def | toJson) . }}'
+```
+
 Note, that in this example connection s3_dags can be specified using `AIRFLOW_CONN_S3_DAGS` environment variable.
 
 If needed, it is possible to specify multiple DAG bundles.
