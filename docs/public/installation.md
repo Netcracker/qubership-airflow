@@ -1544,7 +1544,7 @@ dag_bundle_config_list_def:
     kwargs:
       aws_conn_id: s3_dags
       bucket_name: airflowdags
-      prefix: {{ .Release.Name }}/dagfolder
+      prefix: '{{ .Release.Name }}/dagfolder'
 config:
   dag_processor:
     dag_bundle_config_list: '{{ tpl (.Values.dag_bundle_config_list_def | toJson) . }}'
