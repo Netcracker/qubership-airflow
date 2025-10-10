@@ -17,7 +17,7 @@ nameOverride: ""
 fullnameOverride: "airflow-site-manager"
 
 siteManager:
-  apiGroup: qubership.com
+  apiGroup: netcracker.com
   clusterRoleBinding:
     install: true
   cr:
