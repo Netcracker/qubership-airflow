@@ -3294,7 +3294,7 @@ certManagerInegration:
 
 statusProvisioner:
   enabled: true
-  dockerImage: ghcr.io/netcracker/qubership-deployment-status-provisioner:0.1.4
+  dockerImage: ghcr.io/netcracker/qubership-deployment-status-provisioner:0.2.2
   lifetimeAfterCompletion: 600
   podReadinessTimeout: 300
   integrationTestsTimeout: 300
