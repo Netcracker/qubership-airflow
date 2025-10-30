@@ -21,6 +21,7 @@
 ## Airflow Pgbouncer Ingress
 #################################
 {{- if and .Values.pgbouncer.enabled .Values.ingress.pgbouncer.enabled }}
+{{- $fullname := (include "airflow.fullname" .) }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -66,7 +67,7 @@ spec:
         paths:
           - backend:
               service:
-                name: {{ $.Release.Name }}-pgbouncer
+                name: {{ $fullname }}-pgbouncer
                 port:
                   name: pgb-metrics
             {{- if $.Values.ingress.pgbouncer.path }}
