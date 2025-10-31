@@ -82,10 +82,10 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
             "format": LOG_FORMAT,
             "class": LOG_FORMATTER_CLASS,
         },
-        "airflow_stdout_dag_parsing": {
-            "format": "[dag_processor_manager.log]" + LOG_FORMAT,
-            "class": LOG_FORMATTER_CLASS
-        },
+        # "airflow_stdout_dag_parsing": {
+        #     "format": "[dag_processor_manager.log]" + LOG_FORMAT,
+        #     "class": LOG_FORMATTER_CLASS
+        # },
         "source_processor": {
             "format": DAG_PROCESSOR_LOG_FORMAT,
             "class": LOG_FORMATTER_CLASS,
