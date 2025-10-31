@@ -51,12 +51,6 @@ LOG_FORMATTER_CLASS: str = conf.get_mandatory_value(
 # Separate log level for the audit logs to not affect other loggers
 AUDIT_LOG_LEVEL = conf.get("logging", "AUDIT_LOG_LEVEL").upper()
 
-COLORED_LOG_FORMAT: str = conf.get_mandatory_value("logging", "COLORED_LOG_FORMAT")
-
-COLORED_LOG: bool = conf.getboolean("logging", "COLORED_CONSOLE_LOG")
-
-COLORED_FORMATTER_CLASS: str = conf.get_mandatory_value("logging", "COLORED_FORMATTER_CLASS")
-
 DAG_PROCESSOR_LOG_TARGET: str = conf.get_mandatory_value("logging", "DAG_PROCESSOR_LOG_TARGET")
 QS_LOGGING_TYPE: str = conf.get("logging", "QS_LOGGING_TYPE")
 QS_PROCESSOR_LOGGING_LEVEL: str = conf.get("logging", "QS_PROCESSOR_LOGGING_LEVEL", fallback=LOG_LEVEL).upper()
@@ -92,44 +86,42 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
             "format": "[dag_processor_manager.log]" + LOG_FORMAT,
             "class": LOG_FORMATTER_CLASS
         },
-        "airflow_coloured": {
-            "format": COLORED_LOG_FORMAT if COLORED_LOG else LOG_FORMAT,
-            "class": COLORED_FORMATTER_CLASS if COLORED_LOG else LOG_FORMATTER_CLASS,
-        },
         "source_processor": {
             "format": DAG_PROCESSOR_LOG_FORMAT,
             "class": LOG_FORMATTER_CLASS,
         },
     },
     "filters": {
-        "mask_secrets": {
-            "()": "airflow.sdk.execution_time.secrets_masker.SecretsMasker",
+        "mask_secrets_core": {
+            "()": "airflow._shared.secrets_masker._secrets_masker",
         },
     },
     "handlers": {
         "audit": {
-            "class": "airflow.utils.log.logging_mixin.RedirectStdHandler",
+            "class": "logging.StreamHandler",
+            # "class": "airflow.utils.log.logging_mixin.RedirectStdHandler",
             "formatter": "airflow-audit",
             "stream": "sys.stdout",
-            "filters": ["mask_secrets"]
+            "filters": ["mask_secrets_core"]
         },
         "console": {
-            "class": "airflow.utils.log.logging_mixin.RedirectStdHandler",
-            "formatter": "airflow_coloured",
+            "class": "logging.StreamHandler",
+            # "class": "airflow.utils.log.logging_mixin.RedirectStdHandler",
+            "formatter": "airflow",
             "stream": "sys.stdout",
-            "filters": ["mask_secrets"],
+            "filters": ["mask_secrets_core"],
         },
         #STOPPED
         "task": {
             "class": "airflow.utils.log.file_task_handler.FileTaskHandler",
             "formatter": "airflow",
             "base_log_folder": BASE_LOG_FOLDER,
-            "filters": ["mask_secrets"],
+            "filters": ["mask_secrets_core"],
         },
         "stdout_task": {
             "class": "airflow.utils.log.task_handler_with_custom_formatter.TaskHandlerWithCustomFormatter",
             "formatter": "airflow",
-            "filters": ["mask_secrets"],
+            "filters": ["mask_secrets_core"],
             "stream": "ext://sys.stdout",
         },
     },
@@ -139,7 +131,7 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
             "level": LOG_LEVEL,
             # Set to true here (and reset via set_context) so that if no file is configured we still get logs!
             "propagate": True,
-            "filters": ["mask_secrets"],
+            "filters": ["mask_secrets_core"],
         },
         "flask_appbuilder": {
             "handlers": ["console"],
@@ -170,7 +162,7 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
     "root": {
         "handlers": ["console"],
         "level": LOG_LEVEL,
-        "filters": ["mask_secrets"],
+        "filters": ["mask_secrets_core"],
     },
 }
 
