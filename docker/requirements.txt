@@ -2,5 +2,4 @@ apache-airflow[celery,kerberos,ldap,statsd,redis,rabbitmq,postgres,cncf.kubernet
 apache-airflow-providers-amazon
 apache-airflow-providers-fab
 # Monitoring
-airflow-exporter
 Authlib
