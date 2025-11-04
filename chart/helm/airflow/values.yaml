@@ -79,13 +79,13 @@ airflowHome: /opt/airflow
 defaultAirflowRepository: apache/airflow
 
 # Default airflow tag to deploy
-defaultAirflowTag: "3.0.5"
+defaultAirflowTag: "3.1.1"
 
 # Default airflow digest. If specified, it takes precedence over tag
 defaultAirflowDigest: ~
 
 # Airflow version (Used to make some decisions based on Airflow Version being deployed)
-airflowVersion: "3.0.5"
+airflowVersion: "3.1.1"
 
 # Images
 images:
@@ -135,6 +135,9 @@ images:
   gitSync:
     repository: registry.k8s.io/git-sync/git-sync
     tag: v4.4.2
+    # NOTE:
+    # - If the tag is "v3.x.x" or any version < 4.0.0 - use GIT_SYNC_* env variables
+    # - If the tag is "v4.x.x" or "latest" - use GITSYNC_* env variables
     pullPolicy: IfNotPresent
 
 # Select certain nodes for airflow pods.
@@ -753,7 +756,9 @@ workers:
       {{- if contains "CeleryKubernetesExecutor" .Values.executor }}
       AND queue != '{{ .Values.config.celery_kubernetes_executor.kubernetes_queue }}'
       {{- else if contains "KubernetesExecutor" .Values.executor }}
-      AND executor != 'KubernetesExecutor'
+      AND executor IS DISTINCT FROM 'KubernetesExecutor'
+      {{- else if contains "airflow.providers.edge3.executors.EdgeExecutor" .Values.executor }}
+      AND executor IS DISTINCT FROM 'EdgeExecutor'
       {{- end }}
 
     # Weather to use PGBouncer to connect to the database or not when it is enabled
@@ -2878,9 +2883,13 @@ cleanup:
   successfulJobsHistoryLimit: ~
 
 # Configuration for postgresql subchart
-# Not recommended for production
+# Uses bitnamilegacy images to avoid Bitnami licensing restrictions
+# Not recommended for production - use external database instead
 postgresql:
   enabled: false
+  image:
+    repository: postgres
+    tag: "13"
   auth:
     enablePostgresUser: true
     postgresPassword: postgres
@@ -3081,7 +3090,7 @@ dags:
     # sshKeySecret: airflow-ssh-secret
     #
     # Or set sshKeySecret with your key
-    # sshKey: |-
+    # sshKey: |
     #   -----BEGIN {OPENSSH PRIVATE KEY}-----
     #   ...
     #   -----END {OPENSSH PRIVATE KEY}-----
@@ -3285,7 +3294,7 @@ certManagerInegration:
 
 statusProvisioner:
   enabled: true
-  dockerImage: ghcr.io/netcracker/qubership-deployment-status-provisioner:0.1.4
+  dockerImage: ghcr.io/netcracker/qubership-deployment-status-provisioner:0.2.2
   lifetimeAfterCompletion: 600
   podReadinessTimeout: 300
   integrationTestsTimeout: 300

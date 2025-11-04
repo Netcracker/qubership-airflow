@@ -1,4 +1,4 @@
-FROM golang:1.24.6-alpine3.22 as builder
+FROM golang:1.24.9-alpine3.22 as builder
 
 ENV GOSUMDB=off
 
@@ -20,7 +20,7 @@ RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o airflow-site-manager main.go
 
 
-FROM alpine:3.22.1
+FROM alpine:3.22.2
 
 ENV USER_UID=1008 \
     USER_NAME=airflow-site-manager
