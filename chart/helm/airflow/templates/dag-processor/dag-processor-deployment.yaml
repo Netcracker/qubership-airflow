@@ -76,8 +76,8 @@ spec:
         tier: airflow
         component: dag-processor
         release: {{ .Release.Name }}
-        {{- with .Values.labels }}
-          {{- toYaml . | nindent 8 }}
+        {{- if or .Values.labels .Values.dagProcessor.labels }}
+          {{- mustMerge .Values.dagProcessor.labels .Values.labels | toYaml | nindent 8 }}
         {{- end }}
 #---Qubership custom change: Labels for Qubership release---
         {{- include "deployment_only_labels_dag_processor" . | nindent 8 }}
