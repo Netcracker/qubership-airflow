@@ -65,7 +65,7 @@ Disable and Standby modes are the same for Airflow.
 
 DAGs run only on an active site. When the Airflow mode changes to standby, the DAGs stop. The tasks' queue gets cleaned up as well.
 On a new active site, the DAGs run according to the schedule.   
-If retry arguments are set for the DAG, the tasks are run on a new active site later. For more information about the retry parameters, refer to the _Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/3.1.2/_api/airflow/models/baseoperator/index.html](https://airflow.apache.org/docs/apache-airflow/3.1.2/_api/airflow/models/baseoperator/index.html).
+If retry arguments are set for the DAG, the tasks are run on a new active site later. For more information about the retry parameters, refer to the _Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/3.1.3/_api/airflow/models/baseoperator/index.html](https://airflow.apache.org/docs/apache-airflow/3.1.3/_api/airflow/models/baseoperator/index.html).
 
 ```python
 ... 
