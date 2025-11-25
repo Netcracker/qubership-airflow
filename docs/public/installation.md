@@ -46,7 +46,10 @@ This section provides information about the Airflow installation using [slightly
       - [Using Downloadable ZIP Archive with DAGs](#using-downloadable-zip-archive-with-dags)
   - [Kerberos Support and HostAliases for Workers](#kerberos-support-and-hostaliases-for-workers)
   - [LDAP Support for Web UI](#ldap-support-for-web-ui)
-  - [Keycloak Web UI Integration](#keycloak-web-ui-integration)
+  - [Keycloak User Interface Integration](#keycloak-user-interface-integration)
+    - [Airflow FAB provider integration](#airflow-fab-provider-integration)
+    - [Airflow Keycloak Provider integration](#airflow-keycloak-provider-integration)
+    - [Custom QS Modified Airflow Keycloak Provider integration](#custom-qs-modified-airflow-keycloak-provider-integration)
     - [Keycloak With TLS](#keycloak-with-tls)
   - [Enabling HTTPS for Airflow Ingresses](#enabling-https-for-airflow-ingresses)
       - [Using Cert-manager to Get Certificate for Ingress](#using-cert-manager-to-get-certificate-for-ingress)
@@ -2118,7 +2121,11 @@ apiServer:
 
 **Note**: Currently, the flower pod does not support LDAP integration.
 
-## Keycloak Web UI Integration
+## Keycloak User Interface Integration
+
+Qubership platform supports 3 different possible ways to integrate airflow UI with keycloak. As with LDAP, all these integrations can be enabled using installation parameters.The integrations are presented below.
+
+### Airflow FAB provider integration
 
 **Note:** This section assumes that FAB auth manager is used. Airflow FAB provider is present in the image by default. To enable FAB auth manager in the config, it is necessary to set:
 
@@ -2128,9 +2135,11 @@ config:
     auth_manager: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
 ```
 
-As with LDAP, it is possible to enable Keycloak Web UI integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.3/security/](https://airflow.apache.org/docs/apache-airflow/3.1.3/security/), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter. 
+**Note** FAB provider keyckoak integration does not support authentication for airflow API.
 
-The qubership chart distribution includes a [webserver_config.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py) example file that can be used for the integration with IDP.
+For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.2/security/](https://airflow.apache.org/docs/apache-airflow/3.1.2/security/), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter. 
+
+The qubership chart distribution includes a [webserver_config.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py) example file that can be used for the integration with keycloak IDP. This file requires keycloak IDP to support SCIM, but it can be modified to avoid SCIM reques.
 
 This file can be loaded in the `apiServer.apiServerConfig` parameter, for example:
 
@@ -2154,9 +2163,67 @@ Also, it is necessary to specify the following environment variables for Airflow
 * `AIRFLOW_KEYCLOAK_ADMIN_ROLES`- A comma separated list of roles in Keycloak that is mapped to the Airflow admin role. If the user in Keycloak does not have this role, the users in Airflow will have a `viewer` role.
 * `APP_URL_LOGOUT`- Optional variable. Can be used to specify where the user will be redirected after logout from airflow. By default, the user will be redirected to airflow login page.
 
+### Airflow Keycloak Provider integration
+
+This integration uses [airflow keycloak provider](https://airflow.apache.org/docs/apache-airflow-providers-keycloak/stable/index.html) without any changes. This integration requires keycloak client to have keycloak OpenID Connect client to have authorization enabled and authorization resources/scopes/permissions configured. If there's access to keycloak admin credentials/client, it is possible to create resources/scopes/permissions using [airflow CLI](https://airflow.apache.org/docs/apache-airflow-providers-keycloak/stable/cli-refs.html). Alternatively, in case of no keycloak admin access, it is possible to configure permissions on local test keycloak instance, export them and import on the required keycloak using UI.
+
+**Note**: If keycloak client does not have a secret, it is still necessary to set `client_secret` parameter, but it can be set to any string.
+
+To specify keycloak auth manager it is needed to specify the following:
+
+```yaml
+config:
+  core:
+    auth_manager: airflow.providers.keycloak.auth_manager.keycloak_auth_manager.KeycloakAuthManager
+apiServer:
+  defaultUser:
+    enabled: false # Keycloak auth manager does not support custom users
+```
+
+Also the following environment variables are required:
+
+```yaml
+  - name: AIRFLOW__KEYCLOAK_AUTH_MANAGER__CLIENT_ID
+    value: KEYCLOAK_CLIENT
+  - name: AIRFLOW__KEYCLOAK_AUTH_MANAGER__CLIENT_SECRET
+    value: KEYCLOAK_CLIENT_SECRET
+  - name: AIRFLOW__KEYCLOAK_AUTH_MANAGER__REALM
+    value: KEYCLOAK_REALM
+  - name: AIRFLOW__KEYCLOAK_AUTH_MANAGER__SERVER_URL
+    value: http://keycloak-address/auth/
+```
+
+With this integration API is supported. It is possible to obtain API token with the following request:
+```bash
+$ curl -k -X 'POST' \
+>     "https://airflow.ui.addrss.com/auth/token" \
+>     -H 'Content-Type: application/json' \
+>     -d '{
+>     "username": "airflow_keycloak_user_name",
+>     "password": "airflow_keycloak_password"
+>     }'
+```
+
+### Custom QS Modified Airflow Keycloak Provider integration
+
+Qubership platform provides custom authManager that is based on KeycloakAuthManager from airflow keycloak provider. This auth manager provides permission based on keycloak role instead of resources configured in keycloak. If user role is among the ones specified as a comma-separated list in AIRFLOW_KEYCLOAK_ADMIN_ROLES environment variable, admin permissions will be granted. Otherwise, no permissions will be granted. In other ways these authManager works exactly the same as KeycloakAuthManager from airflow keycloak provider, so the configuration options are also similar. To use Qubership platform custom authManager it is necessary to specify the following:
+
+```yaml
+config:
+  core:
+    auth_manager: qskeycloakintegration.qs_keycloak_integration.QSRBACKeycloakAuthManager
+```
+
+And the following additional environment variable must be added:
+
+```yaml
+  - name: AIRFLOW_KEYCLOAK_ADMIN_ROLES
+    value: airflow_test_role
+```
+
 ### Keycloak With TLS
 
-It is possible to use an https address for `PRIVATE_GATEWAY_EXTERNAL_URL`. If the custom certificate (including the ones from cert-manager) or self-signed certificate are used, it is possible to mount these certificates into the pod and to set `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` environment varibles to point to this file, for example:
+It is possible to use an https address for all keycloak integrations specified above. If the custom certificate (including the ones from cert-manager) or self-signed certificate are used, it is possible to mount these certificates into the pod and to set `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` environment varibles to point to this file, for example:
 
 ```yaml
 extraEnv: >-
