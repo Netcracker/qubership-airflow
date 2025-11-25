@@ -2137,7 +2137,7 @@ config:
 
 **Note** FAB provider keyckoak integration does not support authentication for airflow API.
 
-For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.2/security/](https://airflow.apache.org/docs/apache-airflow/3.1.2/security/), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter. 
+For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.3/security/](https://airflow.apache.org/docs/apache-airflow/3.1.3/security/), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter. 
 
 The qubership chart distribution includes a [webserver_config.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py) example file that can be used for the integration with keycloak IDP. This file requires keycloak IDP to support SCIM, but it can be modified to avoid SCIM reques.
 
