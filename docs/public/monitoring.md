@@ -1,8 +1,8 @@
-This section provides information about the dashboards and metrics for Airflow Service.
+This section provides information about the dashboards and metrics for Airflow service.
 
 # Airflow Overview Dashboard
 
-The Airflow Overview dashboard provides information about Airflow status, pods, Airflow scheduler, executor, DAG parser, DAGs, and tasks. This dashboard is based both on the [third party Airflow plugin](https://github.com/epoch8/airflow-exporter) and on the [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.1.2/logging-monitoring/metrics.html) plus [statsd_exporter](https://github.com/prometheus/statsd_exporter) combination. Also, the dashboard uses Kubernetes metrics.
+The Airflow Overview dashboard provides information about Airflow status, pods, Airflow scheduler, executor, DAG parser, DAGs, and tasks. This dashboard is based both on the [third party Airflow plugin](https://github.com/epoch8/airflow-exporter) and on the [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.1.3/logging-monitoring/metrics.html) plus [statsd_exporter](https://github.com/prometheus/statsd_exporter) combination. Also, the dashboard uses Kubernetes metrics.
 
 ## Dashboard Variables
 
@@ -55,23 +55,23 @@ This section is based on the official Airflow metrics and shows metrics related 
 
 This section is based on the official Airflow metrics and shows metrics related to DAG files parsing. The following panels are available:
 
-* `DAGbag size` - shows Airflow DAG bag size.
-* `DAG import errors` - shows the number of dag import errors.
-* `DAG processing total parse time` - shows seconds taken to scan and import all DAG files once.
-* `DAG processing last run seconds ago` - shows time in seconds since last DAG processing.
-* `Average dag processing duration` - shows milliseconds taken to load the given DAG file.
+* `DAGbag size` - Shows Airflow DAG bag size.
+* `DAG import errors` - Shows the number of dag import errors.
+* `DAG processing total parse time` - Shows seconds taken to scan and import all DAG files once.
+* `DAG processing last run seconds ago` - Shows time in seconds since last DAG processing.
+* `Average dag processing duration` - Shows milliseconds taken to load the given DAG file.
 
-## Stasd DAG and Task execution metrics
+## Stasd DAG and Task Execution Metrics
 
 This section is based on the official Airflow metrics and shows metrics related to DAG and task execution. The following panels are available:
 
-* `Airflow Schedule Delay` - shows the seconds of delay between the scheduled DagRun start date and the actual DagRun start date.
-* `Airflow latest DAG run duration` - shows latest DAGrun duration in seconds.
-* `Airflow latest run task duration` - shows latest task run duration in seconds.
-* `Number of started and finished tasks` - shows the number of started and finished tasks.
-* `Failed tasks` - shows number of failed tasks. Note that other metrics in this panel currently do not work correctly.
-* `Task max CPU usage percent` - shows task max CPU usage percent for the latest task run.
-* `Task max memory usage percent` - shows task max memory usage percent for the latest task run.
+* `Airflow Schedule Delay` - Shows the seconds of delay between the scheduled DagRun start date and the actual DagRun start date.
+* `Airflow latest DAG run duration` - Shows latest DAGrun duration in seconds.
+* `Airflow latest run task duration` - Shows latest task run duration in seconds.
+* `Number of started and finished tasks` - Shows the number of started and finished tasks.
+* `Failed tasks` - Shows number of failed tasks. Note that other metrics in this panel currently do not work correctly.
+* `Task max CPU usage percent` - Shows task max CPU usage percent for the latest task run.
+* `Task max memory usage percent` - Shows task max memory usage percent for the latest task run.
 
 ## Airflow Site Manager Overview
 

@@ -1,4 +1,4 @@
-FROM apache/airflow:slim-3.1.2-python3.11
+FROM apache/airflow:slim-3.1.3-python3.11
 
 # Arguments
 ARG AIRFLOW_USER_HOME=/opt/airflow
@@ -6,6 +6,7 @@ ARG AIRFLOW_USER_HOME=/opt/airflow
 USER root
 
 COPY docker/dbaasintegrationpackage /dbaasintegrationpackage
+COPY docker/keycloakrbacintegrationpackage /keycloakrbacintegrationpackage
 
 RUN rm -rf /etc/apt/sources.list.d/mysql.list \
     && rm -rf /etc/apt/sources.list.d/mssql-release.list \
@@ -18,7 +19,8 @@ RUN rm -rf /etc/apt/sources.list.d/mysql.list \
                        libkrb5-dev \
                        libsasl2-dev libldap2-dev libssl-dev \
     && apt-get clean \
-    && chmod 777 -R /dbaasintegrationpackage
+    && chmod 777 -R /dbaasintegrationpackage \
+    && chmod 777 -R /keycloakrbacintegrationpackage
 
 
 #Copy requirements folder
@@ -32,7 +34,9 @@ USER airflow
 RUN python3 -m pip install -r ${AIRFLOW_USER_HOME}/requirements.txt \
     && cd /dbaasintegrationpackage \
     && python3 -m pip install . \
-    && rm -r /dbaasintegrationpackage/*
-
+    && rm -r /dbaasintegrationpackage/* \
+    && cd /keycloakrbacintegrationpackage \
+    && python3 -m pip install . \
+    && rm -r /keycloakrbacintegrationpackage/*
 
 

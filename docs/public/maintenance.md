@@ -32,20 +32,20 @@ Kerberos keytab can be updated via deploy job too using the `kerberos.keytabBase
 
 The connections and variables created by the chart and stored as environment variables can be updated via chart by setting new values for the respective environments in the chart.
 
-The connections and variables created through the UI (User Interface) or pod terminals must be updated through the UI or pod terminals. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.2/howto/connection.html](https://airflow.apache.org/docs/apache-airflow/3.1.2/howto/connection.html).
+The connections and variables created through the UI (User Interface) or pod terminals must be updated through the UI or pod terminals. For more information, refer to the _Offcial Documentation_ at [https://airflow.apache.org/docs/apache-airflow/3.1.3/howto/connection.html](https://airflow.apache.org/docs/apache-airflow/3.1.3/howto/connection.html).
 
 # Web User Interface Role Management
 
 When RBAC is enabled, Airflow provides the following default roles for web UI users: `Admin`, `User`, `Op`, `Viewer`, and `Public`.
 
-It is also possible to create custom roles if required. For more information about roles and permissions, refer to [https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/index.html#](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/index.html#) and [https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html).
+It is also possible to create custom roles if required. For more information about roles and permissions, refer to the _Offcial Documentation_ at [https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/index.html#](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/index.html#) and [https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/auth-manager/index.html).
 
 ## Add Roles for Users
 
 To add roles for a user via UI, you must login to Airflow as an admin user.
 Navigate to **Security > Users > Edit Record**. Enter the role in **Role** text box.
 
-**Note**: It is possible to add a role during user creation. For more information, refer to [https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/cli-ref.html](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/cli-ref.html].
+**Note**: It is possible to add a role during user creation. For more information, refer to the _Offcial Documentation_ at [https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/cli-ref.html](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/cli-ref.html].
 
 ## Roles with LDAP
 
