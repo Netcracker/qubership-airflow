@@ -32,28 +32,6 @@ spec:
           service: {{ .Release.Name }}
           severity: none
 {{ end }}
-{{- if .Values.databaseCleanup.enabled }}
-      - alert: There are failed jobs in airflow namespace
-        annotations:
-          description: "There are failed jobs in airflow namespace"
-          summary: Some jobs are in failed status
-        expr: sum(kube_job_status_failed{exported_namespace="{{ .Release.Namespace }}"}) > 0
-        for: "1m"
-        labels:
-          severity: warning
-          namespace: {{ .Release.Namespace }}
-          service: {{ .Release.Name }}
-      - alert: Cleanup database cronjob takes too long to complete
-        annotations:
-          description: "Cleanup database cronjob takes too long to complete > 1h"
-          summary: Cleanup database cronjob takes too long to complete > 1h
-        expr: time() - kube_cronjob_next_schedule_time{exported_namespace="{{ .Release.Namespace }}", cronjob="{{ include "airflow.fullname" . }}-database-cleanup"} > 3600
-        for: "1m"
-        labels:
-          severity: warning
-          namespace: {{ .Release.Namespace }}
-          service: {{ .Release.Name }}
-{{- end }}
 {{- if .Values.prometheusRule.dagAlerts.enabled }}
     - name: {{ .Release.Namespace }}-{{ .Release.Name }}-general.dagRules
       rules:
@@ -95,6 +73,28 @@ spec:
   {{- if .Values.prometheusRule.kubeAlerts }}
     - name: {{ .Release.Namespace }}-{{ .Release.Name }}-general.kubeRules
       rules:
+{{- if .Values.databaseCleanup.enabled }}
+      - alert: There are failed jobs in airflow namespace
+        annotations:
+          description: "There are failed jobs in airflow namespace"
+          summary: Some jobs are in failed status
+        expr: sum(kube_job_status_failed{exported_namespace="{{ .Release.Namespace }}"}) > 0
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+      - alert: Cleanup database cronjob takes too long to complete
+        annotations:
+          description: "Cleanup database cronjob takes too long to complete > 1h"
+          summary: Cleanup database cronjob takes too long to complete > 1h
+        expr: time() - kube_cronjob_next_schedule_time{exported_namespace="{{ .Release.Namespace }}", cronjob="{{ include "airflow.fullname" . }}-database-cleanup"} > 3600
+        for: "1m"
+        labels:
+          severity: warning
+          namespace: {{ .Release.Namespace }}
+          service: {{ .Release.Name }}
+{{- end }}
       - alert: SchedulerError
         annotations:
           description: "Scheduler is unavailable for some reason"
