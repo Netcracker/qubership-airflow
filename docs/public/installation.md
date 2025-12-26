@@ -189,7 +189,7 @@ subjects:
 
 * If the [Custom Preinstall Job](#custom-preinstall-job) is not used to create a PG database, then create the database in the External PostgreSQL server manually.
 
-**Warning**: When you set the `webserver.defaultUser.enabled` parameter, the `airflow users create` command runs at the start of the Airflow pod. Ensure that the PostgreSQL database you are using does not have any conflicting records. For example, another user with the same email ID. It is possible to delete or recreate the user manually after the installation using the Airflow CLI. For more information, refer to [https://airflow.apache.org/docs/stable/cli-ref](https://airflow.apache.org/docs/stable/cli-ref).
+**Warning**: When you set the `createUserJob.defaultUser.enabled` parameter, the `airflow users create` command runs at the start of the Airflow pod. Ensure that the PostgreSQL database you are using does not have any conflicting records. For example, another user with the same email ID. It is possible to delete or recreate the user manually after the installation using the Airflow CLI. For more information, refer to [https://airflow.apache.org/docs/stable/cli-ref](https://airflow.apache.org/docs/stable/cli-ref).
 
 ### Restricted Deploy User with Site Manager
 
@@ -2010,7 +2010,7 @@ The following is an example for enabling LDAP without group mapping and with pre
 ```yaml
 webserver:
 ...
-  defaultUser:
+  createUserJob:
     enabled: true
     role: Admin
     username: ldap_admin_username
@@ -2038,14 +2038,14 @@ apiServer:
 ...
 ```
 
-In the example above, the `webserver.defaultUser.*` are required for providing `Admin` role to the `ldap_admin_username` user. This user must also be present in LDAP for successful login. 
+In the example above, the `createUserJob.defaultUser.*` are required for providing `Admin` role to the `ldap_admin_username` user. This user must also be present in LDAP for successful login. 
 
 The following is an example for enabling LDAP with group mapping:
 
 ```yaml
 webserver:
 ...
-  defaultUser:
+  createUserJob:
     enabled: false
 apiServer:
 ...
@@ -2089,7 +2089,7 @@ extraEnvFrom: |
 ...
 webserver:
 ...
-  defaultUser:
+  createUserJob:
     enabled: false
 apiServer:
 ...
@@ -2145,7 +2145,7 @@ This file can be loaded in the `apiServer.apiServerConfig` parameter, for exampl
 
 ```yaml
 apiServer:
-  defaultUser:
+  createUserJob:
     enabled: false
   apiServerConfig: |-
     {{ .Files.Get "qs_files/webserver_config_keycloak.py" }}
@@ -2176,7 +2176,7 @@ config:
   core:
     auth_manager: airflow.providers.keycloak.auth_manager.keycloak_auth_manager.KeycloakAuthManager
 apiServer:
-  defaultUser:
+  createUserJob:
     enabled: false # Keycloak auth manager does not support custom users
 ```
 

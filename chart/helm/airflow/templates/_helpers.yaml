@@ -207,7 +207,7 @@ extraEnv: |-
     value: "https://{{ tpl .name $ }}"
   {{- end }}
 */}}
-{{- if not .Values.webserver.defaultUser.enabled }}
+{{- if not .Values.createUserJob.defaultUser.enabled }}
 {{ if .Values.ingress.web.hosts }}
   {{- with (first .Values.ingress.web.hosts) }}
       {{- $web_ingress_hostname := . -}}
