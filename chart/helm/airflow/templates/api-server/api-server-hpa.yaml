@@ -18,29 +18,32 @@
 */}}
 
 ################################
-## Airflow Scheduler ServiceAccount
+## Airflow Api-Server HPA
 #################################
-{{- if and .Values.scheduler.enabled .Values.scheduler.serviceAccount.create }}
-apiVersion: v1
-kind: ServiceAccount
-{{- if and (include "airflow.podLaunchingExecutor" .) (not .Values.scheduler.serviceAccount.automountServiceAccountToken) }}
-automountServiceAccountToken: false
-{{- end }}
+{{- if .Values.apiServer.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "scheduler.serviceAccountName" . }}
+  name: {{ include "airflow.fullname" . }}-api-server
   labels:
     tier: airflow
-    component: scheduler
+    component: api-server-horizontalpodautoscaler
     release: {{ .Release.Name }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: {{ .Release.Service }}
-    {{- if or (.Values.labels) (.Values.scheduler.labels) }}
-      {{- mustMerge .Values.scheduler.labels .Values.labels | toYaml | nindent 4 }}
+    deploymentName: {{ .Release.Name }}-api-server
+    {{- if or (.Values.labels) (.Values.apiServer.labels) }}
+      {{- mustMerge .Values.apiServer.labels .Values.labels | toYaml | nindent 4 }}
     {{- end }}
-  {{- with .Values.scheduler.serviceAccount.annotations }}
-  annotations:
-    {{- range $key, $value := . }}
-      {{- printf "%s: %s" $key (tpl $value $ | quote) | nindent 4 }}
-    {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "airflow.fullname" . }}-api-server
+  minReplicas: {{ .Values.apiServer.hpa.minReplicaCount }}
+  maxReplicas: {{ .Values.apiServer.hpa.maxReplicaCount }}
+  metrics: {{- toYaml .Values.apiServer.hpa.metrics | nindent 4 }}
+  {{- with .Values.apiServer.hpa.behavior }}
+  behavior: {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}

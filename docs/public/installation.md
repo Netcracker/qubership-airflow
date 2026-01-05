@@ -32,6 +32,7 @@ This section provides information about the Airflow installation using [slightly
       - [Default Logging Config Class](#default-logging-config-class)
       - [Enabling Custom Logging Config Class](#enabling-custom-logging-config-class)
       - [Audit Logs](#audit-logs)
+  - [Cleaning Airflow Database](#cleaning-airflow-database)
   - [Cleaning Airflow Logs](#cleaning-airflow-logs)
   - [Using Custom Pre-start Command for Pods](#using-custom-pre-start-command-for-pods)
   - [Creating Custom Secrets](#creating-custom-secrets)
@@ -75,7 +76,7 @@ For more information about Airflow Helm parameters and configuration, refer to t
 
 ## Image Changes from Community Version
 
-The base Airflow image in addition to Airflow (airflow:slim-3.1.3-python3.11) contains the following libraries:
+The base Airflow image in addition to Airflow (airflow:slim-3.1.5-python3.11) contains the following libraries:
 
 * comerr-dev
 * unzip
@@ -90,8 +91,8 @@ The base Airflow image in addition to Airflow (airflow:slim-3.1.3-python3.11) co
 
 Also, the image contains the following Python libraries/Airflow extras:
 
-* apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.1.3
-* apache-airflow-providers-keycloak==0.3.0
+* apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.1.5
+* apache-airflow-providers-keycloak==0.4.0
 * apache-airflow-providers-amazon
 * apache-airflow-providers-fab
 * airflow-exporter
@@ -189,7 +190,7 @@ subjects:
 
 * If the [Custom Preinstall Job](#custom-preinstall-job) is not used to create a PG database, then create the database in the External PostgreSQL server manually.
 
-**Warning**: When you set the `webserver.defaultUser.enabled` parameter, the `airflow users create` command runs at the start of the Airflow pod. Ensure that the PostgreSQL database you are using does not have any conflicting records. For example, another user with the same email ID. It is possible to delete or recreate the user manually after the installation using the Airflow CLI. For more information, refer to [https://airflow.apache.org/docs/stable/cli-ref](https://airflow.apache.org/docs/stable/cli-ref).
+**Warning**: When you set the `createUserJob.defaultUser.enabled` parameter, the `airflow users create` command runs at the start of the Airflow pod. Ensure that the PostgreSQL database you are using does not have any conflicting records. For example, another user with the same email ID. It is possible to delete or recreate the user manually after the installation using the Airflow CLI. For more information, refer to [https://airflow.apache.org/docs/stable/cli-ref](https://airflow.apache.org/docs/stable/cli-ref).
 
 ### Restricted Deploy User with Site Manager
 
@@ -317,6 +318,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)       | 0.1       | 256     | 1          |
 | Migrate database job (`*`)(`**`)      | 0.5       | 512     | 1          |
 | Create User Job (`*`)(`**`)           | 0.5       | 512     | 1          |
+| Cleanup Databae job (`*`)(`**`)       | 0.5       | 512     | 1          |
 | Custom Preinstall Job (`*`)(`**`)     | 0.1       | 512     | 1          |
 | GitSync(Rclone) sidecar (`*`)         | 0.2       | 512     | 2          |
 | StatsD prometheus exporter (`*`)      | 0.1       | 256     | 1          |
@@ -349,6 +351,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)       | 0.1 | 320     | 1          |
 | Migrate database job (`*`)(`**`)      | 1   | 1024    | 1          |
 | Create User Job (`*`)(`**`)           | 0.5 | 512     | 1          |
+| Cleanup Databae job (`*`)(`**`)       | 0.5 | 512     | 1          |
 | Custom Preinstall Job (`*`)(`**`)     | 0.1 | 512     | 1          |
 | GitSync(Rclone) sidecar (`*`)         | 0.4 | 768     | 2          |
 | StatsD prometheus exporter (`*`)      | 0.8 | 1024    | 1          |
@@ -379,6 +382,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)      | 0.1 | 320     | 1                    |
 | Migrate database job (`*`)(`**`)     | 1   | 1024    | 1                    |
 | Create User Job (`*`)(`**`)          | 0.5 | 512     | 1                    |
+| Cleanup Databae job (`*`)(`**`)      | 0.5 | 768     | 1                    |
 | Custom Preinstall Job (`*`)(`**`)    | 0.1 | 512     | 1                    |
 | GitSync(Rclone) sidecar (`*`)        | 0.4 | 768     | 5                    |
 | StatsD prometheus exporter (`*`)     | 0.8 | 1024    | 1                    |
@@ -709,7 +713,7 @@ customPreinstallJob:
         name: 'dbaas-connection-params-preins'
 ```
 
-Platform also provides a DBaaS integration package for Airflow that [implements](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) Airflow custom secrets' backend. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.3/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/3.1.3/security/secrets/secrets-backend/index.html). It is intended to be used with the custom preinstall job DBaaS script. The custom secrets' backend gets Redis and PG connections for Airflow from DBaaS. To enable custom secrets' backend, the following parameters must be specified (set by default):
+Platform also provides a DBaaS integration package for Airflow that [implements](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) Airflow custom secrets' backend. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.5/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/3.1.5/security/secrets/secrets-backend/index.html). It is intended to be used with the custom preinstall job DBaaS script. The custom secrets' backend gets Redis and PG connections for Airflow from DBaaS. To enable custom secrets' backend, the following parameters must be specified (set by default):
 
 ```yaml
 ...
@@ -1442,6 +1446,11 @@ For example:
     log_format_audit: '[%%(asctime)s][%%(filename)s:%%(lineno)d][%%(levelname)s][AUDIT] %%(message)s'
 ``` 
 
+## Cleaning Airflow Database
+
+It is possible to enable cronJob to clean airflow metadata database using `.Values.databaseCleanup.enabled` parameter. For more information, refer to _Official Airflow Documentation_ at [https://github.com/apache/airflow/blob/main/chart/docs/production-guide.rst#metadata-db-cleanup](https://github.com/apache/airflow/blob/main/chart/docs/production-guide.rst#metadata-db-cleanup). 
+**Note**: Qubership Platform distribution enabling this cronJob will also enable additional prometheus alerts for this job, if monitoring is enabled.
+
 ## Cleaning Airflow Logs
 
 In the default and `QS_DEFAULT_LOGGING_CONFIG` logging config classes with a Celery executor, task logs are stored in the persistence storage provided by Kubernetes. For cleaning the logs in the storage, the log Groomer Sidecar container can be deployed as a part of the Airflow installation. The parameters for the sidecar can be specified under `workers.logGroomerSidecar` and `scheduler.logGroomerSidecar` in [Airflow values.yaml](/chart/helm/airflow/values.yaml). The `AIRFLOW__LOG_RETENTION_DAYS` environment variable can be used to specify the maximum age of the log files in the storage. By default, it is set to `15`.
@@ -2003,14 +2012,14 @@ config:
     auth_manager: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
 ```
 
-You can enable LDAP integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.3/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/3.1.3/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter.
+You can enable LDAP integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.5/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/3.1.5/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter.
 
 The following is an example for enabling LDAP without group mapping and with pre-created Admin user. 
 
 ```yaml
 webserver:
 ...
-  defaultUser:
+  createUserJob:
     enabled: true
     role: Admin
     username: ldap_admin_username
@@ -2038,14 +2047,14 @@ apiServer:
 ...
 ```
 
-In the example above, the `webserver.defaultUser.*` are required for providing `Admin` role to the `ldap_admin_username` user. This user must also be present in LDAP for successful login. 
+In the example above, the `createUserJob.defaultUser.*` are required for providing `Admin` role to the `ldap_admin_username` user. This user must also be present in LDAP for successful login. 
 
 The following is an example for enabling LDAP with group mapping:
 
 ```yaml
 webserver:
 ...
-  defaultUser:
+  createUserJob:
     enabled: false
 apiServer:
 ...
@@ -2089,7 +2098,7 @@ extraEnvFrom: |
 ...
 webserver:
 ...
-  defaultUser:
+  createUserJob:
     enabled: false
 apiServer:
 ...
@@ -2137,7 +2146,7 @@ config:
 
 **Note**: FAB provider keyckoak integration does not support authentication for airflow API.
 
-For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.3/security/](https://airflow.apache.org/docs/apache-airflow/3.1.3/security/), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter. 
+For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.5/security/](https://airflow.apache.org/docs/apache-airflow/3.1.5/security/), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter. 
 
 The qubership chart distribution includes a [webserver_config.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py) example file that can be used for the integration with keycloak IDP. This file requires keycloak IDP to support SCIM, but it can be modified to avoid SCIM reques.
 
@@ -2145,7 +2154,7 @@ This file can be loaded in the `apiServer.apiServerConfig` parameter, for exampl
 
 ```yaml
 apiServer:
-  defaultUser:
+  createUserJob:
     enabled: false
   apiServerConfig: |-
     {{ .Files.Get "qs_files/webserver_config_keycloak.py" }}
@@ -2176,7 +2185,7 @@ config:
   core:
     auth_manager: airflow.providers.keycloak.auth_manager.keycloak_auth_manager.KeycloakAuthManager
 apiServer:
-  defaultUser:
+  createUserJob:
     enabled: false # Keycloak auth manager does not support custom users
 ```
 
@@ -2388,7 +2397,7 @@ However, you should avoid long Prometheus scrapes, as it is better to increase t
 
 ### StatsD Prometheus Exporter Monitoring
 
-The chart also allows to use [official airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.1.3/logging-monitoring/metrics.html) with [statsd_exporter](https://github.com/prometheus/statsd_exporter). To enable StatsD exporter and service monitor that gathers Prometheus metrics from the StatsD exporter, you must specify the following in the installation parameters:
+The chart also allows to use [official airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.1.5/logging-monitoring/metrics.html) with [statsd_exporter](https://github.com/prometheus/statsd_exporter). To enable StatsD exporter and service monitor that gathers Prometheus metrics from the StatsD exporter, you must specify the following in the installation parameters:
 
 ```yaml
 statsd:

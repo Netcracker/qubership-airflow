@@ -63,6 +63,12 @@ app.kubernetes.io/component: {{ .Values.componentLabel | default "airflow-cleanu
 app.kubernetes.io/technology: python
 {{- end }}
 
+{{- define "deployment_only_labels_database_cleanup_cronjob" -}}
+{{ include "deployment_only_labels" . }}
+app.kubernetes.io/component: {{ .Values.componentLabel | default "database-cleanup" }}
+app.kubernetes.io/technology: python
+{{- end }}
+
 {{- define "deployment_only_labels_dag_processor" -}}
 {{ include "deployment_only_labels" . }}
 app.kubernetes.io/component: {{ .Values.componentLabel | default "airflow-dag-processor" }}

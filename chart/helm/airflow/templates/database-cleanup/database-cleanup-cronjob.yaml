@@ -15,27 +15,25 @@
  KIND, either express or implied.  See the License for the
  specific language governing permissions and limitations
  under the License.
-
- Modified in 2025 by NetCracker Technology Corp.
 */}}
 
 ################################
-## Airflow Cleanup Pods CronJob
+## Airflow Database Cleanup CronJob
 #################################
-{{- if (and .Values.cleanup.enabled (contains "KubernetesExecutor" .Values.executor)) }}
-{{- $nodeSelector := or .Values.cleanup.nodeSelector .Values.nodeSelector }}
-{{- $affinity := or .Values.cleanup.affinity .Values.affinity }}
-{{- $tolerations := or .Values.cleanup.tolerations .Values.tolerations }}
-{{- $topologySpreadConstraints := or .Values.cleanup.topologySpreadConstraints .Values.topologySpreadConstraints }}
-{{- $securityContext := include "airflowPodSecurityContext" (list . .Values.cleanup) }}
-{{- $containerSecurityContext := include "containerSecurityContext" (list . .Values.cleanup) }}
+{{- if and .Values.databaseCleanup.enabled (or .Values.databaseCleanup.command .Values.databaseCleanup.args) }}
+{{- $nodeSelector := or .Values.databaseCleanup.nodeSelector .Values.nodeSelector }}
+{{- $affinity := or .Values.databaseCleanup.affinity .Values.affinity }}
+{{- $tolerations := or .Values.databaseCleanup.tolerations .Values.tolerations }}
+{{- $topologySpreadConstraints := or .Values.databaseCleanup.topologySpreadConstraints .Values.topologySpreadConstraints }}
+{{- $securityContext := include "airflowPodSecurityContext" (list . .Values.databaseCleanup) }}
+{{- $containerSecurityContext := include "containerSecurityContext" (list . .Values.databaseCleanup) }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "airflow.fullname" . }}-cleanup
+  name: {{ include "airflow.fullname" . }}-database-cleanup
   labels:
     tier: airflow
-    component: airflow-cleanup-pods
+    component: database-cleanup
     release: {{ .Release.Name }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: {{ .Release.Service }}
@@ -43,20 +41,20 @@ metadata:
       {{- toYaml . | nindent 4 }}
     {{- end }}
 #---Qubership custom change: Labels for Qubership release---
-    {{- include "deployment_only_labels_cleanup_cronjob" . | nindent 4 }}
+    {{- include "deployment_only_labels_database_cleanup_cronjob" . | nindent 4 }}
 #---Qubership custom change: Labels for Qubership release---
-  {{- with .Values.cleanup.jobAnnotations }}
+  {{- with .Values.databaseCleanup.jobAnnotations }}
   annotations: {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  schedule: "{{ tpl .Values.cleanup.schedule . }}"
+  schedule: "{{ tpl .Values.databaseCleanup.schedule . }}"
   # The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn't finished yet, the cron job skips the new job run
   concurrencyPolicy: Forbid
-  {{- if not ( eq .Values.cleanup.failedJobsHistoryLimit nil) }}
-  failedJobsHistoryLimit: {{ .Values.cleanup.failedJobsHistoryLimit }}
+  {{- if not ( eq .Values.databaseCleanup.failedJobsHistoryLimit nil) }}
+  failedJobsHistoryLimit: {{ .Values.databaseCleanup.failedJobsHistoryLimit }}
   {{- end }}
-  {{- if not (eq .Values.cleanup.successfulJobsHistoryLimit nil) }}
-  successfulJobsHistoryLimit: {{ .Values.cleanup.successfulJobsHistoryLimit }}
+  {{- if not (eq .Values.databaseCleanup.successfulJobsHistoryLimit nil) }}
+  successfulJobsHistoryLimit: {{ .Values.databaseCleanup.successfulJobsHistoryLimit }}
   {{- end }}
   jobTemplate:
     spec:
@@ -65,25 +63,25 @@ spec:
         metadata:
           labels:
             tier: airflow
-            component: airflow-cleanup-pods
+            component: database-cleanup
             release: {{ .Release.Name }}
-            {{- if or (.Values.labels) (.Values.cleanup.labels) }}
-              {{- mustMerge .Values.cleanup.labels .Values.labels | toYaml | nindent 12 }}
+            {{- if or (.Values.labels) (.Values.databaseCleanup.labels) }}
+              {{- mustMerge .Values.databaseCleanup.labels .Values.labels | toYaml | nindent 12 }}
             {{- end }}
 #---Qubership custom change: Labels for Qubership release---
-            {{- include "deployment_only_labels_cleanup_cronjob" . | nindent 12 }}
+            {{- include "deployment_only_labels_database_cleanup_cronjob" . | nindent 12 }}
 #---Qubership custom change: Labels for Qubership release---
           annotations:
             {{- if .Values.airflowPodAnnotations }}
               {{- toYaml .Values.airflowPodAnnotations | nindent 12 }}
             {{- end }}
-            {{- if .Values.cleanup.podAnnotations }}
-              {{- toYaml .Values.cleanup.podAnnotations | nindent 12 }}
+            {{- if .Values.databaseCleanup.podAnnotations }}
+              {{- toYaml .Values.databaseCleanup.podAnnotations | nindent 12 }}
             {{- end }}
         spec:
           restartPolicy: Never
-          {{- if .Values.cleanup.priorityClassName }}
-          priorityClassName: {{ .Values.cleanup.priorityClassName }}
+          {{- if .Values.databaseCleanup.priorityClassName }}
+          priorityClassName: {{ .Values.databaseCleanup.priorityClassName }}
           {{- end }}
           nodeSelector: {{- toYaml $nodeSelector | nindent 12 }}
           affinity: {{- toYaml $affinity | nindent 12 }}
@@ -92,29 +90,34 @@ spec:
           {{- end }}
           tolerations: {{- toYaml $tolerations | nindent 12 }}
           topologySpreadConstraints: {{- toYaml $topologySpreadConstraints | nindent 12 }}
-          serviceAccountName: {{ include "cleanup.serviceAccountName" . }}
+          serviceAccountName: {{ include "databaseCleanup.serviceAccountName" . }}
           imagePullSecrets: {{- include "image_pull_secrets" . | nindent 12 }}
           securityContext: {{ $securityContext | nindent 12 }}
           containers:
-            - name: airflow-cleanup-pods
+            - name: database-cleanup
               image: {{ template "airflow_image" . }}
               imagePullPolicy: {{ .Values.images.airflow.pullPolicy }}
               securityContext: {{ $containerSecurityContext | nindent 16 }}
-              {{- if .Values.cleanup.command }}
-              command: {{ tpl (toYaml .Values.cleanup.command) . | nindent 16 }}
+              {{- if .Values.databaseCleanup.command }}
+              command: {{ tpl (toYaml .Values.databaseCleanup.command) . | nindent 16 }}
               {{- end }}
-              {{- if .Values.cleanup.args }}
-              args: {{ tpl (toYaml .Values.cleanup.args) . | nindent 16 }}
+              {{- if .Values.databaseCleanup.args }}
+              args: {{ tpl (toYaml .Values.databaseCleanup.args) . | nindent 16 }}
               {{- end }}
+              {{- if .Values.databaseCleanup.applyCustomEnv }}
+              envFrom: {{- include "custom_airflow_environment_from" . | default "\n  []" | indent 14 }}
+              env: {{- include "custom_airflow_environment" . | indent 14 }}
+              {{- else }}
               env:
-                {{- include "standard_airflow_environment" . | indent 12 }}
-                {{- include "container_extra_envs" (list . .Values.cleanup.env) | indent 12 }}
+              {{- end }}
+                {{- include "standard_airflow_environment" . | indent 14 }}
+                {{- include "container_extra_envs" (list . .Values.databaseCleanup.env) | indent 14 }}
               volumeMounts:
                 {{- include "airflow_config_mount" . | nindent 16 }}
                 {{- if .Values.volumeMounts }}
                   {{- toYaml .Values.volumeMounts | nindent 16 }}
                 {{- end }}
-              resources: {{- toYaml .Values.cleanup.resources | nindent 16 }}
+              resources: {{- toYaml .Values.databaseCleanup.resources | nindent 16 }}
           volumes:
             - name: config
               configMap:

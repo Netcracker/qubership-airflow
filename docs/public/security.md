@@ -32,7 +32,7 @@ When configuring TLS for manually created connections, refer to the _Official Ai
 
 ## Local Accounts
 
-By default, Airflow deploys without IDP and creates the Admin user (using [Airflow FAB provider](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/index.html)). It is configured by `webserver.defaultUser` parameter. The user creation can be disabled or it is possible to assign another role to this user. When using IDP, the creation of this user should be disabled.
+By default, Airflow deploys without IDP and creates the Admin user (using [Airflow FAB provider](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/index.html)). It is configured by `createUserJob.defaultUser` parameter. The user creation can be disabled or it is possible to assign another role to this user. When using IDP, the creation of this user should be disabled.
 
 ### Changing Credentials
 

@@ -2,7 +2,7 @@ This section provides information about the dashboards and metrics for Airflow s
 
 # Airflow Overview Dashboard
 
-The Airflow Overview dashboard provides information about Airflow status, pods, Airflow scheduler, executor, DAG parser, DAGs, and tasks. This dashboard is based both on the [third party Airflow plugin](https://github.com/epoch8/airflow-exporter) and on the [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.1.3/logging-monitoring/metrics.html) plus [statsd_exporter](https://github.com/prometheus/statsd_exporter) combination. Also, the dashboard uses Kubernetes metrics.
+The Airflow Overview dashboard provides information about Airflow status, pods, Airflow scheduler, executor, DAG parser, DAGs, and tasks. This dashboard is based both on the [third party Airflow plugin](https://github.com/epoch8/airflow-exporter) and on the [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.1.5/logging-monitoring/metrics.html) plus [statsd_exporter](https://github.com/prometheus/statsd_exporter) combination. Also, the dashboard uses Kubernetes metrics.
 
 ## Dashboard Variables
 
@@ -21,8 +21,9 @@ The following is a list of dashboard variables:
 This section is based on the third party Airflow plugin and shows the status of the Airflow pods and resources used. The following panels are available:
 
 * `Airflow State` - Displays the Airflow status. If no scheduler/api/worker/DAG processor pod is available it displays the `DOWN` status. If at least one pod of each type (scheduler/api/worker/DAG processor) is available, but some scheduler/api/worker pods are in other states than `running`, it displays `DEGRADED` status, otherwise displays `UP` status.
-* `Unavailable Pods Count` - Displays the number of cheduler/api/worker/DAG processorunavailable pods in Airflow namespace.
+* `Unavailable Pods Count` - Displays the number of scheduler/api/worker/DAG processor unavailable pods in Airflow namespace.
 * `Available Scheduler/Worker/API/Flower Pods Count` - Displays the number of available Scheduler/Worker/API/Flower Pods.
+* `Failed job runs` - Displays the number of failed jobs in Airflow namespace.
 * `CPU/Memory usage` - Displays CPU/memory usages per pod.
 * `CPU/Memory limits usage` - Displays CPU/memory limits usages per pod.
 * `Receive/Transmit Bandwidth` - Displays network statistics in the namespace.
@@ -202,3 +203,19 @@ There are failed DAG runs in Airflow. To fix the alert, delete these runs or man
 **Solution**:
 
 There are failed task runs in Airflow. To fix the alert, fix the task, or delete these runs, or manually change their state.
+
+| Alert                                       | Possible Reason                                          |
+|---------------------------------------------|----------------------------------------------------------|
+| There are failed jobs in airflow namespace  | Some jobs(probably cleanup database cronJob) are failed. |
+
+**Solution**:
+
+Check cleanup database job logs.
+
+|Alert| Possible Reason                                     |
+|---|-----------------------------------------------------|
+|Cleanup database cronjob takes too long to complete | Cleanup database cronjob got stuck for some reason. |
+
+**Solution**:
+
+Check cleanup database job logs.
