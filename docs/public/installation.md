@@ -1448,7 +1448,8 @@ For example:
 
 ## Cleaning Airflow Database
 
-It is possible to enable cronJob to clean airflow metadata database using `.Values.databaseCleanup.enabled` parameter. For more information please refer to [official airflow documentation](https://github.com/apache/airflow/blob/main/chart/docs/production-guide.rst#metadata-db-cleanup)_ . Note, that in Qubership Platform distribution enabling this cronJob will also enable additional prometheus alerts for this job (if monitoring is enabled).
+It is possible to enable cronJob to clean airflow metadata database using `.Values.databaseCleanup.enabled` parameter. For more information, refer to _Official Airflow Documentation_ at [https://github.com/apache/airflow/blob/main/chart/docs/production-guide.rst#metadata-db-cleanup](https://github.com/apache/airflow/blob/main/chart/docs/production-guide.rst#metadata-db-cleanup). 
+**Note**: Qubership Platform distribution enabling this cronJob will also enable additional prometheus alerts for this job, if monitoring is enabled.
 
 ## Cleaning Airflow Logs
 
