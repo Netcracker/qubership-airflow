@@ -382,7 +382,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)      | 0.1 | 320     | 1                    |
 | Migrate database job (`*`)(`**`)     | 1   | 1024    | 1                    |
 | Create User Job (`*`)(`**`)          | 0.5 | 512     | 1                    |
-| Cleanup Databae job (`*`)(`**`)      | 0.5 | 512     | 1                    |
+| Cleanup Databae job (`*`)(`**`)      | 0.5 | 768     | 1                    |
 | Custom Preinstall Job (`*`)(`**`)    | 0.1 | 512     | 1                    |
 | GitSync(Rclone) sidecar (`*`)        | 0.4 | 768     | 5                    |
 | StatsD prometheus exporter (`*`)     | 0.8 | 1024    | 1                    |
