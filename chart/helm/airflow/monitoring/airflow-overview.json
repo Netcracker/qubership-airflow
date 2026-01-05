@@ -165,7 +165,7 @@
         "type": "prometheus",
         "uid": "$datasource"
       },
-      "description": "Shows the number of unavailable pods in the airflow namespace except for flower",
+      "description": "Shows the number of unavailable pods in the airflow namespace except for flower and jobs",
       "fieldConfig": {
         "defaults": {
           "color": {

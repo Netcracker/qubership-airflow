@@ -32,6 +32,7 @@ This section provides information about the Airflow installation using [slightly
       - [Default Logging Config Class](#default-logging-config-class)
       - [Enabling Custom Logging Config Class](#enabling-custom-logging-config-class)
       - [Audit Logs](#audit-logs)
+  - [Cleaning Airflow Database](#cleaning-airflow-database)
   - [Cleaning Airflow Logs](#cleaning-airflow-logs)
   - [Using Custom Pre-start Command for Pods](#using-custom-pre-start-command-for-pods)
   - [Creating Custom Secrets](#creating-custom-secrets)
@@ -317,6 +318,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)       | 0.1       | 256     | 1          |
 | Migrate database job (`*`)(`**`)      | 0.5       | 512     | 1          |
 | Create User Job (`*`)(`**`)           | 0.5       | 512     | 1          |
+| Cleanup Databae job (`*`)(`**`)       | 0.5       | 512     | 1          |
 | Custom Preinstall Job (`*`)(`**`)     | 0.1       | 512     | 1          |
 | GitSync(Rclone) sidecar (`*`)         | 0.2       | 512     | 2          |
 | StatsD prometheus exporter (`*`)      | 0.1       | 256     | 1          |
@@ -349,6 +351,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)       | 0.1 | 320     | 1          |
 | Migrate database job (`*`)(`**`)      | 1   | 1024    | 1          |
 | Create User Job (`*`)(`**`)           | 0.5 | 512     | 1          |
+| Cleanup Databae job (`*`)(`**`)       | 0.5 | 512     | 1          |
 | Custom Preinstall Job (`*`)(`**`)     | 0.1 | 512     | 1          |
 | GitSync(Rclone) sidecar (`*`)         | 0.4 | 768     | 2          |
 | StatsD prometheus exporter (`*`)      | 0.8 | 1024    | 1          |
@@ -379,6 +382,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)      | 0.1 | 320     | 1                    |
 | Migrate database job (`*`)(`**`)     | 1   | 1024    | 1                    |
 | Create User Job (`*`)(`**`)          | 0.5 | 512     | 1                    |
+| Cleanup Databae job (`*`)(`**`)      | 0.5 | 512     | 1                    |
 | Custom Preinstall Job (`*`)(`**`)    | 0.1 | 512     | 1                    |
 | GitSync(Rclone) sidecar (`*`)        | 0.4 | 768     | 5                    |
 | StatsD prometheus exporter (`*`)     | 0.8 | 1024    | 1                    |
@@ -1441,6 +1445,10 @@ For example:
     audit_log_level: DEBUG
     log_format_audit: '[%%(asctime)s][%%(filename)s:%%(lineno)d][%%(levelname)s][AUDIT] %%(message)s'
 ``` 
+
+## Cleaning Airflow Database
+
+It is possible to enable cronJob to clean airflow metadata database using `.Values.databaseCleanup.enabled` parameter. For more information please refer to [official airflow documentation](https://github.com/apache/airflow/blob/main/chart/docs/production-guide.rst#metadata-db-cleanup)_ . Note, that in Qubership Platform distribution enabling this cronJob will also enable additional prometheus alerts for this job (if monitoring is enabled).
 
 ## Cleaning Airflow Logs
 
