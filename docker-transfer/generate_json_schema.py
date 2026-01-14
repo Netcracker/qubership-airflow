@@ -156,7 +156,6 @@ def compare_complex_element(
         if "properties" not in current_schema_element:
             ref = current_schema_element["$ref"]
             element_path = ref.replace("#/", "", 1).split("/")
-            ref_path = ref
             ref_value = customized_schema_internal
             for ref_param in element_path:
                 ref_value = ref_value[ref_param]
