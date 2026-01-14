@@ -6,8 +6,10 @@ import argparse
 
 from jsonschema import validate
 
-url = "https://raw.githubusercontent.com/apache/airflow/" \
-      "3314d54c3595f410a147790b7119392a0922268c/chart/values.schema.json"
+url = (
+    "https://raw.githubusercontent.com/apache/airflow/"
+    "3314d54c3595f410a147790b7119392a0922268c/chart/values.schema.json"
+)
 global_params_to_keep = ["$schema", "description", "type", "definitions"]
 values_params_to_keep = [
     "fullnameOverride",
@@ -99,41 +101,61 @@ def reuse_existing_params():
 
     customized_schema_internal = {}
     for global_param in global_params_to_keep:
-        customized_schema_internal[global_param] = copy.deepcopy(community_schema[global_param])
+        customized_schema_internal[global_param] = copy.deepcopy(
+            community_schema[global_param]
+        )
     customized_schema_internal["properties"] = {}
 
     for values_param in values_params_to_keep:
-        values_param_path_array = values_param.split('.')
+        values_param_path_array = values_param.split(".")
         path_counter = 0
         current_customized_element = customized_schema_internal
         current_community_element = community_schema
         for values_param_single in values_param_path_array:
             path_counter = path_counter + 1
-            if "properties" in current_customized_element and \
-                    values_param_single in current_customized_element["properties"]:
-                current_customized_element = current_customized_element["properties"][values_param_single]
-                current_community_element = current_community_element["properties"][values_param_single]
+            if (
+                "properties" in current_customized_element
+                and values_param_single in current_customized_element["properties"]
+            ):
+                current_customized_element = current_customized_element["properties"][
+                    values_param_single
+                ]
+                current_community_element = current_community_element["properties"][
+                    values_param_single
+                ]
                 continue
             if path_counter == len(values_param_path_array):
-                current_customized_element["properties"][values_param_single] = \
-                    copy.deepcopy(current_community_element["properties"][values_param_single])
+                current_customized_element["properties"][values_param_single] = (
+                    copy.deepcopy(
+                        current_community_element["properties"][values_param_single]
+                    )
+                )
                 continue
             else:
-                current_customized_element["properties"][values_param_single] = \
-                    copy.deepcopy(current_community_element["properties"][values_param_single])
-                current_customized_element = current_customized_element["properties"][values_param_single]
-                current_community_element = current_community_element["properties"][values_param_single]
+                current_customized_element["properties"][values_param_single] = (
+                    copy.deepcopy(
+                        current_community_element["properties"][values_param_single]
+                    )
+                )
+                current_customized_element = current_customized_element["properties"][
+                    values_param_single
+                ]
+                current_community_element = current_community_element["properties"][
+                    values_param_single
+                ]
                 current_customized_element["properties"] = {}
                 if "additionalProperties" in current_customized_element:
                     current_customized_element["additionalProperties"] = True
     return customized_schema_internal
 
 
-def compare_complex_element(values_param, current_schema_element, values_default, customized_schema_internal):
+def compare_complex_element(
+    values_param, current_schema_element, values_default, customized_schema_internal
+):
     for key, value in values_default.items():
         if "properties" not in current_schema_element:
             ref = current_schema_element["$ref"]
-            element_path = ref.replace("#/", "", 1).split('/')
+            element_path = ref.replace("#/", "", 1).split("/")
             ref_path = ref
             ref_value = customized_schema_internal
             for ref_param in element_path:
@@ -143,11 +165,17 @@ def compare_complex_element(values_param, current_schema_element, values_default
                     print(f"values for {values_param}.{key} are the same!")
                 else:
                     print(f"values for {values_param}.{key} are different!")
-                    raise ValueError("Updating in refs is not supported since it might affect Airflow defaults")
+                    raise ValueError(
+                        "Updating in refs is not supported since it might affect Airflow defaults"
+                    )
                 continue
             else:
-                compare_complex_element(f'{values_param}.{key}', ref_value["properties"][key], value,
-                                        customized_schema_internal)
+                compare_complex_element(
+                    f"{values_param}.{key}",
+                    ref_value["properties"][key],
+                    value,
+                    customized_schema_internal,
+                )
         elif "default" in current_schema_element["properties"][key]:
             if value == current_schema_element["properties"][key]["default"]:
                 print(f"values for {values_param}.{key} are the same!")
@@ -155,20 +183,33 @@ def compare_complex_element(values_param, current_schema_element, values_default
                 print(f"values for {values_param}.{key} are different, updating...")
                 current_schema_element["properties"][key]["default"] = value
         else:
-            compare_complex_element(f'{values_param}.{key}', current_schema_element["properties"][key], value,
-                                    customized_schema_internal)
+            compare_complex_element(
+                f"{values_param}.{key}",
+                current_schema_element["properties"][key],
+                value,
+                customized_schema_internal,
+            )
 
 
-def update_defaults_for_existing_schema(values_data_internal, customized_schema_internal):
+def update_defaults_for_existing_schema(
+    values_data_internal, customized_schema_internal
+):
     for values_param in values_params_to_keep:
-        values_param_path_array = values_param.split('.')
+        values_param_path_array = values_param.split(".")
         values_default = values_data_internal
         current_schema_element = customized_schema_internal
         for values_param_single in values_param_path_array:
-            current_schema_element = current_schema_element["properties"][values_param_single]
+            current_schema_element = current_schema_element["properties"][
+                values_param_single
+            ]
             values_default = values_default[values_param_single]
         if "default" not in current_schema_element:
-            compare_complex_element(values_param, current_schema_element, values_default, customized_schema_internal)
+            compare_complex_element(
+                values_param,
+                current_schema_element,
+                values_default,
+                customized_schema_internal,
+            )
             continue
         if values_default == current_schema_element["default"]:
             print(f"values for {values_param} are the same!")
@@ -194,7 +235,11 @@ def validate_defaults(values, default_values_schema, param_path):
                     print(f"{param_path}{key} is different!")
                     raise ValueError(f"{param_path}{key} is different!")
             else:
-                validate_defaults(value, default_values_schema["properties"][key], f"{param_path}{key}.")
+                validate_defaults(
+                    value,
+                    default_values_schema["properties"][key],
+                    f"{param_path}{key}.",
+                )
 
 
 def remove_common_key(current_element, excessive_key):
@@ -218,8 +263,10 @@ def replace_common_key(current_element, old_key, new_key):
 
 def add_qubership_custom_schema(qubership_schema_internal, customized_schema_internal):
     replace_common_key(qubership_schema_internal, "airflow_base_ref", "$ref")
-    customized_schema_internal["properties"] = customized_schema_internal["properties"] | qubership_schema_internal[
-        "properties"]
+    customized_schema_internal["properties"] = (
+        customized_schema_internal["properties"]
+        | qubership_schema_internal["properties"]
+    )
 
 
 parser = argparse.ArgumentParser()
@@ -228,18 +275,17 @@ parser.add_argument("--additional_schema", default="qubership_values.schema.json
 parser.add_argument("--target_schema", default="target/values.schema.json")
 args = parser.parse_args()
 customized_schema = reuse_existing_params()
-with open(args.complete_values, 'r') as default_qubership_values:
+with open(args.complete_values, "r") as default_qubership_values:
     qubership_values = yaml.safe_load(default_qubership_values)
 update_defaults_for_existing_schema(qubership_values, customized_schema)
 remove_common_key(customized_schema, "x-docsSection")
-with open(args.additional_schema, 'r') as file:
+with open(args.additional_schema, "r") as file:
     qubership_schema = json.load(file)
 add_qubership_custom_schema(qubership_schema, customized_schema)
-#print(json.dumps(customized_schema, indent=4))
+# print(json.dumps(customized_schema, indent=4))
 
 validate(instance=qubership_values, schema=customized_schema)
 validate_properties_in_defaults(qubership_values, qubership_schema, "")
 validate_defaults(qubership_values, qubership_schema, "")
 with open(args.target_schema, "w") as values_schema_json:
-    json.dump(customized_schema, values_schema_json, indent=4) # type: ignore
-
+    json.dump(customized_schema, values_schema_json, indent=4)  # type: ignore
