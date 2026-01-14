@@ -1,0 +1,502 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "properties": {
+    "platformAirflowMonitoring": {
+      "description": "Enable Qubership Airflow Monitoring.",
+      "type": "boolean",
+      "default": false
+    },
+    "serviceMonitor": {
+      "structuredValue": true,
+      "description": "Qubership Airflow Monitoring service monitor configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "Enable service monitor creation.",
+          "type": "boolean",
+          "default": false
+        },
+        "selector": {
+          "description": "Service monitor selector",
+          "type": "object",
+          "default": {
+            "app.kubernetes.io/component": "monitoring"
+          }
+        },
+        "path": {
+          "description": "Service monitor scrape path.",
+          "type": "string",
+          "default": "/admin/metrics"
+        },
+        "interval": {
+          "description": "Service monitor scrape interval.",
+          "type": "string",
+          "default": "30s"
+        }
+      }
+    },
+    "prometheusRule": {
+      "description": "Qubership Airflow prometheus rule configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "Enable prometheus rule creation.",
+          "type": "boolean",
+          "default": false
+        },
+        "kubeAlerts": {
+          "description": "Add kubernetes alerts to prometheus rule.",
+          "type": "boolean",
+          "default": true
+        },
+        "additionalLabels": {
+          "description": "Additional labels for prometheus rule.",
+          "type": "object",
+          "default": {
+            "app.kubernetes.io/component": "monitoring"
+          }
+        },
+        "groups": {
+          "description": "Additional alert groups for prometheus rule.",
+          "type": "array",
+          "default": []
+        },
+        "dagAlerts": {
+          "description": "Additional DAG specific alerts for airflow configuration.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "description": "Enable DAG alerts.",
+              "type": "boolean",
+              "default": true
+            },
+            "taskFailed": {
+              "description": "Enable alert for task fails.",
+              "type": "boolean",
+              "default": true
+            },
+            "maxDagRunDuration": {
+              "description": "Set maximum DAG run duration in seconds before alert is triggered",
+              "type": "integer",
+              "default": 3600
+            }
+          }
+        }
+      }
+    },
+    "serviceMonitorStatsd": {
+      "structuredValue": true,
+      "description": "Prometheus operator service monitor for airflow statsd exporter configuration",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "Whether to install service monitor for service monitor for airflow statsd exporter",
+          "type": "boolean",
+          "default": false
+        },
+        "selector": {
+          "description": "additional labels for service monitor for service monitor for airflow statsd exporter",
+          "type": "object",
+          "default": {
+            "app.kubernetes.io/component": "monitoring"
+          }
+        },
+        "path": {
+          "description": "scrape path for service monitor for service monitor for airflow statsd exporter",
+          "type": "string",
+          "default": "/metrics"
+        },
+        "interval": {
+          "description": "scrape interval for service monitor for airflow prometheus plugin",
+          "type": "string",
+          "default": "30s"
+        }
+      }
+    },
+    "customPreinstallJob": {
+      "structuredValue": true,
+      "description": "Custom preinstall job configuration",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "description": "Whether to enable custom preinstall job",
+          "type": "boolean",
+          "default": true
+        },
+        "labels": {
+          "description": "Labels for custom preinstall job ",
+          "internal": true,
+          "type": "object",
+          "default": {},
+          "x-docsSection": "Kubernetes",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "resources": {
+          "description": "Resources for custom preinstall job.",
+          "type": "object",
+          "default": {},
+          "examples": [
+            {
+              "limits": {
+                "cpu": "200m",
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "200m",
+                "memory": "256Mi"
+              }
+            }
+          ],
+          "airflow_base_ref": "#/definitions/io.k8s.api.core.v1.ResourceRequirements"
+        },
+        "useHelmHooks": {
+          "description": "Specify if Helm Hook annotations will be ised for custom preinstall job",
+          "type": "boolean",
+          "default": true
+        },
+        "jobAnnotations": {
+          "description": "Annotations to add to custom preinstall job.",
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "priorityClassName": {
+          "description": "Specify priority class name for custom preinstall job.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "serviceAccount": {
+          "structuredValue": true,
+          "description": "Custom preinstall job service account configuration",
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "create": {
+              "description": "Whether to create custom preinstall job service account",
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "role": {
+          "structuredValue": true,
+          "description": "Custom preinstall job role configuration",
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "create": {
+              "description": "Whether to create custom preinstall job role",
+              "type": "boolean",
+              "default": true
+            },
+            "rules": {
+              "description": "Rules for custom preinstall job role",
+              "type": "array",
+              "default": [
+                {
+                  "apiGroups": [
+                    ""
+                  ],
+                  "resources": [
+                    "secrets"
+                  ],
+                  "verbs": [
+                    "create",
+                    "get",
+                    "delete",
+                    "update"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "securityContexts": {
+          "description": "Security context for custom preinstall job. If not set global `securityContexts` will be used.",
+          "type": "object",
+          "x-docsSection": "Kubernetes",
+          "properties": {
+            "pod": {
+              "description": "Custom preinstall job pod security context.",
+              "type": "object",
+              "airflow_base_ref": "#/definitions/io.k8s.api.core.v1.PodSecurityContext",
+              "default": {},
+              "x-docsSection": "Kubernetes",
+              "examples": [
+                {
+                  "runAsUser": 50000,
+                  "runAsGroup": 0,
+                  "fsGroup": 0
+                }
+              ]
+            },
+            "container": {
+              "description": "Custom preinstall job container security context.",
+              "type": "object",
+              "airflow_base_ref": "#/definitions/io.k8s.api.core.v1.SecurityContext",
+              "default": {},
+              "x-docsSection": "Kubernetes",
+              "examples": [
+                {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "command": {
+          "description": "Command for custom preinstall job(templated).",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": null
+        },
+        "args": {
+          "description": "Args for custom preinstall job(templated).",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "python",
+            "/bin/create_dbs_dbaas.py"
+          ]
+        },
+        "extraSecrets": {
+          "structuredValue": true,
+          "internal": true,
+          "description": "Extra secrets for the preinstall job.",
+          "type": "object",
+          "default": {
+            "dbaas-connection-params-preins": {
+              "stringData": "DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'\nDBAAS_USER: 'insert dbaas user here'\nDBAAS_PASSWORD: 'insert dbaas password here'\nDBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'\nDBAAS_PG_BACKUP_DISABLED: 'true'\nDBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'\nDBAAS_REDIS_DB_OWNER: 'insert dbaas redis password here'\nDBAAS_REDIS_BACKUP_DISABLED: 'true'\nDBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'\nAIRFLOW_EXECUTOR: '{{ .Values.executor }}'\n"
+            }
+          },
+          "additionalProperties": {
+            "description": "Name of the secret (can be templated).",
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "description": "Type **as string** of secret E.G. Opaque, kubernetes.io/dockerconfigjson, etc.",
+                "type": "string"
+              },
+              "labels": {
+                "description": "Labels for the secret",
+                "type": "object",
+                "default": null,
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "annotations": {
+                "description": "Annotations for the secret",
+                "type": "object",
+                "default": null,
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "data": {
+                "description": "Content for the 'data' item of the secret (can be templated)",
+                "type": "string"
+              },
+              "stringData": {
+                "description": "Content **as string** for the 'stringData' item of the secret (can be templated)",
+                "type": "string"
+              }
+            }
+          },
+          "examples": [
+            {
+              "{{ .Release.Name }}-airflow-connections": {
+                "data": "AIRFLOW_CONN_GCP: 'base64_encoded_gcp_conn_string'\nAIRFLOW_CONN_AWS: 'base64_encoded_aws_conn_string'",
+                "stringData": "AIRFLOW_CONN_OTHER: 'other_conn'"
+              }
+            }
+          ]
+        },
+        "extraEnvFrom": {
+          "description": "Extra envFrom 'items' that will be added to custom preinstall job.",
+          "type": [
+            "null",
+            "string"
+          ],
+          "default": "- secretRef:\n    name: 'dbaas-connection-params-preins'\n",
+          "examples": [
+            "- secretRef:\n    name: '{{ .Release.Name }}-airflow-connections'",
+            "- configMapRef:\n    name: '{{ .Release.Name }}-airflow-variables'"
+          ]
+        }
+      }
+    },
+    "certManagerIntegration": {
+      "structuredValue": true,
+      "description": "Certificate manager integration configuration",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "description": "Whether to enable certificate manager integration",
+          "type": "boolean",
+          "default": false
+        },
+        "secretName": {
+          "description": "Secret name to store certificate",
+          "type": "string",
+          "default": "airflow-services-tls-certificate"
+        },
+        "duration": {
+          "description": "Certificate duration in days",
+          "type": "integer",
+          "default": 365
+        },
+        "subjectAlternativeName": {
+          "description": "Additional DNS names/IP addresses for the generated certificate.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "additionalDnsNames": {
+              "description": "Additional DNS names for the generated certificate.",
+              "type": "array",
+              "default": []
+            },
+            "additionalIpAddresses": {
+              "description": "Additional IP addresses for the generated certificate.",
+              "type": "array",
+              "default": []
+            }
+          }
+        },
+        "clusterIssuerName": {
+          "description": "Cert manager cluster issuer name to generate certificate.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        }
+      }
+    },
+    "statusProvisioner": {
+      "structuredValue": true,
+      "description": "Status provisioner configuration",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "description": "Whether to use Status provisioner",
+          "type": "boolean",
+          "default": true
+        },
+        "lifetimeAfterCompletion": {
+          "description": "The number of seconds that the job remains alive after its completion.",
+          "type": "integer",
+          "default": 600
+        },
+        "podReadinessTimeout": {
+          "description": "The timeout in seconds that the job waits for the monitored resources to be ready or completed.",
+          "type": "integer",
+          "default": 300
+        },
+        "integrationTestsTimeout": {
+          "description": "The timeout in seconds that the job waits for integration tests to complete(if integration tests are enabled).",
+          "type": "integer",
+          "default": 300
+        },
+        "labels": {
+          "description": "Additional labels for status provisioner.",
+          "type": "object",
+          "default": {}
+        },
+        "priorityClassName": {
+          "description": "Priority class name for status provisioner..",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "securityContexts": {
+          "description": "Security context definition for the status provisioner. If not set, the values from global `securityContexts` will be used.",
+          "type": "object",
+          "properties": {
+            "pod": {
+              "description": "Pod security context for the status provisioner.",
+              "type": "object",
+              "airflow_base_ref": "#/definitions/io.k8s.api.core.v1.PodSecurityContext",
+              "default": {},
+              "examples": [
+                {
+                  "runAsUser": 50000,
+                  "runAsGroup": 0,
+                  "fsGroup": 0
+                }
+              ]
+            },
+            "container": {
+              "description": "Container security context for the status provisioner.",
+              "type": "object",
+              "airflow_base_ref": "#/definitions/io.k8s.api.core.v1.SecurityContext",
+              "default": {},
+              "examples": [
+                {
+                  "allowPrivilegeEscalation": false
+                }
+              ]
+            }
+          }
+        },
+        "resources": {
+          "description": "Resources on status provisioner.",
+          "type": "object",
+          "default": {},
+          "examples": [
+            {
+              "limits": {
+                "cpu": "200m",
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "200m",
+                "memory": "256Mi"
+              }
+            }
+          ],
+          "airflow_base_ref": "#/definitions/io.k8s.api.core.v1.ResourceRequirements"
+        }
+      }
+    },
+    "useQubershipDeployerUpdateStrategies": {
+      "description": "Enable Qubership Deployer Update Strategies.",
+      "type": "boolean",
+      "default": true
+    }
+  }
+}
