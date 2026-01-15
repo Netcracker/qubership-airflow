@@ -98,8 +98,8 @@ values_params_to_keep = [
 
 def reuse_existing_params():
     community_schema = json.loads(urllib.request.urlopen(url).read())
-    community_schema["properties"]["securityContexts"]["properties"]["containers"] = (
-        community_schema)["properties"]["securityContexts"]["properties"]["container"]
+    community_schema["properties"]["securityContexts"]["properties"]["containers"] =
+        community_schema["properties"]["securityContexts"]["properties"]["container"]
     customized_schema_internal = {}
     for global_param in global_params_to_keep:
         customized_schema_internal[global_param] = copy.deepcopy(
