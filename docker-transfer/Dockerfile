@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir ruamel.yaml && \
     python sync_util.py chart/helm/airflow/release-images.yaml chart/helm/airflow/values.yaml && \
     python sync_util.py chart/helm/airflow/release-images.yaml chart/helm/airflow/charts/airflow-site-manager/values.yaml && \
     python sync_util.py chart/helm/airflow/release-images.yaml chart/helm/airflow/charts/integrationTests/values.yaml && \
-    pip install --no-cache-dir json PyYAML jsonschema && \
+    pip install --no-cache-dir PyYAML jsonschema && \
     python generate_json_schema.py --complete_values chart/helm/airflow/values.yaml --additional_schema chart/helm/airflow/qubership_values.schema.json --target_schema chart/helm/airflow/values.schema.json && \
     rm chart/helm/airflow/qubership_values.schema.json
 
