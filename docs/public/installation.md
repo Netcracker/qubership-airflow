@@ -979,7 +979,7 @@ For SSL configuration, the `data.metadataConnection.sslmode` parameter is respon
 It is possible to create a secret containing ca-cert using [cert-manager](https://cert-manager.io/). To do so, the following configuration is available:
 
 ```yaml
-certManagerInegration:
+certManagerIntegration:
   ## Enabling
   enabled: false
   ## Secret name
@@ -993,7 +993,7 @@ certManagerInegration:
   clusterIssuerName: ~
 ```
 
-Note that in this case, cert-manager must be installed in the cluster. In case `certManagerIntegration.enabled` is set to `true`, the cert manager creates a secret containing ca-cert from clusterIssuer with `certManagerInegration.clusterIssuerName` in the ca.crt field with the name, `certManagerInegration.secretName`. For example, to create a secret with `ca.crt` and use it for Redis connection certificate verification, you must specify the the following parameters:
+Note that in this case, cert-manager must be installed in the cluster. In case `certManagerIntegration.enabled` is set to `true`, the cert manager creates a secret containing ca-cert from clusterIssuer with `certManagerIntegration.clusterIssuerName` in the ca.crt field with the name, `certManagerIntegration.secretName`. For example, to create a secret with `ca.crt` and use it for Redis connection certificate verification, you must specify the the following parameters:
 
 ```yaml
 ...
@@ -1013,7 +1013,7 @@ workers:
       secret:
         secretName: airflow-services-tls-certificate
 ...
-certManagerInegration:
+certManagerIntegration:
   enabled: true
   secretName: airflow-services-tls-certificate
   duration: 365
@@ -1055,7 +1055,7 @@ extraSecrets:
       MAAS_USER: 'insert maas user here'
       MAAS_PASSWORD: 'insert maas password here'
       DBAAS_SSL_VERIFICATION_MAIN: 'CERT_PATH:/home/airflow/certs/ca.crt'
-certManagerInegration:
+certManagerIntegration:
   enabled: true
   secretName: airflow-services-tls-certificate
   duration: 365
@@ -1076,7 +1076,7 @@ volumes:
 
 ## Enabling TLS on airflow UI inside kubernetes
 
-It is possible to enable TLS on Airflow web UI directly inside kubernetes. For this, Airflow API server needs TLS key and certificate. TLS key and certificate can be requested from cert-manager using `certManagerInegration.enabled` parameter. By default, it creates the secret `airflow-services-tls-certificate` with TLS certificate, TLS key and CA certificate. Alternatively, TLS key and certificate can be specified using `extraSecrets` parameter. After this, it is necessary to mount the certificates into webserver pod and specify the certificates in API server using `config.webserver.web_server_ssl_cert` and `config.webserver.web_server_ssl_key` (or `config.api.ssl_cert` and `config.api.ssl_key`). Also, it is necessary to specify the HTTPS scheme for API server liveness, readiness, and startup probes. Since in Airflow 3 workers go to airflow API server, workers must also have access to the TLS certificate and `execution_api_server_url` must be redirected to https. If using kubernetes with NGINX ingress controller, it is possible to pass annotations for ingress controller to work with TLS backend, for example:
+It is possible to enable TLS on Airflow web UI directly inside kubernetes. For this, Airflow API server needs TLS key and certificate. TLS key and certificate can be requested from cert-manager using `certManagerIntegration.enabled` parameter. By default, it creates the secret `airflow-services-tls-certificate` with TLS certificate, TLS key and CA certificate. Alternatively, TLS key and certificate can be specified using `extraSecrets` parameter. After this, it is necessary to mount the certificates into webserver pod and specify the certificates in API server using `config.webserver.web_server_ssl_cert` and `config.webserver.web_server_ssl_key` (or `config.api.ssl_cert` and `config.api.ssl_key`). Also, it is necessary to specify the HTTPS scheme for API server liveness, readiness, and startup probes. Since in Airflow 3 workers go to airflow API server, workers must also have access to the TLS certificate and `execution_api_server_url` must be redirected to https. If using kubernetes with NGINX ingress controller, it is possible to pass annotations for ingress controller to work with TLS backend, for example:
 
 ```yaml
 # airflow-install-namespace here should be replaced with the namespace where airflow is installed.
@@ -1126,7 +1126,7 @@ config:
   webserver:
     web_server_ssl_cert: /home/airflow/certs/tls.crt
     web_server_ssl_key: /home/airflow/certs/tls.key
-certManagerInegration:
+certManagerIntegration:
   clusterIssuerName: common-cluster-issuer
   enabled: true
 ```
