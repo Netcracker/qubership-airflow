@@ -436,7 +436,7 @@
           "default": {}
         },
         "priorityClassName": {
-          "description": "Priority class name for status provisioner..",
+          "description": "Priority class name for status provisioner.",
           "type": [
             "string",
             "null"
