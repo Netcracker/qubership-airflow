@@ -1,0 +1,422 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "description": "Qubership airflow site manager schema.",
+  "type": "object",
+  "properties": {
+    "labels": {
+      "description": "Qubership airflow site manager labels.",
+      "type": "object",
+      "default": {
+        "app.kubernetes.io/part-of": "airflow"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "image": {
+      "structuredValue": true,
+      "description": "Qubership airflow site manager image configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository": {
+          "description": "Specifies the repository for airflow site manager image.",
+          "type": "string",
+          "default": "ghcr.io/netcracker/qubership-airflow-sm"
+        },
+        "pullPolicy": {
+          "description": "Specifies image pull policy for airflow site manager image.",
+          "type": "string",
+          "default": "IfNotPresent"
+        },
+        "tag": {
+          "description": "Airflow site manager image tag.",
+          "type": "string",
+          "default": "main"
+        }
+      }
+    },
+    "imagePullSecrets": {
+      "description": "Image Pull Secrets for airflow site manager.",
+      "type": "array",
+      "default": []
+    },
+    "priorityClassName": {
+      "description": "Specify priority class name for airflow site manager.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "nameOverride": {
+      "description": "Expand the name of the chart.",
+      "type": "string",
+      "default": ""
+    },
+    "fullnameOverride": {
+      "description": "Create a default fully qualified app name.",
+      "type": "string",
+      "default": ""
+    },
+    "siteManager": {
+      "structuredValue": true,
+      "description": "Qubership airflow site manager general configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "apiGroup": {
+          "description": "Disaster recovery CR API group.",
+          "type": "string",
+          "default": "netcracker.com"
+        },
+        "clusterRoleBinding": {
+          "structuredValue": true,
+          "description": "Qubership airflow site manager cluster role binding configuration.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "install": {
+              "description": "Deploy the site-manager Cluster Role Binding.",
+              "type": "boolean",
+              "default": true
+            }
+          }
+        },
+        "cr": {
+          "structuredValue": true,
+          "description": "Qubership airflow site-manager CR configuration.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "install": {
+              "description": "Deploy the site-manager CR.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "startAfter": {
+          "description": "The list of DR services Airflow depends on. Currently, it is PostgreSQL. The name of the service should be as in its site-manager CR. The Site Manager client renders services' names in the table of statuses.",
+          "type": "array",
+          "default": [
+            "pg"
+          ]
+        },
+        "timeout": {
+          "description": "The timeout site-manager waits for Airflow SM to respond.",
+          "type": "integer",
+          "default": 180
+        },
+        "tls": {
+          "structuredValue": true,
+          "description": "Qubership airflow site-manager tls configuration.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "description": "Enable tls for SM.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    "dr": {
+      "structuredValue": true,
+      "description": "Qubership airflow site manager dr configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "description": "The DR mode of Airflow. It should be active or standby.",
+          "type": "string",
+          "default": "standby"
+        },
+        "noWait": {
+          "description": "It specifies whether it is a failover or not.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "START_TIMEOUT": {
+      "description": "The timeout to wait for the Airflow Operator to start after it has been switched to the active mode.",
+      "type": "integer",
+      "default": 120
+    },
+    "SHUTDOWN_TIMEOUT": {
+      "description": "The timeout to wait for the Airflow Operator to scale to 0 after it has been switched to the standby mode.",
+      "type": "integer",
+      "default": 25
+    },
+    "FLOWER_REPLICAS": {
+      "description": "The required number of flower replicas in the active mode. It must be 0 or 1.",
+      "type": "integer",
+      "default": 1
+    },
+    "DAG_PROCESSOR_REPLICAS": {
+      "description": "The required number of DAG processor replicas in the active mode.",
+      "type": "integer",
+      "default": 1
+    },
+    "WORKER_REPLICAS": {
+      "description": "The required number of CeleryExecutor worker replicas in the active mode.",
+      "type": "integer",
+      "default": 1
+    },
+    "SCHEDULER_REPLICAS": {
+      "description": "The required number of scheduler replicas in the active mode.",
+      "type": "integer",
+      "default": 1
+    },
+    "API_SERVER_REPLICAS": {
+      "description": "The required number of api server replicas in the active mode.",
+      "type": "integer",
+      "default": 1
+    },
+    "RESOURCE_FOR_DR": {
+      "description": "A DRD parameter. The value must not be changed. It specifies configmap, which is used to store and manage the Airflow DR state. The configmap contains the DR mode and a state of the mode change.",
+      "type": "string",
+      "default": "\"\" v1 configmaps airflow-dr-state"
+    },
+    "USE_DEFAULT_PATH": {
+      "description": "A DRD parameter. The value must not be changed. Airflow's DRD resource is a configmap and has its own parameters.",
+      "type": "string",
+      "default": "false"
+    },
+    "DISASTER_RECOVERY_MODE_PATH": {
+      "description": "A DRD parameter. The value must not be changed. It is the DRD configmap's parameter to store the Airflow DR mode.",
+      "type": "string",
+      "default": "data.mode"
+    },
+    "DISASTER_RECOVERY_NOWAIT_PATH": {
+      "description": "A DRD parameter. The value must not be changed. This parameter specifies the path to the disaster recovery no-wait field in the Airflow DR configmap..",
+      "type": "string",
+      "default": "data.noWait"
+    },
+    "DISASTER_RECOVERY_STATUS_MODE_PATH": {
+      "description": "A DRD parameter. The value must not be changed. This parameter specifies the path to the disaster recovery status mode field in the Airflow DR configmap.",
+      "type": "string",
+      "default": "data.status_mode"
+    },
+    "DISASTER_RECOVERY_STATUS_STATUS_PATH": {
+      "description": "A DRD parameter. The value must not be changed. This parameter specifies the path to the disaster recovery status status field in the Airflow DR configmap.",
+      "type": "string",
+      "default": "data.status_status"
+    },
+    "DISASTER_RECOVERY_STATUS_COMMENT_PATH": {
+      "description": "A DRD parameter. The value must not be changed. This parameter specifies the path to the disaster recovery status comment field in the Airflow DR configmap. The comment contains information about the last mode change.",
+      "type": "string",
+      "default": "data.status_comment"
+    },
+    "DISASTER_RECOVERY_NOWAIT_AS_STRING": {
+      "description": "A DRD parameter. The value must not be changed. If this parameter is true, the DRD uses string values for the no-wait parameter, otherwise a Boolean value is used.",
+      "type": "string",
+      "default": "true"
+    },
+    "TREAT_STATUS_AS_FIELD": {
+      "description": "A DRD parameter. The value must not be changed. It specifies that a configmap is used as a DRD resource instead of a CR.",
+      "type": "string",
+      "default": "true"
+    },
+    "HEALTH_MAIN_SERVICES_ACTIVE": {
+      "description": "A DRD parameter. It must not be empty. This parameter is not used in the Airflow DR, but is required to be set by DRD.",
+      "type": "string",
+      "default": "deployment airflow-api-server"
+    },
+    "HTTP_AUTH_ENABLED": {
+      "description": "A DRD parameter. It specifies if the authentication should be enabled.",
+      "type": "boolean",
+      "default": false
+    },
+    "SM_SECURE_AUTH": {
+      "description": "A DRD parameter. It specifies whether the smSecureAuth mode is enabled for Site Manager.",
+      "type": "boolean",
+      "default": false
+    },
+    "SITE_MANAGER_SERVICE_ACCOUNT_NAME": {
+      "description": "A DRD parameter. It specifies the name of the service account used by site-manager. It should be set along with SITE_MANAGER_NAMESPACE to enable JWT token checks for DR requests. If set to empty string, will be site-manager-sa if SM_SECURE_AUTH is true and sm-auth-sa otherwise.",
+      "type": "string",
+      "default": ""
+    },
+    "SITE_MANAGER_NAMESPACE": {
+      "description": "A DRD parameter. It specifies the namespace where Site-Manager of K8s' clusters are deployed. It should be set along with SITE_MANAGER_SERVICE_ACCOUNT_NAME to enable JWT token checks for DR requests.",
+      "type": "string",
+      "default": "site-manager"
+    },
+    "SITE_MANAGER_CUSTOM_AUDIENCE": {
+      "description": "A DRD parameter. It specifies the name of custom audience for the rest api token, that is used to connect with services. It is necessary if Site Manager installed with SM_SECURE_AUTH=true, and has applied custom audience (sm-services by default). It is considered if airflow-site-manager.SM_SECURE_AUTH parameter is set to true.",
+      "type": "string",
+      "default": "sm-services"
+    },
+    "logLevel": {
+      "description": "Set higher levels up to 4 for more verbose logging.",
+      "type": "integer",
+      "default": 2
+    },
+    "serviceAccount:": {
+      "structuredValue": true,
+      "description": "Qubership Airflow site manager service account configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "description": "Specifies whether the service account for Airflow site manager is to be deployed or not.",
+          "type": "boolean",
+          "default": true
+        },
+        "annotations": {
+          "description": "Annotations to add to the Airflow site manager service account.",
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "The name of the service account to use. If not set and create is true, a name is generated using the fullname template.",
+          "type": "string",
+          "default": "airflow-site-manager"
+        }
+      }
+    },
+    "podAnnotations": {
+      "description": "Annotations to add to the Quberhip Airflow site manager pod.",
+      "type": "object",
+      "default": {},
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "securityContexts": {
+      "description": "Security context definition for Qubership Airflow site manager.",
+      "type": "object",
+      "properties": {
+        "pod": {
+          "description": "Pod security context for site manager.",
+          "type": "object",
+          "default": {
+            "runAsUser": 50000,
+            "runAsNonRoot": true,
+            "fsGroup": 50000,
+            "seccompProfile": {
+              "type": "RuntimeDefault"
+            }
+          },
+          "examples": [
+            {
+              "runAsUser": 50000,
+              "runAsGroup": 0,
+              "fsGroup": 0
+            }
+          ]
+        },
+        "container": {
+          "description": "Container security context for site manager.",
+          "type": "object",
+          "default": {
+            "capabilities": {
+              "drop": [
+                "ALL"
+              ]
+            },
+            "allowPrivilegeEscalation": false
+          },
+          "examples": [
+            {
+              "allowPrivilegeEscalation": false
+            }
+          ]
+        }
+      }
+    },
+    "service:": {
+      "structuredValue": true,
+      "description": "Qubership Airflow site manager service configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "description": "The type of the Kubernetes service.",
+          "type": "string",
+          "default": "ClusterIP"
+        },
+        "port": {
+          "description": "Do not change it. The Site Manager uses the 8080 port.",
+          "type": "integer",
+          "default": 8080
+        }
+      }
+    },
+    "ingress:": {
+      "structuredValue": true,
+      "description": "Qubership Airflow site manager ingress configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "Enables the Airflow Site Manager ingress creation.",
+          "type": "boolean",
+          "default": false
+        },
+        "annotations": {
+          "description": "Annotations to add to the Airflow Site Manager ingress.",
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "hosts": {
+          "description": "The Ingress hosts configuration. It should be compatible with the cluster's ingress URL routing rules.",
+          "type": "array",
+          "default": [
+            {
+              "host": "",
+              "paths": [
+                {
+                  "path": "/",
+                  "backend": {
+                    "servicePort": 8080
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "tls": {
+          "description": "Airflow Site Manager ingress tls configuration.",
+          "type": "array",
+          "default": [],
+          "examples": [
+            {
+              "secretName": "chart-example-tls",
+              "hosts": [
+                "chart-example.local"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "resources": {
+      "description": "Resources for airflow site manager.",
+      "type": "object",
+      "default": {},
+      "examples": [
+        {
+          "limits": {
+            "cpu": "100m",
+            "memory": "128Mi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "128Mi"
+          }
+        }
+      ]
+    }
+  }
+}
