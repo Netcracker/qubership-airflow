@@ -48,7 +48,7 @@ DISASTER_RECOVERY_STATUS_STATUS_PATH: 'data.status_status' # do not change
 DISASTER_RECOVERY_STATUS_COMMENT_PATH: 'data.status_comment' # do not change
 DISASTER_RECOVERY_NOWAIT_AS_STRING: 'true' # do not change
 TREAT_STATUS_AS_FIELD: 'true' # do not change
-HEALTH_MAIN_SERVICES_ACTIVE: deployment airflow-airflow-webserver
+HEALTH_MAIN_SERVICES_ACTIVE: deployment airflow-api-server
 
 # auth settings
 HTTP_AUTH_ENABLED: false
