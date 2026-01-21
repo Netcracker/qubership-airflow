@@ -54,6 +54,7 @@ This section provides information about the Airflow installation using [slightly
     - [Keycloak With TLS](#keycloak-with-tls)
   - [Enabling HTTPS for Airflow Ingresses](#enabling-https-for-airflow-ingresses)
       - [Using Cert-manager to Get Certificate for Ingress](#using-cert-manager-to-get-certificate-for-ingress)
+  - [Enabling HPAs for workers and API server](#enabling-hpas-for-workers-and-api-server)
   - [Prometheus Monitoring and Alerts](#prometheus-monitoring-and-alerts)
       - [Plugin Prometheus Monitoring](#plugin-prometheus-monitoring)
       - [StatsD Prometheus Exporter Monitoring](#statsd-prometheus-exporter-monitoring)
@@ -1194,7 +1195,7 @@ For more information, refer to [https://airflow.apache.org/docs/apache-airflow/s
 For example:
 
 ```yaml
-webserver:
+apiServer:
 ...
   args: ["bash", "-c", "exec airflow api-server --access-logformat '%(t)s %(h)s %(l)s %(u)s
               \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\"'"]
@@ -2017,12 +2018,13 @@ You can enable LDAP integration for Web UI using the installation parameters. Fo
 The following is an example for enabling LDAP without group mapping and with pre-created Admin user. 
 
 ```yaml
-webserver:
+createUserJob:
 ...
-  createUserJob:
-    enabled: true
+  enabled: true
+...
+  defaultUser:
     role: Admin
-    username: ldap_admin_username
+    username: admin
 ...
 apiServer:
 ...
@@ -2052,10 +2054,10 @@ In the example above, the `createUserJob.defaultUser.*` are required for providi
 The following is an example for enabling LDAP with group mapping:
 
 ```yaml
-webserver:
 ...
-  createUserJob:
-    enabled: false
+createUserJob:
+  enabled: false
+...
 apiServer:
 ...
   apiServerConfig: |
@@ -2096,10 +2098,8 @@ extraEnvFrom: |
   - secretRef:
       name: 'ldap-bind-password'
 ...
-webserver:
-...
-  createUserJob:
-    enabled: false
+createUserJob:
+  enabled: false
 apiServer:
 ...
   apiServerConfig: |
@@ -2334,9 +2334,9 @@ ingress:
       - web-airflow.kubernetes.qubership.com
 ```
 
-## Enabling HPAs for workers and webserver
+## Enabling HPAs for workers and API server
 
-It is possible to configure HPAs for workers and webservers using `webserver.hpa.*` and `workers.hpa.*` parameters, for example:
+It is possible to configure HPAs for workers and API servers using `apiServer.hpa.*` and `workers.hpa.*` parameters, for example:
 
 ```yaml
 workers:
