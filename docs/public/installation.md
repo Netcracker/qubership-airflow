@@ -2153,9 +2153,9 @@ The qubership chart distribution includes a [webserver_config.py](/chart/helm/ai
 This file can be loaded in the `apiServer.apiServerConfig` parameter, for example:
 
 ```yaml
+createUserJob:
+  enabled: false
 apiServer:
-  createUserJob:
-    enabled: false
   apiServerConfig: |-
     {{ .Files.Get "qs_files/webserver_config_keycloak.py" }}
 ...
@@ -2184,9 +2184,9 @@ To specify keycloak auth manager, it is required to specify the following:
 config:
   core:
     auth_manager: airflow.providers.keycloak.auth_manager.keycloak_auth_manager.KeycloakAuthManager
-apiServer:
-  createUserJob:
-    enabled: false # Keycloak auth manager does not support custom users
+...
+createUserJob:
+  enabled: false # Keycloak auth manager does not support custom users
 ```
 
 Also, the following environment variables are required:
