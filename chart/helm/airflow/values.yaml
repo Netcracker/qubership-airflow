@@ -3454,7 +3454,7 @@ customPreinstallJob:
 #    - secretRef:
 #        name: 'postgres-conn'
 
-certManagerInegration:
+certManagerIntegration:
   enabled: false
   secretName: airflow-services-tls-certificate
   duration: 365

@@ -54,6 +54,7 @@ This section provides information about the Airflow installation using [slightly
     - [Keycloak With TLS](#keycloak-with-tls)
   - [Enabling HTTPS for Airflow Ingresses](#enabling-https-for-airflow-ingresses)
       - [Using Cert-manager to Get Certificate for Ingress](#using-cert-manager-to-get-certificate-for-ingress)
+  - [Enabling HPAs for workers and API server](#enabling-hpas-for-workers-and-api-server)
   - [Prometheus Monitoring and Alerts](#prometheus-monitoring-and-alerts)
       - [Plugin Prometheus Monitoring](#plugin-prometheus-monitoring)
       - [StatsD Prometheus Exporter Monitoring](#statsd-prometheus-exporter-monitoring)
@@ -422,7 +423,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * Added labels required by Qubership release.
 * Status provisioner job and parameters for it are added.
 * For scheduler, webserver and api-server deployments support of custom Qubership rolling update deployment strategies were added. The `useQubershipDeployerUpdateStrategies` parameter is added that can be used to disable Qubership update strategies (must be set to `false`).
-* `rbac.create` parameter is set to `false` to avoid unnecessary for celery executor roles creation.
+* `values.schema.json` is changed. `values.schema.json` is not stored in this repository, but during the transfer-image build airflow schema is downloaded from airflow repository and modified in a way so only parameters that are used in Qubership platform are left in the schema. The default values for these parameters are changed to default values from Qubership platform. Also new Quberhip platform related parameters are added.
 
 ### Using Non-DBaaS Airflow Installation
 
@@ -510,7 +511,7 @@ All the possible parameters are listed below.
 | `airflow-site-manager.DISASTER_RECOVERY_STATUS_COMMENT_PATH` | true                             | string          | `data.status_comment`                                                                  | A DRD parameter. The value must not be changed. This parameter specifies the path to the disaster recovery status `comment` field in the Airflow DR configmap. The comment contains information about the last mode change. |                                                                                                                                                                                                                |
 | `airflow-site-manager.DISASTER_RECOVERY_NOWAIT_AS_STRING`    | true                             | string          | `true`                                                                                 | A DRD parameter. The value must not be changed. If this parameter is true, the DRD uses string values for the no-wait parameter, otherwise a Boolean value is used.                                                         |
 | `airflow-site-manager.TREAT_STATUS_AS_FIELD`                 | true                             | string          | `true`                                                                                 | A DRD parameter. The value must not be changed. It specifies that a configmap is used as a DRD resource instead of a CR.                                                                                                    |
-| `airflow-site-manager.HEALTH_MAIN_SERVICES_ACTIVE`           | true                             | string          | `deployment airflow-airflow-webserver`                                                 | A DRD parameter. It must not be empty. This parameter is not used in the Airflow DR, but is required to be set by DRD.                                                                                                      |
+| `airflow-site-manager.HEALTH_MAIN_SERVICES_ACTIVE`           | true                             | string          | `deployment airflow-api-server`                                                        | A DRD parameter. It must not be empty. This parameter is not used in the Airflow DR, but is required to be set by DRD.                                                                                                      |
 | `airflow-site-manager.HTTP_AUTH_ENABLED`     | false                            | boolean          | `false`                                                                          | A DRD parameter. It specifies if the authentication should be enabled.                                        |
 | `airflow-site-manager.SM_SECURE_AUTH`     | false                            | boolean          | `false`                                                                          | A DRD parameter. It specifies whether the smSecureAuth mode is enabled for Site Manager.                                   |
 | `airflow-site-manager.SITE_MANAGER_SERVICE_ACCOUNT_NAME`     | false                            | string          | `sm-auth-sa`                                                                           | A DRD parameter. It specifies the name of the service account used by site-manager. It should be set along with `SITE_MANAGER_NAMESPACE` to enable JWT token checks for DR requests.                                        |
@@ -521,7 +522,7 @@ All the possible parameters are listed below.
 | `airflow-site-manager.securityContexts.pod`                  | false                            | object          | `{}`                                                                                   | The Airflow Site Manager pod security context.                                                                                                                                                                              |
 | `airflow-site-manager.securityContexts.container`            | false                            | object          | `{}`                                                                                   | The Airflow Site Manager container security context.                                                                                                                                                                        |
 | `airflow-site-manager.service.type`                          | false                            | string          | `ClusterIP`                                                                            | The type of the Kubernetes service.                                                                                                                                                                                         |
-| `airflow-site-manager.service.port`                          | false                            | string          | `8080`                                                                                 | Do not change it. The Site Manager uses the 8080 port.                                                                                                                                                                      |
+| `airflow-site-manager.service.port`                          | false                            | int             | `8080`                                                                                 | Do not change it. The Site Manager uses the 8080 port.                                                                                                                                                                      |
 | `airflow-site-manager.ingress`                               | false                            | object          | `{}`                                                                                   | Set the proper `host` if ingress is enabled.                                                                                                                                                                                |
 | `airflow-site-manager.ingress.enabled`                       | false                            | bool            | false                                                                                  | Enables the Airflow Site Manager ingress creation.                                                                                                                                                                          |
 | `airflow-site-manager.ingress.hosts`                         | Mandatory if ingress is enabled.  | list ob objects | -                                                                                      | The Ingress host. It should be compatible with the cluster's ingress URL routing rules.                                                                                                                                     |
@@ -979,7 +980,7 @@ For SSL configuration, the `data.metadataConnection.sslmode` parameter is respon
 It is possible to create a secret containing ca-cert using [cert-manager](https://cert-manager.io/). To do so, the following configuration is available:
 
 ```yaml
-certManagerInegration:
+certManagerIntegration:
   ## Enabling
   enabled: false
   ## Secret name
@@ -993,7 +994,7 @@ certManagerInegration:
   clusterIssuerName: ~
 ```
 
-Note that in this case, cert-manager must be installed in the cluster. In case `certManagerIntegration.enabled` is set to `true`, the cert manager creates a secret containing ca-cert from clusterIssuer with `certManagerInegration.clusterIssuerName` in the ca.crt field with the name, `certManagerInegration.secretName`. For example, to create a secret with `ca.crt` and use it for Redis connection certificate verification, you must specify the the following parameters:
+Note that in this case, cert-manager must be installed in the cluster. In case `certManagerIntegration.enabled` is set to `true`, the cert manager creates a secret containing ca-cert from clusterIssuer with `certManagerIntegration.clusterIssuerName` in the ca.crt field with the name, `certManagerIntegration.secretName`. For example, to create a secret with `ca.crt` and use it for Redis connection certificate verification, you must specify the the following parameters:
 
 ```yaml
 ...
@@ -1013,7 +1014,7 @@ workers:
       secret:
         secretName: airflow-services-tls-certificate
 ...
-certManagerInegration:
+certManagerIntegration:
   enabled: true
   secretName: airflow-services-tls-certificate
   duration: 365
@@ -1055,7 +1056,7 @@ extraSecrets:
       MAAS_USER: 'insert maas user here'
       MAAS_PASSWORD: 'insert maas password here'
       DBAAS_SSL_VERIFICATION_MAIN: 'CERT_PATH:/home/airflow/certs/ca.crt'
-certManagerInegration:
+certManagerIntegration:
   enabled: true
   secretName: airflow-services-tls-certificate
   duration: 365
@@ -1076,7 +1077,7 @@ volumes:
 
 ## Enabling TLS on airflow UI inside kubernetes
 
-It is possible to enable TLS on Airflow web UI directly inside kubernetes. For this, Airflow API server needs TLS key and certificate. TLS key and certificate can be requested from cert-manager using `certManagerInegration.enabled` parameter. By default, it creates the secret `airflow-services-tls-certificate` with TLS certificate, TLS key and CA certificate. Alternatively, TLS key and certificate can be specified using `extraSecrets` parameter. After this, it is necessary to mount the certificates into webserver pod and specify the certificates in API server using `config.webserver.web_server_ssl_cert` and `config.webserver.web_server_ssl_key` (or `config.api.ssl_cert` and `config.api.ssl_key`). Also, it is necessary to specify the HTTPS scheme for API server liveness, readiness, and startup probes. Since in Airflow 3 workers go to airflow API server, workers must also have access to the TLS certificate and `execution_api_server_url` must be redirected to https. If using kubernetes with NGINX ingress controller, it is possible to pass annotations for ingress controller to work with TLS backend, for example:
+It is possible to enable TLS on Airflow web UI directly inside kubernetes. For this, Airflow API server needs TLS key and certificate. TLS key and certificate can be requested from cert-manager using `certManagerIntegration.enabled` parameter. By default, it creates the secret `airflow-services-tls-certificate` with TLS certificate, TLS key and CA certificate. Alternatively, TLS key and certificate can be specified using `extraSecrets` parameter. After this, it is necessary to mount the certificates into webserver pod and specify the certificates in API server using `config.webserver.web_server_ssl_cert` and `config.webserver.web_server_ssl_key` (or `config.api.ssl_cert` and `config.api.ssl_key`). Also, it is necessary to specify the HTTPS scheme for API server liveness, readiness, and startup probes. Since in Airflow 3 workers go to airflow API server, workers must also have access to the TLS certificate and `execution_api_server_url` must be redirected to https. If using kubernetes with NGINX ingress controller, it is possible to pass annotations for ingress controller to work with TLS backend, for example:
 
 ```yaml
 # airflow-install-namespace here should be replaced with the namespace where airflow is installed.
@@ -1126,7 +1127,7 @@ config:
   webserver:
     web_server_ssl_cert: /home/airflow/certs/tls.crt
     web_server_ssl_key: /home/airflow/certs/tls.key
-certManagerInegration:
+certManagerIntegration:
   clusterIssuerName: common-cluster-issuer
   enabled: true
 ```
@@ -1194,7 +1195,7 @@ For more information, refer to [https://airflow.apache.org/docs/apache-airflow/s
 For example:
 
 ```yaml
-webserver:
+apiServer:
 ...
   args: ["bash", "-c", "exec airflow api-server --access-logformat '%(t)s %(h)s %(l)s %(u)s
               \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\"'"]
@@ -2017,10 +2018,11 @@ You can enable LDAP integration for Web UI using the installation parameters. Fo
 The following is an example for enabling LDAP without group mapping and with pre-created Admin user. 
 
 ```yaml
-webserver:
+createUserJob:
 ...
-  createUserJob:
-    enabled: true
+  enabled: true
+...
+  defaultUser:
     role: Admin
     username: ldap_admin_username
 ...
@@ -2052,10 +2054,10 @@ In the example above, the `createUserJob.defaultUser.*` are required for providi
 The following is an example for enabling LDAP with group mapping:
 
 ```yaml
-webserver:
 ...
-  createUserJob:
-    enabled: false
+createUserJob:
+  enabled: false
+...
 apiServer:
 ...
   apiServerConfig: |
@@ -2096,10 +2098,8 @@ extraEnvFrom: |
   - secretRef:
       name: 'ldap-bind-password'
 ...
-webserver:
-...
-  createUserJob:
-    enabled: false
+createUserJob:
+  enabled: false
 apiServer:
 ...
   apiServerConfig: |
@@ -2153,9 +2153,9 @@ The qubership chart distribution includes a [webserver_config.py](/chart/helm/ai
 This file can be loaded in the `apiServer.apiServerConfig` parameter, for example:
 
 ```yaml
+createUserJob:
+  enabled: false
 apiServer:
-  createUserJob:
-    enabled: false
   apiServerConfig: |-
     {{ .Files.Get "qs_files/webserver_config_keycloak.py" }}
 ...
@@ -2184,9 +2184,9 @@ To specify keycloak auth manager, it is required to specify the following:
 config:
   core:
     auth_manager: airflow.providers.keycloak.auth_manager.keycloak_auth_manager.KeycloakAuthManager
-apiServer:
-  createUserJob:
-    enabled: false # Keycloak auth manager does not support custom users
+...
+createUserJob:
+  enabled: false # Keycloak auth manager does not support custom users
 ```
 
 Also, the following environment variables are required:
@@ -2334,9 +2334,9 @@ ingress:
       - web-airflow.kubernetes.qubership.com
 ```
 
-## Enabling HPAs for workers and webserver
+## Enabling HPAs for workers and API server
 
-It is possible to configure HPAs for workers and webservers using `webserver.hpa.*` and `workers.hpa.*` parameters, for example:
+It is possible to configure HPAs for workers and API servers using `apiServer.hpa.*` and `workers.hpa.*` parameters, for example:
 
 ```yaml
 workers:

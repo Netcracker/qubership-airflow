@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "description": "Qubership airflow integration tests schema.",
+  "type": "object",
+  "properties": {
+    "service": {
+      "structuredValue": true,
+      "description": "Integration tests service configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Specifies the name of Airflow integration tests' service.",
+          "type": "string",
+          "default": "airflow-integration-tests"
+        }
+      }
+    },
+    "secret": {
+      "structuredValue": true,
+      "description": "Integration tests secret configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "airflow": {
+          "description": "Airflow credentials configuration for integration tests.",
+          "type": "object",
+          "properties": {
+            "user": {
+              "description": "Specifies the user for authentication in Airflow.",
+              "type": "string",
+              "default": "admin"
+            },
+            "password": {
+              "description": "Specifies the password for authentication in Airflow.",
+              "type": "string",
+              "default": "admin"
+            }
+          }
+        }
+      }
+    },
+    "serviceAccount": {
+      "structuredValue": true,
+      "description": "Integration tests service account configuration",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "description": "Specifies whether the service account for Airflow integration tests is to be deployed or not.",
+          "type": "boolean",
+          "default": true
+        },
+        "name": {
+          "description": "Specifies the name of the service account that is used to deploy Airflow integration tests.",
+          "type": "string",
+          "default": "airflow-integration-tests"
+        }
+      }
+    },
+    "image": {
+      "description": "Specifies the Docker image of Airflow integration tests.",
+      "type": "string",
+      "default": "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
+    },
+    "tags": {
+      "description": "Specifies the tags combined together with AND, OR, and NOT operators that select test cases to run.",
+      "type": "string",
+      "default": "smoke"
+    },
+    "airflowHost": {
+      "description": "Specifies the host name of the Airflow API server.",
+      "type": "string",
+      "default": "airflow-api-server"
+    },
+    "airflowPort": {
+      "description": "Specifies the port of Airflow.",
+      "type": "integer",
+      "default": 8080
+    },
+    "workerServiceName": {
+      "description": "Specifies the name of the Airflow Worker service.",
+      "type": "string",
+      "default": "airflow-worker"
+    },
+    "apiServiceName": {
+      "description": "Specifies the name of the Airflow API service.",
+      "type": "string",
+      "default": "airflow-api-server"
+    },
+    "schedulerDeployment": {
+      "description": "Specifies the name of the Airflow Scheduler deployment.",
+      "type": "string",
+      "default": "airflow-scheduler"
+    },
+    "dagProcessorDeployment": {
+      "description": "Specifies the name of the DAG Processor deployment.",
+      "type": "string",
+      "default": "airflow-dag-processor"
+    },
+    "prometheusHost": {
+      "description": "Specifies the host name of the Prometheus service.",
+      "type": "string",
+      "default": ""
+    },
+    "prometheusPort": {
+      "description": "Specifies the port of the Prometheus service.",
+      "type": "integer",
+      "default": 9090
+    },
+    "executorType": {
+      "description": "Specifies the type of worker executor. The possible value is CeleryExecutor or KubernetesExecutor.",
+      "type": "string",
+      "default": "CeleryExecutor"
+    },
+    "securityContexts": {
+      "description": "Security context definition for integration tests.",
+      "type": "object",
+      "properties": {
+        "pod": {
+          "description": "Pod security context for integration tests.",
+          "type": "object",
+          "default": {
+            "runAsUser": 50000,
+            "runAsNonRoot": true,
+            "fsGroup": 50000,
+            "seccompProfile": {
+              "type": "RuntimeDefault"
+            }
+          },
+          "examples": [
+            {
+              "runAsUser": 50000,
+              "runAsGroup": 0,
+              "fsGroup": 0
+            }
+          ]
+        },
+        "container": {
+          "description": "Container security context for integration tests.",
+          "type": "object",
+          "default": {
+            "capabilities": {
+              "drop": [
+                "ALL"
+              ]
+            },
+            "allowPrivilegeEscalation": false
+          },
+          "examples": [
+            {
+              "allowPrivilegeEscalation": false
+            }
+          ]
+        }
+      }
+    },
+    "statusWritingEnabled": {
+      "description": "Specifies the writing status of integration tests' execution to the specified Custom Resource.",
+      "type": [
+        "string",
+        "boolean"
+      ],
+      "default": "true"
+    },
+    "isShortStatusMessage": {
+      "description": "Specifies the type of status message.",
+      "type": [
+        "string",
+        "boolean"
+      ],
+      "default": "true"
+    },
+    "onlyIntegrationTests": {
+      "description": "Specifies if only integration tests should be run not affecting deploy status.",
+      "type": [
+        "string",
+        "boolean"
+      ],
+      "default": "false"
+    },
+    "resources": {
+      "description": "Resources for integration tests.",
+      "type": "object",
+      "default": {},
+      "examples": [
+        {
+          "limits": {
+            "cpu": "100m",
+            "memory": "128Mi"
+          },
+          "requests": {
+            "cpu": "100m",
+            "memory": "128Mi"
+          }
+        }
+      ]
+    },
+    "priorityClassName": {
+      "description": "Specify priority class name for integration tests.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    }
+  }
+}
