@@ -1,0 +1,50 @@
+{{- if  .Values.httpRoute.apiServer.enabled -}}
+{{- $fullname := (include "airflow.fullname" .) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullname }}-apiServer
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: airflow
+    component: airflow-httproute
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+    {{- if or (.Values.labels) (.Values.apiServer.labels) }}
+      {{- mustMerge .Values.apiServer.labels .Values.labels | toYaml | nindent 4 }}
+    {{- end }}
+  {{- with .Values.httpRoute.apiServer.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.httpRoute.apiServer.parentRefs }}
+  parentRefs:
+    {{- tpl (toYaml .) | nindent 4 }}
+  {{- end }}
+  {{- with .Values.httpRoute.apiServer.hostnames }}
+  hostnames:
+    {{- tpl (toYaml .) | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range .Values.httpRoute.apiServer.rules }}
+    - matches:
+        {{- if .matches }}
+        {{- toYaml .matches | nindent 8 }}
+        {{- else }}
+        - path:
+            type: {{ .path.type | default "PathPrefix" }}
+            value: {{ .path.value | default "/" }}
+        {{- end }}
+      {{- if .filters }}
+      filters:
+        {{- toYaml .filters | nindent 8 }}
+      {{- end }}
+      backendRefs:
+        - name: {{ $fullname }}-api-server
+          port: {{ .Values.ports.apiServer }}
+          {{- if .weight }}
+          weight: {{ .weight }}
+          {{- end }}
+    {{- end }}
+{{- end }}
