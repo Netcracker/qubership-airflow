@@ -497,6 +497,50 @@
       "description": "Enable Qubership Deployer Update Strategies.",
       "type": "boolean",
       "default": true
+    },
+    "httpRoute": {
+      "structuredValue": true,
+      "description": "Status provisioner configuration",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "apiServer": {
+          "structuredValue": true,
+          "description": "Status provisioner configuration",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "description": "Whether to enable apiServer http route",
+              "type": "boolean",
+              "default": false
+            },
+            "annotations": {
+              "description": "Annotations to add to the api server http route.",
+              "type": "object",
+              "default": {},
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "parentRefs": {
+              "description": "parentRefs for api server http route (can be templated).",
+              "type": "array",
+              "default": []
+            },
+            "hostnames": {
+              "description": "hostnames for api server http route (can be templated).",
+              "type": "array",
+              "default": []
+            },
+            "rules": {
+              "description": "rules for api server http route.",
+              "type": "array",
+              "default": []
+            }
+          }
+        }
+      }
     }
   }
 }
