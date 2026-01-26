@@ -3486,7 +3486,7 @@ useQubershipDeployerUpdateStrategies: true
 
 httpRoute:
   apiServer:
-    enabled: true
+    enabled: false
     annotations: {}
     parentRefs: []
     hostnames: []
