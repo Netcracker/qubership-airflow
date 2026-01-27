@@ -3491,3 +3491,10 @@ httpRoute:
     parentRefs: []
     hostnames: []
     rules: []
+    redirectRoute:
+      enabled: false
+      parentRefs: []
+    backendTLSPolicy:
+      enabled: false
+      hostname: ''
+      caCertificateRefs: []
