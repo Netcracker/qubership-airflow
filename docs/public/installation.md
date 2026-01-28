@@ -54,6 +54,7 @@ This section provides information about the Airflow installation using [slightly
     - [Keycloak With TLS](#keycloak-with-tls)
   - [Enabling HTTPS for Airflow Ingresses](#enabling-https-for-airflow-ingresses)
       - [Using Cert-manager to Get Certificate for Ingress](#using-cert-manager-to-get-certificate-for-ingress)
+  - [HTTPRoute for K8S gateway API support](#httproute-for-k8s-gateway-api-support)
   - [Enabling HPAs for workers and API server](#enabling-hpas-for-workers-and-api-server)
   - [Prometheus Monitoring and Alerts](#prometheus-monitoring-and-alerts)
       - [Plugin Prometheus Monitoring](#plugin-prometheus-monitoring)
@@ -423,6 +424,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * Added labels required by Qubership release.
 * Status provisioner job and parameters for it are added.
 * For scheduler, webserver and api-server deployments support of custom Qubership rolling update deployment strategies were added. The `useQubershipDeployerUpdateStrategies` parameter is added that can be used to disable Qubership update strategies (must be set to `false`).
+* HTTP Route and related objects for api server and parameters for their configuration are added.
 * `values.schema.json` is changed. `values.schema.json` is not stored in this repository, but during the transfer-image build airflow schema is downloaded from airflow repository and modified in a way so only parameters that are used in Qubership platform are left in the schema. The default values for these parameters are changed to default values from Qubership platform. Also new Quberhip platform related parameters are added.
 
 ### Using Non-DBaaS Airflow Installation
@@ -2332,6 +2334,48 @@ ingress:
       secretName: myingress-cert
     hosts:
       - web-airflow.kubernetes.qubership.com
+```
+
+## HTTPRoute for K8S gateway API support
+
+Qubership platform provides an option to deploy HTTPRoute to expose airflow API server using K8S gateway API(as an alternative to ingress). For more information about k8s Gateway API and HTTPRoute please refer to official kubernetes documentation at https://gateway-api.sigs.k8s.io/ and https://gateway-api.sigs.k8s.io/guides/http-routing/ .
+
+It is possible to deploy 3 objects: 
+* Main HTTPRoute. It is required to replicate main ingress logic.
+* Redirect HTTPRoute. Can be used for redirecting airflow UI client from HTTP to HTTPS when using gateway with custom certificate.
+* BackendTLSPolicy. Required for verifying airflow certificate when TLS is enabled on airflow API server inside K8S.
+
+Following configuration parameters are available:
+
+|Name|Type|Default|Description|
+|---|---|---|---|
+|httpRoute.apiServer.enabled|`boolean`|`false`|Specifies if HTTPRoute for API server is deployed.|
+|httpRoute.apiServer.annotations|`object`|`{}`|Annotations for HTTPRoute and related objects|
+|httpRoute.apiServer.parentRefs|`array`|`[]`|parentRefs for HTTPRoute|
+|httpRoute.apiServer.hostnames|`array`|`[]`|hostnames for HTTPRoute|
+|httpRoute.apiServer.rules|`array`|`[]`|rules for HTTPRoute. When `rules[].matches` is not set,it defaults to `path.type=PathPrefix` and `path.value=/`|
+|httpRoute.apiServer.redirectRoute.enabled|`boolean`|`false`|Specifies if redirect HTTPRoute for API server is deployed|
+|httpRoute.apiServer.redirectRoute.parentRefs|`array`|`[]`|parentRefs for redirect HTTPRoute|
+|httpRoute.apiServer.backendTLSPolicy.enabled|`boolean`|`false`|Specifies if backendTLSPolicy should be deployed|
+|httpRoute.apiServer.backendTLSPolicy.hostname|`string`|`''`|Hostname for backendTLSPolicy|
+|httpRoute.apiServer.backendTLSPolicy.caCertificateRefs|`array`|`[]`|caCertificateRefs for backendTLSPolicy|
+|httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates|`string`|`""`|wellKnownCACertificates for backendTLSPolicy|
+|httpRoute.apiServer.backendTLSPolicy.subjectAltNames|`array`|`[]`|subjectAltNames for backendTLSPolicy|
+
+Configuration example can be found below:
+```yaml
+httpRoute:
+  apiServer:
+    enabled: true
+    parentRefs:
+      - name: default-external-gateway
+        namespace: envoy-api-gateway
+    hostnames:
+      - airflow-gateway.your.k8s.hostname
+    rules:
+      - backendRefs:
+          name: airflow-api-server
+          port: 8080
 ```
 
 ## Enabling HPAs for workers and API server
