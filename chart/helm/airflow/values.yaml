@@ -3498,3 +3498,6 @@ httpRoute:
       enabled: false
       hostname: ''
       caCertificateRefs: []
+      wellKnownCACertificates: ""
+      subjectAltNames: []
+

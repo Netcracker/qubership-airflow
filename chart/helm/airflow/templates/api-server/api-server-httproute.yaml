@@ -99,8 +99,19 @@ spec:
     kind: Service
     name: {{ $fullname }}-api-server
   validation:
+    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.hostname }}
     hostname: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.hostname . | quote }}
+    {{- end }}
+    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.subjectAltNames }}
+    subjectAltNames:
+    {{- toYaml .Values.httpRoute.apiServer.backendTLSPolicy.subjectAltNames | nindent 6 }}
+    {{- end }}
+    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.caCertificateRefs }}
     caCertificateRefs:
-{{- toYaml .Values.httpRoute.apiServer.backendTLSPolicy.caCertificateRefs | nindent 6 }}
+    {{- toYaml .Values.httpRoute.apiServer.backendTLSPolicy.caCertificateRefs | nindent 6 }}
+    {{- end }}
+    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates }}
+    wellKnownCACertificates: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates . | quote }}
+    {{- end }}
 {{- end }}
 {{- end }}
