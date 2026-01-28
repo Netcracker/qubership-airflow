@@ -1,0 +1,130 @@
+{{- if  .Values.httpRoute.apiServer.enabled -}}
+{{- $fullname := (include "airflow.fullname" .) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullname }}-api-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: airflow
+    component: airflow-httproute
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+    {{- if or (.Values.labels) (.Values.apiServer.labels) }}
+      {{- mustMerge .Values.apiServer.labels .Values.labels | toYaml | nindent 4 }}
+    {{- end }}
+  {{- with .Values.httpRoute.apiServer.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.httpRoute.apiServer.parentRefs }}
+  parentRefs:
+    {{- tpl (toYaml .) . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.httpRoute.apiServer.hostnames }}
+  hostnames:
+    {{- tpl (toYaml .) . | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range .Values.httpRoute.apiServer.rules }}
+    - matches:
+        {{- if .matches }}
+        {{- toYaml .matches | nindent 8 }}
+        {{- else }}
+        - path:
+            type: {{ .path.type | default "PathPrefix" }}
+            value: {{ .path.value | default "/" }}
+        {{- end }}
+      {{- if .filters }}
+      filters:
+        {{- toYaml .filters | nindent 8 }}
+      {{- end }}
+      backendRefs:
+        - name: {{ $fullname }}-api-server
+          port: {{ $.Values.ports.apiServer }}
+          {{- if .weight }}
+          weight: {{ .weight }}
+          {{- end }}
+    {{- end }}
+
+---
+
+{{- if  .Values.httpRoute.apiServer.redirectRoute.enabled -}}
+{{- $fullname := (include "airflow.fullname" .) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullname }}-api-server-redirect
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: airflow
+    component: airflow-httproute
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+    {{- if or (.Values.labels) (.Values.apiServer.labels) }}
+      {{- mustMerge .Values.apiServer.labels .Values.labels | toYaml | nindent 4 }}
+    {{- end }}
+  {{- with .Values.httpRoute.apiServer.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.httpRoute.apiServer.redirectRoute.parentRefs }}
+  parentRefs:
+    {{- tpl (toYaml .) . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.httpRoute.apiServer.hostnames }}
+  hostnames:
+    {{- tpl (toYaml .) . | nindent 4 }}
+  {{- end }}
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        statusCode: 301
+{{- end }}
+
+---
+
+{{- if  .Values.httpRoute.apiServer.backendTLSPolicy.enabled -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: BackendTLSPolicy
+metadata:
+  name: {{ $fullname }}-api-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: airflow
+    component: airflow-httproute
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+    {{- if or (.Values.labels) (.Values.apiServer.labels) }}
+      {{- mustMerge .Values.apiServer.labels .Values.labels | toYaml | nindent 4 }}
+    {{- end }}
+  {{- with .Values.httpRoute.apiServer.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io/v1
+    kind: Service
+    name: {{ $fullname }}-api-server
+  validation:
+    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.hostname }}
+    hostname: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.hostname . | quote }}
+    {{- end }}
+    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.subjectAltNames }}
+    subjectAltNames:
+    {{- toYaml .Values.httpRoute.apiServer.backendTLSPolicy.subjectAltNames | nindent 6 }}
+    {{- end }}
+    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.caCertificateRefs }}
+    caCertificateRefs:
+    {{- toYaml .Values.httpRoute.apiServer.backendTLSPolicy.caCertificateRefs | nindent 6 }}
+    {{- end }}
+    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates }}
+    wellKnownCACertificates: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates . | quote }}
+    {{- end }}
+{{- end }}
+{{- end }}

@@ -497,6 +497,114 @@
       "description": "Enable Qubership Deployer Update Strategies.",
       "type": "boolean",
       "default": true
+    },
+    "httpRoute": {
+      "structuredValue": true,
+      "description": "Status provisioner configuration",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "apiServer": {
+          "structuredValue": true,
+          "description": "Status provisioner configuration",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "description": "Whether to enable apiServer http route",
+              "type": "boolean",
+              "default": false
+            },
+            "annotations": {
+              "description": "Annotations to add to the api server http route.",
+              "type": "object",
+              "default": {},
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "parentRefs": {
+              "description": "parentRefs for api server http route (can be templated).",
+              "type": "array",
+              "default": []
+            },
+            "hostnames": {
+              "description": "hostnames for api server http route (can be templated).",
+              "type": "array",
+              "default": []
+            },
+            "rules": {
+              "description": "rules for api server http route.",
+              "type": "array",
+              "default": []
+            },
+            "redirectRoute": {
+              "structuredValue": true,
+              "description": "redirect route configuration for custom TLS",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "description": "Whether to enable redirect HTTPRoute",
+                  "type": "boolean",
+                  "default": false
+                },
+                "parentRefs": {
+                  "description": "parentRefs for api server redirect http route (can be templated).",
+                  "type": "array",
+                  "default": [],
+                  "examples": [
+                    {
+                      "name": "default-external-gateway",
+                      "namespace": "envoy-gateway",
+                      "port": 80
+                    }
+                  ]
+                }
+              }
+            },
+            "backendTLSPolicy": {
+              "structuredValue": true,
+              "description": "backendTLSPolicy configuration in case of airflow-api enabled TLS",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "description": "Whether to enable backendTLSPolicy",
+                  "type": "boolean",
+                  "default": false
+                },
+                "hostname": {
+                  "description": "Hostname for backendTLSPolicy",
+                  "type": "string",
+                  "default": ""
+                },
+                "caCertificateRefs": {
+                  "description": "Secret/configmap reference with a certificate",
+                  "type": "array",
+                  "default": [],
+                  "examples": [
+                    {
+                      "kind": "ConfigMap",
+                      "name": "httpbin-ca"
+                    }
+                  ]
+                },
+                "wellKnownCACertificates": {
+                  "description": "wellKnownCACertificates for backendTLSPolicy",
+                  "type": "string",
+                  "default": ""
+                },
+                "subjectAltNames": {
+                  "description": "subjectAltNames for backendTLSPolicy",
+                  "type": "array",
+                  "default": []
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
