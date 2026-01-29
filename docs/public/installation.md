@@ -54,7 +54,7 @@ This section provides information about the Airflow installation using [slightly
     - [Keycloak With TLS](#keycloak-with-tls)
   - [Enabling HTTPS for Airflow Ingresses](#enabling-https-for-airflow-ingresses)
       - [Using Cert-manager to Get Certificate for Ingress](#using-cert-manager-to-get-certificate-for-ingress)
-  - [HTTPRoute for K8S gateway API support](#httproute-for-k8s-gateway-api-support)
+  - [HTTPRoute for K8S Gateway API Support](#httproute-for-k8s-gateway-api-support)
   - [Enabling HPAs for workers and API server](#enabling-hpas-for-workers-and-api-server)
   - [Prometheus Monitoring and Alerts](#prometheus-monitoring-and-alerts)
       - [Plugin Prometheus Monitoring](#plugin-prometheus-monitoring)
@@ -2336,14 +2336,14 @@ ingress:
       - web-airflow.kubernetes.qubership.com
 ```
 
-## HTTPRoute for K8S gateway API support
+## HTTPRoute for K8S Gateway API Support
 
-Qubership platform provides an option to deploy HTTPRoute to expose airflow API server using K8S gateway API(as an alternative to ingress). For more information about k8s Gateway API and HTTPRoute please refer to official kubernetes documentation at https://gateway-api.sigs.k8s.io/ and https://gateway-api.sigs.k8s.io/guides/http-routing/ .
+Qubership platform provides an option to deploy HTTPRoute to expose airflow API server using K8S gateway API (as an alternative to ingress). For more information about k8s Gateway API and HTTPRoute, please refer to the _Official Kubernetes Documentation_ at https://gateway-api.sigs.k8s.io/ and https://gateway-api.sigs.k8s.io/guides/http-routing/ .
 
 It is possible to deploy 3 objects: 
 * Main HTTPRoute. It is required to replicate main ingress logic.
-* Redirect HTTPRoute. Can be used for redirecting airflow UI client from HTTP to HTTPS when using gateway with custom certificate.
-* BackendTLSPolicy. Required for verifying airflow certificate when TLS is enabled on airflow API server inside K8S.
+* Redirect HTTPRoute. It can be used for redirecting airflow user interface client from HTTP to HTTPS when using gateway with custom certificate.
+* BackendTLSPolicy. It is required for verifying airflow certificate when TLS is enabled on airflow API server inside K8S.
 
 Following configuration parameters are available:
 
@@ -2353,7 +2353,7 @@ Following configuration parameters are available:
 |httpRoute.apiServer.annotations|`object`|`{}`|Annotations for HTTPRoute and related objects|
 |httpRoute.apiServer.parentRefs|`array`|`[]`|parentRefs for HTTPRoute|
 |httpRoute.apiServer.hostnames|`array`|`[]`|hostnames for HTTPRoute|
-|httpRoute.apiServer.rules|`array`|`[]`|rules for HTTPRoute. When `rules[].matches` is not set,it defaults to `path.type=PathPrefix` and `path.value=/`. `backendRefs` in the rule will point to api-server service, but the weight can be configured if needed.|
+|httpRoute.apiServer.rules|`array`|`[]`|rules for HTTPRoute. When `rules[].matches` is not set, it defaults to `path.type=PathPrefix` and `path.value=/`. `backendRefs` in the rule will point to api-server service, but the weight can be configured if needed.|
 |httpRoute.apiServer.redirectRoute.enabled|`boolean`|`false`|Specifies if redirect HTTPRoute for API server is deployed|
 |httpRoute.apiServer.redirectRoute.parentRefs|`array`|`[]`|parentRefs for redirect HTTPRoute|
 |httpRoute.apiServer.backendTLSPolicy.enabled|`boolean`|`false`|Specifies if backendTLSPolicy should be deployed|
