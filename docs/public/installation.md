@@ -2353,7 +2353,7 @@ Following configuration parameters are available:
 |httpRoute.apiServer.annotations|`object`|`{}`|Annotations for HTTPRoute and related objects|
 |httpRoute.apiServer.parentRefs|`array`|`[]`|parentRefs for HTTPRoute|
 |httpRoute.apiServer.hostnames|`array`|`[]`|hostnames for HTTPRoute|
-|httpRoute.apiServer.rules|`array`|`[]`|rules for HTTPRoute. When `rules[].matches` is not set,it defaults to `path.type=PathPrefix` and `path.value=/`|
+|httpRoute.apiServer.rules|`array`|`[]`|rules for HTTPRoute. When `rules[].matches` is not set,it defaults to `path.type=PathPrefix` and `path.value=/`. `backendRefs` in the rule will point to api-server service, but the weight can be configured if needed.|
 |httpRoute.apiServer.redirectRoute.enabled|`boolean`|`false`|Specifies if redirect HTTPRoute for API server is deployed|
 |httpRoute.apiServer.redirectRoute.parentRefs|`array`|`[]`|parentRefs for redirect HTTPRoute|
 |httpRoute.apiServer.backendTLSPolicy.enabled|`boolean`|`false`|Specifies if backendTLSPolicy should be deployed|
@@ -2373,9 +2373,7 @@ httpRoute:
     hostnames:
       - airflow-gateway.your.k8s.hostname
     rules:
-      - backendRefs:
-          name: airflow-api-server
-          port: 8080
+      - path: {}
 ```
 
 ## Enabling HPAs for workers and API server
