@@ -3483,3 +3483,21 @@ statusProvisioner:
   #   memory: 50Mi
 
 useQubershipDeployerUpdateStrategies: true
+
+httpRoute:
+  apiServer:
+    enabled: false
+    annotations: {}
+    parentRefs: []
+    hostnames: []
+    rules: []
+    redirectRoute:
+      enabled: false
+      parentRefs: []
+    backendTLSPolicy:
+      enabled: false
+      hostname: ''
+      caCertificateRefs: []
+      wellKnownCACertificates: ""
+      subjectAltNames: []
+
