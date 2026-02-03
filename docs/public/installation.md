@@ -2136,6 +2136,8 @@ apiServer:
 
 Qubership platform supports 3 different possible ways to integrate airflow user interface with keycloak. As with LDAP, all these integrations can be enabled using installation parameters. The integrations are presented below.
 
+**Note** When running airflow behind a reverse proxy, like nginx-ingress, please also check https://airflow.apache.org/docs/apache-airflow/stable/howto/run-behind-proxy.html .
+
 ### Airflow FAB provider integration
 
 **Note**: This section assumes that FAB auth manager is used. Airflow FAB provider is present in the image by default. To enable FAB auth manager in the config, it is necessary to set:
