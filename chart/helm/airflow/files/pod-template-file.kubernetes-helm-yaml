@@ -259,7 +259,7 @@ spec:
   - configMap:
       name: {{ include "airflow_config" . }}
     name: config
-   {{- if semverCompare ">=3.0.0" .Values.airflowVersion }}
+  {{- if semverCompare ">=3.0.0" .Values.airflowVersion }}
     {{- if and (or .Values.apiServer.apiServerConfig .Values.apiServer.apiServerConfigConfigMapName) (or .Values.workers.kubernetes.kerberosInitContainer.enabled .Values.workers.kerberosInitContainer.enabled .Values.workers.kerberosSidecar.enabled) }}
   - name: api-server-config
     configMap:
