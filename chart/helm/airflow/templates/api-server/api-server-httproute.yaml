@@ -1,5 +1,6 @@
 {{- if  .Values.httpRoute.apiServer.enabled -}}
 {{- $fullname := (include "airflow.fullname" .) }}
+{{- $Global := . }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -20,11 +21,11 @@ metadata:
 spec:
   {{- with .Values.httpRoute.apiServer.parentRefs }}
   parentRefs:
-    {{- tpl (toYaml .) . | nindent 4 }}
+    {{- tpl (toYaml .) $Global | nindent 4 }}
   {{- end }}
   {{- with .Values.httpRoute.apiServer.hostnames }}
   hostnames:
-    {{- tpl (toYaml .) . | nindent 4 }}
+    {{- tpl (toYaml .) $Global | nindent 4 }}
   {{- end }}
   rules:
     {{- range .Values.httpRoute.apiServer.rules }}
@@ -72,11 +73,11 @@ metadata:
 spec:
   {{- with .Values.httpRoute.apiServer.redirectRoute.parentRefs }}
   parentRefs:
-    {{- tpl (toYaml .) . | nindent 4 }}
+    {{- tpl (toYaml .) $Global | nindent 4 }}
   {{- end }}
   {{- with .Values.httpRoute.apiServer.hostnames }}
   hostnames:
-    {{- tpl (toYaml .) . | nindent 4 }}
+    {{- tpl (toYaml .) $Global | nindent 4 }}
   {{- end }}
   rules:
   - filters:
@@ -108,12 +109,12 @@ metadata:
   {{- end }}
 spec:
   targetRefs:
-  - group: gateway.networking.k8s.io/v1
+  - group: ""
     kind: Service
     name: {{ $fullname }}-api-server
   validation:
     {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.hostname }}
-    hostname: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.hostname . | quote }}
+    hostname: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.hostname $Global | quote }}
     {{- end }}
     {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.subjectAltNames }}
     subjectAltNames:
@@ -124,7 +125,7 @@ spec:
     {{- toYaml .Values.httpRoute.apiServer.backendTLSPolicy.caCertificateRefs | nindent 6 }}
     {{- end }}
     {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates }}
-    wellKnownCACertificates: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates . | quote }}
+    wellKnownCACertificates: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates $Global | quote }}
     {{- end }}
 {{- end }}
 {{- end }}
