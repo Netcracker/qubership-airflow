@@ -161,7 +161,7 @@ ingress:
   # (deprecated - use ingress.web.enabled, ingress.apiServer.enabled and ingress.flower.enabled)
   enabled: ~
 
-  # Configs for the Ingress of the API Server
+  # Configs for the Ingress of the API Server (Airflow 3+)
   apiServer:
     # Enable API Server ingress resource
     enabled: false
@@ -205,7 +205,7 @@ ingress:
     # Http paths to add to the API Server Ingress after the default path
     succeedingPaths: []
 
-  # Configs for the Ingress of the web Service
+  # Configs for the Ingress of the web Service (Airflow 2.x)
   web:
     # Enable web ingress resource
     enabled: true
@@ -890,6 +890,7 @@ workers:
     containerLifecycleHooks: {}
 
   # Kerberos init container configuration for Airflow Celery workers and pods created with pod-template-file
+  # (deprecated, use `workers.celery.kerberosInitContainer` instead)
   kerberosInitContainer:
     # Enable kerberos init container
     enabled: false
@@ -1059,11 +1060,6 @@ workers:
   #         requests:
   #           storage: "20Gi"
 
-
-  # One common Service Account for all workers will be created if flag is set to false.
-  # If true, dedicated Service Accounts for every worker type will be created.
-  useWorkerDedicatedServiceAccounts: false
-
   celery:
     # Number of Airflow Celery workers
     replicas: 1
@@ -1137,19 +1133,6 @@ workers:
       pod: {}
       container: {}
 
-    # Create ServiceAccount for Airflow Celery workers
-    serviceAccount:
-      # default value is true
-      # ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-      automountServiceAccountToken: true
-      # Specifies whether a ServiceAccount should be created
-      create: true
-      # The name of the ServiceAccount to use.
-      # If not set and create is true, a name is generated using the release name
-      name: ~
-      # Annotations to add to worker kubernetes service account.
-      annotations: {}
-
     # Persistence volume configuration for Airflow Celery workers
     persistence:
       # Enable persistent volumes
@@ -1179,6 +1162,25 @@ workers:
       securityContexts:
         container: {}
 
+    # Kerberos init container configuration for Airflow Celery workers
+    kerberosInitContainer:
+      # Enable kerberos init container
+      enabled: false
+      resources: {}
+      #  limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+      #  requests:
+      #   cpu: 100m
+      #   memory: 128Mi
+
+      # Detailed default security context for kerberos init container on container level
+      securityContexts:
+        container: {}
+
+      # Container level lifecycle hooks
+      containerLifecycleHooks: {}
+
   kubernetes:
     # Command to use in pod-template-file (templated)
     command: ~
@@ -1188,19 +1190,6 @@ workers:
     securityContexts:
       pod: {}
       container: {}
-
-    # Create ServiceAccount for pods created with pod-template-file
-    serviceAccount:
-      # Auto mount service account token into the pod. Default value is true.
-      # ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-      automountServiceAccountToken: true
-      # Specifies whether a ServiceAccount should be created
-      create: true
-      # The name of the ServiceAccount to use.
-      # If not set and create is true, a name is generated using the release name.
-      name: ~
-      # Annotations to add to worker kubernetes service account
-      annotations: {}
 
 # Airflow scheduler settings
 scheduler:
@@ -2303,6 +2292,16 @@ dagProcessor:
 
     # Annotations to add to dag processor kubernetes service account.
     annotations: {}
+
+  # Dag processor pod disruption budget
+  podDisruptionBudget:
+    enabled: false
+
+    # PDB configuration
+    config:
+      # minAvailable and maxUnavailable are mutually exclusive
+      maxUnavailable: 1
+      # minAvailable: 1
 
   # When not set, the values defined in the global securityContext will be used
   securityContext: {}
