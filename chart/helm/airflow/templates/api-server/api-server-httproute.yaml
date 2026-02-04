@@ -21,11 +21,11 @@ metadata:
 spec:
   {{- with .Values.httpRoute.apiServer.parentRefs }}
   parentRefs:
-    {{- tpl (toYaml .) $Global  | nindent 4 }}
+    {{- tpl (toYaml .) $Global | nindent 4 }}
   {{- end }}
   {{- with .Values.httpRoute.apiServer.hostnames }}
   hostnames:
-    {{- tpl (toYaml .) $Global  | nindent 4 }}
+    {{- tpl (toYaml .) $Global | nindent 4 }}
   {{- end }}
   rules:
     {{- range .Values.httpRoute.apiServer.rules }}
@@ -73,11 +73,11 @@ metadata:
 spec:
   {{- with .Values.httpRoute.apiServer.redirectRoute.parentRefs }}
   parentRefs:
-    {{- tpl (toYaml .) $Global  | nindent 4 }}
+    {{- tpl (toYaml .) $Global | nindent 4 }}
   {{- end }}
   {{- with .Values.httpRoute.apiServer.hostnames }}
   hostnames:
-    {{- tpl (toYaml .) $Global  | nindent 4 }}
+    {{- tpl (toYaml .) $Global | nindent 4 }}
   {{- end }}
   rules:
   - filters:
