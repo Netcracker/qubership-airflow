@@ -1,4 +1,4 @@
-FROM rclone/rclone:1.71.2
+FROM rclone/rclone:1.73.0
 
 COPY rclone-image/entrypoint.sh /entrypoint.sh
 

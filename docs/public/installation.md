@@ -78,7 +78,7 @@ For more information about Airflow Helm parameters and configuration, refer to t
 
 ## Image Changes from Community Version
 
-The base Airflow image in addition to Airflow (airflow:slim-3.1.5-python3.11) contains the following libraries:
+The base Airflow image in addition to Airflow (airflow:slim-3.1.7-python3.11) contains the following libraries:
 
 * comerr-dev
 * unzip
@@ -93,7 +93,7 @@ The base Airflow image in addition to Airflow (airflow:slim-3.1.5-python3.11) co
 
 Also, the image contains the following Python libraries/Airflow extras:
 
-* apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.1.5
+* apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.1.7
 * apache-airflow-providers-keycloak==0.4.0
 * apache-airflow-providers-amazon
 * apache-airflow-providers-fab
@@ -716,7 +716,7 @@ customPreinstallJob:
         name: 'dbaas-connection-params-preins'
 ```
 
-Platform also provides a DBaaS integration package for Airflow that [implements](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) Airflow custom secrets' backend. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.5/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/3.1.5/security/secrets/secrets-backend/index.html). It is intended to be used with the custom preinstall job DBaaS script. The custom secrets' backend gets Redis and PG connections for Airflow from DBaaS. To enable custom secrets' backend, the following parameters must be specified (set by default):
+Platform also provides a DBaaS integration package for Airflow that [implements](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) Airflow custom secrets' backend. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.7/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/3.1.7/security/secrets/secrets-backend/index.html). It is intended to be used with the custom preinstall job DBaaS script. The custom secrets' backend gets Redis and PG connections for Airflow from DBaaS. To enable custom secrets' backend, the following parameters must be specified (set by default):
 
 ```yaml
 ...
@@ -2017,7 +2017,7 @@ config:
     auth_manager: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
 ```
 
-You can enable LDAP integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.5/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/3.1.5/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter.
+You can enable LDAP integration for Web UI using the installation parameters. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.7/security/webserver.html](https://airflow.apache.org/docs/apache-airflow/3.1.7/security/webserver.html), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter.
 
 The following is an example for enabling LDAP without group mapping and with pre-created Admin user. 
 
@@ -2152,7 +2152,7 @@ config:
 
 **Note**: FAB provider keyckoak integration does not support authentication for airflow API.
 
-For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.5/security/](https://airflow.apache.org/docs/apache-airflow/3.1.5/security/), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter. 
+For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.7/security/](https://airflow.apache.org/docs/apache-airflow/3.1.7/security/), [https://flask-appbuilder.readthedocs.io/en/latest/security.html](https://flask-appbuilder.readthedocs.io/en/latest/security.html), and [https://flask-appbuilder.readthedocs.io/en/latest/config.html](https://flask-appbuilder.readthedocs.io/en/latest/config.html). The `webserver_config.py` can be specified using the `apiServer.apiServerConfig` parameter. 
 
 The qubership chart distribution includes a [webserver_config.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py) example file that can be used for the integration with keycloak IDP. This file requires keycloak IDP to support SCIM, but it can be modified to avoid SCIM reques.
 
@@ -2443,7 +2443,7 @@ However, you should avoid long Prometheus scrapes, as it is better to increase t
 
 ### StatsD Prometheus Exporter Monitoring
 
-The chart also allows to use [official airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.1.5/logging-monitoring/metrics.html) with [statsd_exporter](https://github.com/prometheus/statsd_exporter). To enable StatsD exporter and service monitor that gathers Prometheus metrics from the StatsD exporter, you must specify the following in the installation parameters:
+The chart also allows to use [official airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.1.7/logging-monitoring/metrics.html) with [statsd_exporter](https://github.com/prometheus/statsd_exporter). To enable StatsD exporter and service monitor that gathers Prometheus metrics from the StatsD exporter, you must specify the following in the installation parameters:
 
 ```yaml
 statsd:
