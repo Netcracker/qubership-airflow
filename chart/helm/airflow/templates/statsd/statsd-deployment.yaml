@@ -102,6 +102,7 @@ spec:
           securityContext: {{ $containerSecurityContext | nindent 12 }}
           {{- if $containerLifecycleHooks }}
           lifecycle: {{- tpl (toYaml $containerLifecycleHooks) . | nindent 12 }}
+          {{- end }}
           args:
           {{- if .Values.statsd.cache.size }}
             - "--statsd.cache-size={{ .Values.statsd.cache.size }}"
