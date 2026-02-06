@@ -1,6 +1,5 @@
 {{- if .Values.statusProvisioner.enabled }}
 # status-provisioner job provides status about cluster state
-
 {{- $securityContext := include "airflowPodSecurityContext" (list .Values.statusProvisioner .Values) }}
 {{- $containerSecurityContext := include "containerSecurityContext" (list .Values.statusProvisioner .Values) }}
 
