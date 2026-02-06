@@ -6,8 +6,8 @@
   {{- end }}
 {{- end }}
 
-{{- $securityContext := include "airflowPodSecurityContext" (list . .Values.customPreinstallJob) }}
-{{- $containerSecurityContext := include "containerSecurityContext" (list . .Values.customPreinstallJob) }}
+{{- $securityContext := include "airflowPodSecurityContext" (list .Values.customPreinstallJob .Values) }}
+{{- $containerSecurityContext := include "containerSecurityContext" (list .Values.customPreinstallJob .Values) }}
 
 {{/* User defined Airflow environment variables for custom preinstall job */}}
 {{- define "custom_job_custom_airflow_environment" }}
