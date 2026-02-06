@@ -1570,7 +1570,7 @@ config:
 
 If needed, it is possible to specify multiple DAG bundles.
 
-**Note** Alternatively it is possible to use `dagProcessor.dagBundleConfigList` from airfloow helm chart to configure DAG bundles.
+**Note** Alternatively it is possible to use `dagProcessor.dagBundleConfigList` from [Airflow Helm Chart](https://airflow.apache.org/docs/helm-chart/stable/parameters-ref.html) to configure DAG bundles.
 
 To configure DAG bundle refresh interval, it is possible to use `refresh_interval` in `kwargs` field. If not specified, global parameter [refresh_interval](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#refresh-interval) will be used (can be specified using `config` field), by default it is set to 300 seconds. However, this parameter only affects DAG processor, workers update code on each task start.
 
