@@ -8,7 +8,7 @@ from jsonschema import validate
 
 url = (
     "https://raw.githubusercontent.com/apache/airflow/"
-    "3314d54c3595f410a147790b7119392a0922268c/chart/values.schema.json"
+    "b1a6ebc6c5a14c48170de0d5472018905ab5edde/chart/values.schema.json"
 )
 global_params_to_keep = ["$schema", "description", "type", "definitions"]
 values_params_to_keep = [
@@ -98,9 +98,6 @@ values_params_to_keep = [
 
 def reuse_existing_params():
     community_schema = json.loads(urllib.request.urlopen(url).read())
-    community_schema["properties"]["securityContexts"]["properties"]["containers"] = (
-        community_schema["properties"]["securityContexts"]["properties"]["container"]
-    )
     customized_schema_internal = {}
     for global_param in global_params_to_keep:
         customized_schema_internal[global_param] = copy.deepcopy(

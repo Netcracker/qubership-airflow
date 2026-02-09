@@ -32,7 +32,7 @@ Kerberos keytab can be updated via deploy job too using the `kerberos.keytabBase
 
 The connections and variables created by the chart and stored as environment variables can be updated via chart by setting new values for the respective environments in the chart.
 
-The connections and variables created through the UI (User Interface) or pod terminals must be updated through the UI or pod terminals. For more information, refer to the _Offcial Documentation_ at [https://airflow.apache.org/docs/apache-airflow/3.1.5/howto/connection.html](https://airflow.apache.org/docs/apache-airflow/3.1.5/howto/connection.html).
+The connections and variables created through the UI (User Interface) or pod terminals must be updated through the UI or pod terminals. For more information, refer to the _Offcial Documentation_ at [https://airflow.apache.org/docs/apache-airflow/3.1.7/howto/connection.html](https://airflow.apache.org/docs/apache-airflow/3.1.7/howto/connection.html).
 
 # Web User Interface Role Management
 
