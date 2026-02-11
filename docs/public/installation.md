@@ -2372,7 +2372,9 @@ httpRoute:
   apiServer:
     enabled: true
     parentRefs:
-      - name: default-external-gateway
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: default-external-gateway
         namespace: envoy-api-gateway
     hostnames:
       - airflow-gateway.your.k8s.hostname
