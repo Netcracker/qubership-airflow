@@ -42,10 +42,14 @@ spec:
         {{- toYaml .filters | nindent 8 }}
       {{- end }}
       backendRefs:
-        - name: {{ $fullname }}-api-server
+        - group: ''
+          kind: Service
+          name: {{ $fullname }}-api-server
           port: {{ $.Values.ports.apiServer }}
           {{- if .weight }}
           weight: {{ .weight }}
+          {{- else }}
+          weight: 1
           {{- end }}
     {{- end }}
 
