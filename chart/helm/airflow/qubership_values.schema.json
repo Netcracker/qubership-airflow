@@ -271,7 +271,9 @@
           "items": {
             "type": "string"
           },
-          "default": null
+          "default": [
+            "python"
+          ]
         },
         "args": {
           "description": "Args for custom preinstall job(templated).",
@@ -283,7 +285,6 @@
             "type": "string"
           },
           "default": [
-            "python",
             "/bin/create_dbs_dbaas.py"
           ]
         },
