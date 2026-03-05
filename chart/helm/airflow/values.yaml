@@ -2705,7 +2705,7 @@ statsd:
       fsGroup: 50000
       seccompProfile:
         type: RuntimeDefault
-    containers:
+    container:
       capabilities:
         drop:
           - ALL
