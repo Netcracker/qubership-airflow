@@ -2710,6 +2710,7 @@ statsd:
         drop:
           - ALL
       allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
 
   # container level lifecycle hooks
   containerLifecycleHooks: {}

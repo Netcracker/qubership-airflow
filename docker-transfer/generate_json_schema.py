@@ -87,6 +87,7 @@ values_params_to_keep = [
     "apiServer.apiServerConfig",
     "statsd.enabled",
     "statsd.resources",
+    "statsd.securityContexts",
     "databaseCleanup.enabled",
     "databaseCleanup.resources",
     "config",
