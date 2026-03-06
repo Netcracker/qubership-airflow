@@ -251,6 +251,7 @@ securityContexts:
       drop:
         - ALL
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
 ```
 
 ## AWS
@@ -420,7 +421,8 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * It is possible to specify the number of Flower pods. (**Note**: This change was only made for DR support - specifying more than one flower pod would work incorrectly.)
 * DR sitemanager subchart is added.
 * Certificate object for integration with cert-manager is added.
-* Default security context is set to be in line with the restricted Pod Security Standards. For more information, refer to [https://kubernetes.io/docs/concepts/security/pod-security-standards/](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
+* Default security context is set to be in-line with the restricted Pod Security Standards. For more information, refer to the _Pod Security Standards_ documentation at [https://kubernetes.io/docs/concepts/security/pod-security-standards/](https://kubernetes.io/docs/concepts/security/pod-security-standards/). Also, `readOnlyRootFilesystem: true` is set for airflow containers security contexts (except for gitSync/Rclone).
+* `volumes/volumeMounts` parameters are configured to mount emptyVolume to `/tmp` by default in order to support readOnlyRootFilesystem.
 * Added labels required by Qubership release.
 * Status provisioner job and parameters for it are added.
 * For scheduler, webserver and api-server deployments support of custom Qubership rolling update deployment strategies were added. The `useQubershipDeployerUpdateStrategies` parameter is added that can be used to disable Qubership update strategies (must be set to `false`).

@@ -93,8 +93,12 @@ spec:
           volumeMounts:
             - name: output
               mountPath: /opt/robot/output
+            - name: tmpvolume
+              mountPath: /tmp
           terminationMessagePath: /dev/termination-log
           imagePullPolicy: Always
       volumes:
         - name: output
+          emptyDir: {}
+        - name: tmpvolume
           emptyDir: {}

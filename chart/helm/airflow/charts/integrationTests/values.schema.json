@@ -145,7 +145,8 @@
                 "ALL"
               ]
             },
-            "allowPrivilegeEscalation": false
+            "allowPrivilegeEscalation": false,
+            "readOnlyRootFilesystem": true
           },
           "examples": [
             {

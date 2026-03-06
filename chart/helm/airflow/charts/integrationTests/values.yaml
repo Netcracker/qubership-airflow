@@ -34,6 +34,7 @@ securityContexts:
       drop:
         - ALL
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
 statusWritingEnabled: "true"
 isShortStatusMessage: "true"
 onlyIntegrationTests: "false"
