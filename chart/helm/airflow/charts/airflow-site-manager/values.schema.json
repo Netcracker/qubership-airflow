@@ -365,7 +365,9 @@
         "annotations": {
           "description": "Annotations to add to the Airflow Site Manager ingress.",
           "type": "object",
-          "default": {},
+          "default": {
+            "gateway-api-converter.netcracker.com/ignore": "true"
+          },
           "additionalProperties": {
             "type": "string"
           }

@@ -165,7 +165,8 @@ ingress:
     enabled: false
 
     # Annotations for the API Server Ingress
-    annotations: {}
+    annotations:
+      gateway-api-converter.netcracker.com/ignore: "true"
 
     # The path for the API Server Ingress
     path: "/"
