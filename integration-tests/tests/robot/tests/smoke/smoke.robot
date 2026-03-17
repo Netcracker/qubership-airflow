@@ -9,7 +9,7 @@ Resource  ../shared/shared.robot
 Check Airflow API Status
     ${resp} =  GET On Session  airflowsession  /api/v2/dags
     Should Be Equal As Strings  ${resp.status_code}   200
-    [Return]  ${resp.status_code}
+    RETURN  ${resp.status_code}
 
 
 *** Test Cases ***
