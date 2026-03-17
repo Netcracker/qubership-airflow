@@ -19,13 +19,13 @@ Get Resource Details
       ${name}  ${container_name}  ${manifest_image}=  Split String	${resource}
       Exit For Loop IF  "${name}" == "${sevice_name}"
     END
-    [Return]  ${name}  ${container_name}  ${manifest_image}
+    RETURN  ${name}  ${container_name}  ${manifest_image}
 
 Get Manager Of Dags
     ${dags_manager}=  Identify Dags Manager  ${SCHEDULER_DEPLOYMENT}  ${AIRFLOW_NAMESPACE}
     ${name}  ${container_name}  ${manifest_image}=  Run Keyword If  "${dags_manager}" == "gitsync"  Get Resource Details  git-sync
     ...  ELSE IF  "${dags_manager}" == "rclone"  Get Resource Details  rclone
-    [Return]  ${dags_manager}  ${container_name}  ${manifest_image}
+    RETURN  ${dags_manager}  ${container_name}  ${manifest_image}
 
 *** Test Cases ***
 Test Hardcoded Images In Worker

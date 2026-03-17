@@ -63,7 +63,7 @@ Execute PATCH request to DAG
     Should Be Equal As Strings  ${resp.status_code}   200
     Log To Console  \nExecute PATCH Request To ${DAG_ID} With Status Code: ${resp.status_code}
     ${resp_json} =  Convert Json ${resp.content} To Type
-    [Return]  ${resp_json}
+    RETURN  ${resp_json}
 
 Run DAG
     [Arguments]  ${DAG_ID}
@@ -72,14 +72,14 @@ Run DAG
     Should Be Equal As Strings  ${resp.status_code}   200
     Log To Console  \nDAG ${DAG_ID} Started With Status Code: ${resp.status_code}
     ${resp_json} =  Convert Json ${resp.content} To Type
-    [Return]  ${resp_json}
+    RETURN  ${resp_json}
 
 Get Dag Status
     [Arguments]  ${DAG_ID}  ${dag_run_id}
     ${status} =  GET On Session  airflowsession  /api/v2/dags/${DAG_ID}/dagRuns/${dag_run_id}
     Should Be Equal As Strings  ${status.status_code}  200
     ${status_json} =  Convert Json ${status.content} To Type
-    [Return]  ${status_json['state']}
+    RETURN  ${status_json['state']}
 
 Wait Until DAG Succeed
     [Arguments]  ${DAG_ID}  ${dag_run_id}
@@ -93,7 +93,7 @@ Wait Until DAG Failed
 
 Convert Json ${json} To Type
     ${json_dictionary} =  Evaluate  json.loads('''${json}''')  json
-    [Return]  ${json_dictionary}
+    RETURN  ${json_dictionary}
 
 Return Worker Pods
     Run Keyword If  ${IF_WORKERS_STATEFULSET} == True  Set Replicas For Stateful Set  ${WORKER_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}  replicas=${ACTIVE_WORKER}
@@ -130,4 +130,4 @@ Check Dags Amount
     ${resp_json} =  Convert Json ${resp.content} To Type
     ${dags_amount} =  Get Length  ${resp_json['dags']}
     Log to console  DAGS COUNT: ${dags_amount}
-    [Return]  ${dags_amount}
+    RETURN  ${dags_amount}
