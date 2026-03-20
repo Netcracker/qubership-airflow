@@ -31,8 +31,6 @@ ENV SPARK_HOME=/home/airflow/.local/lib/python3.11/site-packages/pyspark
 ENV HADOOP_USER_NAME=hdfs
 ENV HADOOP_CONF_DIR=/etc/hadoop/conf
 
-RUN curl -k  https://repo1.maven.org/maven2/com/sun/jersey/jersey-bundle/1.17/jersey-bundle-1.17.jar -o jersey-bundle-1.17.jar \
-    && mv jersey-bundle-1.17.jar $SPARK_HOME/jars
 
 # COPY docker/idpapiintegrationpackage /idpapiintegrationpackage
 # RUN chmod 777 -R /idpapiintegrationpackagecd /idpapiintegrationpackage \

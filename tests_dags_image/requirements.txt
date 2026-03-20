@@ -3,7 +3,7 @@ pypandoc
 kafka_python
 atlasclient
 hmsclient
-opentelemetry-proto==1.33.1
+opentelemetry-proto
 # HDFS
 hdfs
 # kerberos
@@ -16,7 +16,7 @@ apache-airflow-providers-apache-spark
 apache-airflow-providers-ssh
 apache-airflow-providers-apache-kafka
 # Spark
-pyspark==3.5.5
+pyspark==4.1.1
 # pyHive for Python 3.9 wait for https://github.com/apache/airflow/pull/32607
 # PyHive
 # sasl
