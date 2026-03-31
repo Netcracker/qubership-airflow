@@ -36,6 +36,8 @@ This section provides information about the Airflow installation using [slightly
   - [Cleaning Airflow Logs](#cleaning-airflow-logs)
   - [Using Custom Pre-start Command for Pods](#using-custom-pre-start-command-for-pods)
   - [Creating Custom Secrets](#creating-custom-secrets)
+  - [Using Git DAG bundle](#using-git-dag-bundle)
+      - [Configuring Git connection for Git DAG bundle](#configuring-git-connection-for-git-dag-bundle)
   - [Using S3 DAG Bundle](#using-s3-dag-bundle)
       - [Validating DAG update](#validating-dag-update)
   - [Using Git Sync](#using-git-sync)
@@ -94,7 +96,8 @@ The base Airflow image in addition to Airflow (airflow:slim-3.1.7-python3.11) co
 Also, the image contains the following Python libraries/Airflow extras:
 
 * apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.1.7
-* apache-airflow-providers-keycloak==0.4.0
+* apache-airflow-providers-git
+* apache-airflow-providers-keycloak==0.5.1
 * apache-airflow-providers-amazon
 * apache-airflow-providers-fab
 * airflow-exporter
@@ -1535,6 +1538,40 @@ extraEnvFrom: |
       name: '{{ .Release.Name }}-airflow-connections'
 ```
 
+## Using Git DAG bundle
+
+Starting with Airflow 3, it is possible to use DAG bundles in Airflow. For more information about DAG Bundles, please refer to _[official airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/dag-bundles.html)_.
+
+Qubership Airflow image includes `apache-airflow-providers-git provider`, so it is possible to use Git DAG bundle. For more information about Git Dag Bundle, please refer to _[official airflow documentation](https://airflow.apache.org/docs/apache-airflow-providers-git/stable/bundles/index.html)_. To configure Git DAG bundle in installation parameters, please refer to this example:
+
+```yaml
+...
+dag_bundle_config_list_def:
+  - name: git_dags
+    classpath: airflow.providers.git.bundles.git.GitDagBundle
+    kwargs:
+      tracking_ref: branch_with_dags
+      git_conn_id: git_dags
+      subdir: tests_dags_image/dags
+integrationTests:
+  enabled: true
+config:
+  dag_processor:
+    dag_bundle_config_list: "{{ .Values.dag_bundle_config_list_def | toJson }}"
+...
+```
+**Note**: Git Dag Bundle supports versioning, it is enabled by default. It can be disabled using `config.dag_processor.disable_bundle_versioning` parameter. For more information please refer to _[official airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning)_ .
+
+### Configuring Git connection for Git DAG bundle
+
+To use Git DAG Bundle it is necessary configure git connection. For more information about configuring git connection, please refer to _[official airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning)_ . Note, that when using HTTPS authentication, the connection parameters are used to form authenticated URL for `git` command. This means that when using environment variable, username/password must be URL-encoded twice. For example, for `username`/`pass@word` environment varible configuration would look like this:
+```yaml
+env:
+...
+  - name: AIRFLOW_CONN_GIT_DAGS
+    value: git://https://username:pass%2540word@github.com%2FNetcracker%2Fqubership-airflow.git
+...
+```
 
 ## Using S3 DAG Bundle
 
