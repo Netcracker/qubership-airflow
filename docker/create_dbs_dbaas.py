@@ -11,13 +11,23 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-dbaas_host = os.getenv("DBAAS_HOST")
-dbaas_user = os.getenv("DBAAS_USER")
-dbaas_password = os.getenv("DBAAS_PASSWORD")
-airflow_executor = os.getenv("AIRFLOW_EXECUTOR", "CeleryExecutor")
+def read_secret_var_from_file(env_name, default_value=None, secret_folder="/var/run/secrets/airflow"):
+    try:
+        with open(f"{secret_folder}/{env_name}", 'r') as file:
+            env_value = file.read()
+            return env_value
+    except Exception as e:
+        logging.warning(f"Could not read parameter{env_name} from file, falling back to env: {e}")
+        env_value = os.getenv(env_name, default_value)
+        return env_value
+
+dbaas_host = read_secret_var_from_file("DBAAS_HOST")
+dbaas_user = read_secret_var_from_file("DBAAS_USER")
+dbaas_password = read_secret_var_from_file("DBAAS_PASSWORD")
+airflow_executor = read_secret_var_from_file("AIRFLOW_EXECUTOR", "CeleryExecutor")
 
 negative_values = ("false", "False", "no", "No", False)
-dbaas_api_verify = os.getenv("DBAAS_API_VERIFY", True)
+dbaas_api_verify = read_secret_var_from_file("DBAAS_API_VERIFY", True)
 api_verify = False if dbaas_api_verify in negative_values else dbaas_api_verify
 
 k8s_config.load_incluster_config()
@@ -48,9 +58,9 @@ def delete_secret_ignore_not_found(name, grace_period_seconds=20):
 
 
 def get_redis_database():
-    dbaas_redis_db_owner = os.getenv("DBAAS_REDIS_DB_OWNER", "airflow")
-    dbaas_redis_backup_disabled = os.getenv("DBAAS_REDIS_BACKUP_DISABLED", "true")
-    dbaas_redis_microservice_name = os.getenv(
+    dbaas_redis_db_owner = read_secret_var_from_file("DBAAS_REDIS_DB_OWNER", "airflow")
+    dbaas_redis_backup_disabled = read_secret_var_from_file("DBAAS_REDIS_BACKUP_DISABLED", "true")
+    dbaas_redis_microservice_name = read_secret_var_from_file(
         "DBAAS_REDIS_MICROSERVICE_NAME", "airflow"
     )
     headers = {"Content-Type": "application/json"}
@@ -66,7 +76,7 @@ def get_redis_database():
             "isServiceDb": "true",
         },
     }
-    dbaas_redis_db_name_prefix = os.getenv("DBAAS_REDIS_DB_NAME_PREFIX")
+    dbaas_redis_db_name_prefix = read_secret_var_from_file("DBAAS_REDIS_DB_NAME_PREFIX")
     if dbaas_redis_db_name_prefix is not None:
         data["namePrefix"] = dbaas_redis_db_name_prefix
 
@@ -91,9 +101,9 @@ def get_redis_database():
 
 
 def get_pg_database():
-    dbaas_pg_db_owner = os.getenv("DBAAS_PG_DB_OWNER", "airflow")
-    dbaas_pg_backup_disabled = os.getenv("DBAAS_PG_BACKUP_DISABLED", "true")
-    dbaas_pg_microservice_name = os.getenv("DBAAS_PG_MICROSERVICE_NAME", "airflow")
+    dbaas_pg_db_owner = read_secret_var_from_file("DBAAS_PG_DB_OWNER", "airflow")
+    dbaas_pg_backup_disabled = read_secret_var_from_file("DBAAS_PG_BACKUP_DISABLED", "true")
+    dbaas_pg_microservice_name = read_secret_var_from_file("DBAAS_PG_MICROSERVICE_NAME", "airflow")
     headers = {"Content-Type": "application/json"}
     data = {
         "backupDisabled": dbaas_pg_backup_disabled,
@@ -107,7 +117,7 @@ def get_pg_database():
             "isServiceDb": "true",
         },
     }
-    dbaas_pg_db_name_prefix = os.getenv("DBAAS_PG_DB_NAME_PREFIX")
+    dbaas_pg_db_name_prefix = read_secret_var_from_file("DBAAS_PG_DB_NAME_PREFIX")
     if dbaas_pg_db_name_prefix is not None:
         data["namePrefix"] = dbaas_pg_db_name_prefix
 

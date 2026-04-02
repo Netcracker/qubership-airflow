@@ -14,22 +14,33 @@ logging.basicConfig(
     level=logging_level,
 )
 
+def read_secret_var_from_file(env_name, default_value=None, secret_folder="/var/run/secrets/airflow"):
+    try:
+        with open(f"{secret_folder}/{env_name}", 'r') as file:
+            logging.debug(f"trying to get {env_name} from file")
+            env_value = file.read()
+            return env_value
+    except Exception as e:
+        logging.warning(f"Could not read parameter{env_name} from file, falling back to env: {e}")
+        env_value = os.getenv(env_name, default_value)
+        return env_value
+
 positive_values = ("true", "True", "yes", "Yes", True)
 negative_values = ("false", "False", "no", "No", False)
 
-dbaas_host = os.getenv("DBAAS_HOST")
-dbaas_user = os.getenv("DBAAS_USER")
-dbaas_password = os.getenv("DBAAS_PASSWORD")
-dbaas_conn_namespace_from_config = os.getenv(
+dbaas_host = read_secret_var_from_file("DBAAS_HOST")
+dbaas_user = read_secret_var_from_file("DBAAS_USER")
+dbaas_password = read_secret_var_from_file("DBAAS_PASSWORD")
+dbaas_conn_namespace_from_config = read_secret_var_from_file(
     "DBAAS_CONN_NAMESPACE_FROM_CONFIG", "false"
 )
-maas_conn_namespace_from_config = os.getenv("MAAS_CONN_NAMESPACE_FROM_CONFIG", "true")
+maas_conn_namespace_from_config = read_secret_var_from_file("MAAS_CONN_NAMESPACE_FROM_CONFIG", "true")
 
-maas_host = os.getenv("MAAS_HOST")
-maas_user = os.getenv("MAAS_USER")
-maas_password = os.getenv("MAAS_PASSWORD")
-dbaas_api_verify = os.getenv("DBAAS_API_VERIFY", True)
-dbaas_ssl_verification_main = os.getenv("DBAAS_SSL_VERIFICATION_MAIN", "DISABLED")
+maas_host = read_secret_var_from_file("MAAS_HOST")
+maas_user = read_secret_var_from_file("MAAS_USER")
+maas_password = read_secret_var_from_file("MAAS_PASSWORD")
+dbaas_api_verify = read_secret_var_from_file("DBAAS_API_VERIFY", True)
+dbaas_ssl_verification_main = read_secret_var_from_file("DBAAS_SSL_VERIFICATION_MAIN", "DISABLED")
 
 
 class DBAASSecretsBackend(BaseSecretsBackend):
@@ -275,9 +286,9 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             f"DBAAS_properties type:{type(self.qs_secrets_backend_properties)}"
         )
         logging.debug(f"DBAAS properties value:{self.qs_secrets_backend_properties}")
-        dbaas_pg_db_owner = os.getenv("DBAAS_PG_DB_OWNER", "airflow")
-        dbaas_pg_backup_disabled = os.getenv("DBAAS_PG_BACKUP_DISABLED", "true")
-        dbaas_pg_microservice_name = os.getenv("DBAAS_PG_MICROSERVICE_NAME", "airflow")
+        dbaas_pg_db_owner = read_secret_var_from_file("DBAAS_PG_DB_OWNER", "airflow")
+        dbaas_pg_backup_disabled = read_secret_var_from_file("DBAAS_PG_BACKUP_DISABLED", "true")
+        dbaas_pg_microservice_name = read_secret_var_from_file("DBAAS_PG_MICROSERVICE_NAME", "airflow")
         headers = {"Content-Type": "application/json"}
         auth = (dbaas_user, dbaas_password)
         data = {
@@ -308,7 +319,7 @@ class DBAASSecretsBackend(BaseSecretsBackend):
                 "dbOwner": dbaas_pg_db_owner,
             }
         )
-        dbaas_pg_db_name_prefix = os.getenv("DBAAS_PG_DB_NAME_PREFIX")
+        dbaas_pg_db_name_prefix = read_secret_var_from_file("DBAAS_PG_DB_NAME_PREFIX")
         if dbaas_pg_db_name_prefix is not None:
             data["namePrefix"] = dbaas_pg_db_name_prefix
         response = requests.put(
@@ -327,9 +338,9 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             )
 
     def get_redis_database(self):
-        dbaas_redis_db_owner = os.getenv("DBAAS_REDIS_DB_OWNER", "airflow")
-        dbaas_redis_backup_disabled = os.getenv("DBAAS_REDIS_BACKUP_DISABLED", "true")
-        dbaas_redis_microservice_name = os.getenv(
+        dbaas_redis_db_owner = read_secret_var_from_file("DBAAS_REDIS_DB_OWNER", "airflow")
+        dbaas_redis_backup_disabled = read_secret_var_from_file("DBAAS_REDIS_BACKUP_DISABLED", "true")
+        dbaas_redis_microservice_name = read_secret_var_from_file(
             "DBAAS_REDIS_MICROSERVICE_NAME", "airflow"
         )
         headers = {"Content-Type": "application/json"}
@@ -362,7 +373,7 @@ class DBAASSecretsBackend(BaseSecretsBackend):
                 "dbOwner": dbaas_redis_db_owner,
             }
         )
-        dbaas_redis_db_name_prefix = os.getenv("DBAAS_REDIS_DB_NAME_PREFIX")
+        dbaas_redis_db_name_prefix = read_secret_var_from_file("DBAAS_REDIS_DB_NAME_PREFIX")
         if dbaas_redis_db_name_prefix is not None:
             data["namePrefix"] = dbaas_redis_db_name_prefix
 
@@ -387,7 +398,7 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         return connection_string
 
     def get_redis_connection(self):
-        redis_db_name = os.getenv("DBAAS_REDIS_DB_NAME_PREFIX", "1")
+        redis_db_name = read_secret_var_from_file("DBAAS_REDIS_DB_NAME_PREFIX", "1")
         redis_connection = self.get_redis_database()
         if "dbName" in redis_connection:
             redis_dbname = redis_connection["dbName"]
