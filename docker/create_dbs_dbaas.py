@@ -11,15 +11,21 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-def read_secret_var_from_file(env_name, default_value=None, secret_folder="/var/run/secrets/airflow"):
+
+def read_secret_var_from_file(
+    env_name, default_value=None, secret_folder="/var/run/secrets/airflow"
+):
     try:
-        with open(f"{secret_folder}/{env_name}", 'r') as file:
+        with open(f"{secret_folder}/{env_name}", "r") as file:
             env_value = file.read()
             return env_value
     except Exception as e:
-        logging.warning(f"Could not read parameter{env_name} from file, falling back to env: {e}")
+        logging.warning(
+            f"Could not read parameter{env_name} from file, falling back to env: {e}"
+        )
         env_value = os.getenv(env_name, default_value)
         return env_value
+
 
 dbaas_host = read_secret_var_from_file("DBAAS_HOST")
 dbaas_user = read_secret_var_from_file("DBAAS_USER")
@@ -59,7 +65,9 @@ def delete_secret_ignore_not_found(name, grace_period_seconds=20):
 
 def get_redis_database():
     dbaas_redis_db_owner = read_secret_var_from_file("DBAAS_REDIS_DB_OWNER", "airflow")
-    dbaas_redis_backup_disabled = read_secret_var_from_file("DBAAS_REDIS_BACKUP_DISABLED", "true")
+    dbaas_redis_backup_disabled = read_secret_var_from_file(
+        "DBAAS_REDIS_BACKUP_DISABLED", "true"
+    )
     dbaas_redis_microservice_name = read_secret_var_from_file(
         "DBAAS_REDIS_MICROSERVICE_NAME", "airflow"
     )
@@ -102,8 +110,12 @@ def get_redis_database():
 
 def get_pg_database():
     dbaas_pg_db_owner = read_secret_var_from_file("DBAAS_PG_DB_OWNER", "airflow")
-    dbaas_pg_backup_disabled = read_secret_var_from_file("DBAAS_PG_BACKUP_DISABLED", "true")
-    dbaas_pg_microservice_name = read_secret_var_from_file("DBAAS_PG_MICROSERVICE_NAME", "airflow")
+    dbaas_pg_backup_disabled = read_secret_var_from_file(
+        "DBAAS_PG_BACKUP_DISABLED", "true"
+    )
+    dbaas_pg_microservice_name = read_secret_var_from_file(
+        "DBAAS_PG_MICROSERVICE_NAME", "airflow"
+    )
     headers = {"Content-Type": "application/json"}
     data = {
         "backupDisabled": dbaas_pg_backup_disabled,
