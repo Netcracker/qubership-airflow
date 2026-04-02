@@ -1538,11 +1538,11 @@ extraEnvFrom: |
       name: '{{ .Release.Name }}-airflow-connections'
 ```
 
-## Using Git DAG bundle
+## Using Git DAG Bundle
 
-Starting with Airflow 3, it is possible to use DAG bundles in Airflow. For more information about DAG Bundles, please refer to _[official airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/dag-bundles.html)_.
+Starting with Airflow 3, it is possible to use DAG bundles in Airflow. For more information about DAG Bundles, please refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/dag-bundles.html](https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/dag-bundles.html).
 
-Qubership Airflow image includes `apache-airflow-providers-git provider`, so it is possible to use Git DAG bundle. For more information about Git Dag Bundle, please refer to _[official airflow documentation](https://airflow.apache.org/docs/apache-airflow-providers-git/stable/bundles/index.html)_. To configure Git DAG bundle in installation parameters, please refer to this example:
+Qubership Airflow image includes `apache-airflow-providers-git provider`, so it is possible to use Git DAG bundle. For more information about Git Dag Bundle, please refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow-providers-git/stable/bundles/index.html](https://airflow.apache.org/docs/apache-airflow-providers-git/stable/bundles/index.html). To configure Git DAG bundle in installation parameters, please refer to the following example:
 
 ```yaml
 ...
@@ -1560,11 +1560,14 @@ config:
     dag_bundle_config_list: "{{ .Values.dag_bundle_config_list_def | toJson }}"
 ...
 ```
-**Note**: Git Dag Bundle supports versioning, it is enabled by default. It can be disabled using `config.dag_processor.disable_bundle_versioning` parameter. For more information please refer to _[official airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning)_ .
+**Note**: Git Dag Bundle supports versioning, it is enabled by default. It can be disabled using `config.dag_processor.disable_bundle_versioning` parameter. For more information, please refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning).
 
-### Configuring Git connection for Git DAG bundle
+### Configuring Git Connection for Git DAG Bundle
 
-To use Git DAG Bundle it is necessary configure git connection. For more information about configuring git connection, please refer to _[official airflow documentation](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning)_ . Note, that when using HTTPS authentication, the connection parameters are used to form authenticated URL for `git` command. This means that when using environment variable, username/password must be URL-encoded twice. For example, for `username`/`pass@word` environment varible configuration would look like this:
+To use Git DAG Bundle, it is necessary to configure the git connection. For more information about configuring git connection, please refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning). 
+
+**Note**: When using HTTPS authentication, the connection parameters are used to form authenticated URL for `git` command. This means that when using environment variable, username/password must be URL-encoded twice. For example, for `username`/`pass@word` environment varible configuration would look like this:
+
 ```yaml
 env:
 ...
