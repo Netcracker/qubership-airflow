@@ -349,11 +349,41 @@
             "null",
             "string"
           ],
-          "default": "- secretRef:\n    name: 'dbaas-connection-params-preins'\n",
+          "default": null,
           "examples": [
             "- secretRef:\n    name: '{{ .Release.Name }}-airflow-connections'",
             "- configMapRef:\n    name: '{{ .Release.Name }}-airflow-variables'"
           ]
+        },
+        "extraVolumes": {
+          "description": "Additional volumes attached to the Airflow Celery workers and pods created with pod-template-file.",
+          "type": "array",
+          "default": [
+            {
+              "name": "dbaas-connection-params-preins",
+              "secret": {
+                "secretName": "dbaas-connection-params-preins",
+                "defaultMode": 256
+              }
+            }
+          ],
+          "items": {
+            "airflow_base_ref": "#/definitions/io.k8s.api.core.v1.Volume"
+          }
+        },
+        "extraVolumeMounts": {
+          "description": "Additional volume mounts attached to the Airflow Celery workers and pods created with pod-template-file.",
+          "type": "array",
+          "default": [
+            {
+              "name": "dbaas-connection-params-preins",
+              "mountPath": "/var/run/secrets/airflow",
+              "readOnly": true
+            }
+          ],
+          "items": {
+            "airflow_base_ref": "#/definitions/io.k8s.api.core.v1.VolumeMount"
+          }
         }
       }
     },

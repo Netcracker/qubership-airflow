@@ -399,7 +399,7 @@ volumes:
   - name: dbaas-connection-params-main
     secret:
       secretName: dbaas-connection-params-main
-      defaultMode: 400
+      defaultMode: 0400
 
 # VolumeMounts for all airflow containers
 volumeMounts:
@@ -3690,7 +3690,7 @@ customPreinstallJob:
     - name: dbaas-connection-params-preins
       secret:
         secretName: dbaas-connection-params-preins
-        defaultMode: 400
+        defaultMode: 0400
   extraVolumeMounts:
     - name: dbaas-connection-params-preins
       mountPath: /var/run/secrets/airflow
