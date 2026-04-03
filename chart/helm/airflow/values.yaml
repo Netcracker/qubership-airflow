@@ -396,11 +396,18 @@ env:
 volumes:
   - name: emtpyvolume1
     emptyDir: {}
+  - name: dbaas-connection-params-main
+    secret:
+      secretName: dbaas-connection-params-main
+      defaultMode: 400
 
 # VolumeMounts for all airflow containers
 volumeMounts:
   - name: emtpyvolume1
     mountPath: /tmp
+  - name: dbaas-connection-params-main
+    mountPath: /var/run/secrets/airflow
+    readOnly: true
 
 # Secrets for all airflow containers
 secret: []
@@ -512,9 +519,8 @@ extraEnv: ~
 
 # Extra envFrom 'items' that will be added to the definition of airflow containers
 # A string is expected (templated).
-extraEnvFrom: |
-  - secretRef:
-      name: 'dbaas-connection-params-main'
+extraEnvFrom: ~
+
 # eg:
 # extraEnvFrom: |
 #   - secretRef:
@@ -3679,9 +3685,16 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
-  extraEnvFrom: |
-    - secretRef:
-        name: 'dbaas-connection-params-preins'
+  extraEnvFrom: ~
+  extraVolumes:
+    - name: dbaas-connection-params-preins
+      secret:
+        secretName: dbaas-connection-params-preins
+        defaultMode: 400
+  extraVolumeMounts:
+    - name: dbaas-connection-params-preins
+      mountPath: /var/run/secrets/airflow
+      readOnly: true
 
 
 #customPreinstallJob:

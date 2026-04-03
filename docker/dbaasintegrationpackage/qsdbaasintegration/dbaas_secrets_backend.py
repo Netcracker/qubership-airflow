@@ -24,7 +24,7 @@ def read_secret_var_from_file(
             env_value = file.read()
             return env_value
     except Exception as e:
-        logging.warning(
+        logging.debug(
             f"Could not read parameter{env_name} from file, falling back to env: {e}"
         )
         env_value = os.getenv(env_name, default_value)
