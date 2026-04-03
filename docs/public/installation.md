@@ -2279,6 +2279,8 @@ Also, the following additional environment variable must be added:
     value: airflow_test_role
 ```
 
+**Note**: Airflow Keycloak authentication manager stores JWT with user information recieved from keycloak in cookies and some browsers have a limit on cookie size set to 4KB. Because of it in cases when received from keycloak user information is too large(for example, user has too many roles) authentication might not work and in browser console you will be able to see errors like `Set-Cookie header is ignored in response from url ... The combined size of the name and value must be then or equal to 4096 characters`. When this happens, it is recommended to reconfigure user on keycloak side (for example, to reduce the number of assigned roles).
+
 ### Keycloak With TLS
 
 It is possible to use an https address for all keycloak integrations specified above. If the custom certificate (including the ones from cert-manager) or self-signed certificate are used, it is possible to mount these certificates into the pod and to set `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` environment varibles to point to this file, for example:
