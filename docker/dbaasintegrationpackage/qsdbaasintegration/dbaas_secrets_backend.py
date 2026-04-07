@@ -16,10 +16,14 @@ logging.basicConfig(
 
 
 def read_secret_var_from_file(
-    env_name, default_value=None, secret_folder="/var/run/secrets/airflow"
+    env_name,
+    default_value=None,
+    secret_folder="/var/run/secrets/airflow",
+    filename=None,
 ):
+    filepath = f"{secret_folder}/{env_name if filename is None else filename}"
     try:
-        with open(f"{secret_folder}/{env_name}", "r") as file:
+        with open(filepath, "r") as file:
             logging.debug(f"trying to get {env_name} from file")
             env_value = file.read()
             return env_value
@@ -33,6 +37,10 @@ def read_secret_var_from_file(
 
 positive_values = ("true", "True", "yes", "Yes", True)
 negative_values = ("false", "False", "no", "No", False)
+
+fernet_key_filename = "fernet-key"
+api_secret_key_filename = "api-secret-key"
+jwt_secret_filename = "jwt-secret"
 
 dbaas_host = read_secret_var_from_file("DBAAS_HOST")
 dbaas_user = read_secret_var_from_file("DBAAS_USER")
@@ -473,6 +481,19 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         # ToDo reformat key to conn_id
         if key == "airfow_celery_redis_main_conn":
             return self.get_redis_connection()
-        if key == "airfow_pg_main_conn":
+        elif key == "airfow_pg_main_conn":
             return self.get_pg_connection()
-        return None
+        elif key == fernet_key_filename:
+            return read_secret_var_from_file(
+                "AIRFLOW__CORE__FERNET_KEY", filename=fernet_key_filename
+            )
+        elif key == api_secret_key_filename:
+            return read_secret_var_from_file(
+                "AIRFLOW__API__SECRET_KEY", filename=api_secret_key_filename
+            )
+        elif key == jwt_secret_filename:
+            return read_secret_var_from_file(
+                "AIRFLOW__API_AUTH__JWT_SECRET", filename=jwt_secret_filename
+            )
+        else:
+            return None
