@@ -41,6 +41,7 @@ negative_values = ("false", "False", "no", "No", False)
 fernet_key_filename = "fernet-key"
 api_secret_key_filename = "api-secret-key"
 jwt_secret_filename = "jwt-secret"
+key_folder = "/var/run/secrets/airflow-keys"
 
 dbaas_host = read_secret_var_from_file("DBAAS_HOST")
 dbaas_user = read_secret_var_from_file("DBAAS_USER")
@@ -485,15 +486,21 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             return self.get_pg_connection()
         elif key == fernet_key_filename:
             return read_secret_var_from_file(
-                "AIRFLOW__CORE__FERNET_KEY", filename=fernet_key_filename
+                "AIRFLOW__CORE__FERNET_KEY",
+                secret_folder=key_folder,
+                filename=fernet_key_filename,
             )
         elif key == api_secret_key_filename:
             return read_secret_var_from_file(
-                "AIRFLOW__API__SECRET_KEY", filename=api_secret_key_filename
+                "AIRFLOW__API__SECRET_KEY",
+                secret_folder=key_folder,
+                filename=api_secret_key_filename,
             )
         elif key == jwt_secret_filename:
             return read_secret_var_from_file(
-                "AIRFLOW__API_AUTH__JWT_SECRET", filename=jwt_secret_filename
+                "AIRFLOW__API_AUTH__JWT_SECRET",
+                secret_folder=key_folder,
+                filename=jwt_secret_filename,
             )
         else:
             return None
