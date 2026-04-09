@@ -80,7 +80,7 @@ spec:
               value: {{ randAlphaNum 10 | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-         volumeMounts:
+          volumeMounts:
             - name: {{ .Values.service.name }}-secret
               mountPath: /var/run/secrets/airflowtests
               readOnly: true
