@@ -19,11 +19,14 @@ Library  String
 Library  DateTime
 Library	 Collections
 Library	 RequestsLibrary
+Library  OperatingSystem
 Library  PlatformLibrary  managed_by_operator=${MANAGED_BY_OPERATOR}
 
 
 *** Keywords ***
 Preparation
+    ${AIRFLOW_USER}=    Get File    /var/run/secrets/airflowtests/airflow-user
+    ${AIRFLOW_PASSWORD}=    Get File    /var/run/secrets/airflowtests/airflow-password
     Create Session    auth_session    http://${AIRFLOW_HOST}:${AIRFLOW_PORT}
     &{auth_data}=    Create Dictionary
     ...    username=${AIRFLOW_USER}
