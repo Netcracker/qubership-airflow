@@ -41,6 +41,7 @@ negative_values = ("false", "False", "no", "No", False)
 fernet_key_filename = "fernet-key"
 api_secret_key_filename = "api-secret-key"
 jwt_secret_filename = "jwt-secret"
+keycloak_secret_filename = "client-secret"
 key_folder = "/var/run/secrets/airflow-keys"
 
 dbaas_host = read_secret_var_from_file("DBAAS_HOST")
@@ -501,6 +502,12 @@ class DBAASSecretsBackend(BaseSecretsBackend):
                 "AIRFLOW__API_AUTH__JWT_SECRET",
                 secret_folder=key_folder,
                 filename=jwt_secret_filename,
+            )
+        elif key == keycloak_secret_filename:
+            return read_secret_var_from_file(
+                "AIRFLOW__KEYCLOAK_AUTH_MANAGER__CLIENT_SECRET",
+                secret_folder=key_folder,
+                filename=keycloak_secret_filename,
             )
         else:
             return None
