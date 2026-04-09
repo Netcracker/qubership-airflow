@@ -1,6 +1,4 @@
 *** Variables ***
-${AIRFLOW_USER}             %{AIRFLOW_USER}
-${AIRFLOW_PASSWORD}         %{AIRFLOW_PASSWORD}
 ${AIRFLOW_HOST}             %{AIRFLOW_HOST}
 ${AIRFLOW_PORT}             %{AIRFLOW_PORT}
 ${AIRFLOW_NAMESPACE}        %{AIRFLOW_NAMESPACE}
@@ -134,3 +132,4 @@ Check Dags Amount
     ${dags_amount} =  Get Length  ${resp_json['dags']}
     Log to console  DAGS COUNT: ${dags_amount}
     RETURN  ${dags_amount}
+
