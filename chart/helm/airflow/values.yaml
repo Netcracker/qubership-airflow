@@ -389,6 +389,12 @@ env:
     value: airfow_pg_main_conn
   - name: AIRFLOW__CELERY__BROKER_URL_SECRET
     value: airfow_celery_redis_main_conn
+  - name: AIRFLOW__CORE__FERNET_KEY_SECRET
+    value: fernet-key
+  - name: AIRFLOW__API__SECRET_KEY_SECRET
+    value: api-secret-key
+  - name: AIRFLOW__API_AUTH__JWT_SECRET_SECRET
+    value: jwt-secret
 # - name: ""
 #   value: ""
 
@@ -400,6 +406,18 @@ volumes:
     secret:
       secretName: dbaas-connection-params-main
       defaultMode: 0400
+  - name: fernet-key
+    secret:
+      secretName: airflow-fernet-key
+      defaultMode: 0400
+  - name: jwt-secret
+    secret:
+      secretName: airflow-jwt-secret
+      defaultMode: 0400
+  - name: api-secret-key
+    secret:
+      secretName: airflow-api-secret-key
+      defaultMode: 0400
 
 # VolumeMounts for all airflow containers
 volumeMounts:
@@ -407,6 +425,18 @@ volumeMounts:
     mountPath: /tmp
   - name: dbaas-connection-params-main
     mountPath: /var/run/secrets/airflow
+    readOnly: true
+  - name: fernet-key
+    mountPath: /var/run/secrets/airflow-keys/fernet-key
+    subPath: fernet-key
+    readOnly: true
+  - name: api-secret-key
+    mountPath: /var/run/secrets/airflow-keys/api-secret-key
+    subPath: api-secret-key
+    readOnly: true
+  - name: jwt-secret
+    mountPath: /var/run/secrets/airflow-keys/jwt-secret
+    subPath: jwt-secret
     readOnly: true
 
 # Secrets for all airflow containers
@@ -420,13 +450,12 @@ secret: []
 # might want to provide some of those variables with _CMD or _SECRET variable, and you should
 # in this case disable setting of those variables by setting the relevant configuration to false.
 enableBuiltInSecretEnvVars:
-  AIRFLOW__CORE__FERNET_KEY: true
-  # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
+  AIRFLOW__CORE__FERNET_KEY: false
   AIRFLOW__CORE__SQL_ALCHEMY_CONN: false
   AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: false
   AIRFLOW_CONN_AIRFLOW_DB: false
-  AIRFLOW__API__SECRET_KEY: true
-  AIRFLOW__API_AUTH__JWT_SECRET: true
+  AIRFLOW__API__SECRET_KEY: false
+  AIRFLOW__API_AUTH__JWT_SECRET: false
   AIRFLOW__WEBSERVER__SECRET_KEY: true
   AIRFLOW__CELERY__CELERY_RESULT_BACKEND: true
   AIRFLOW__CELERY__RESULT_BACKEND: true
