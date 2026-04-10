@@ -1,6 +1,4 @@
 *** Variables ***
-${AIRFLOW_USER}             %{AIRFLOW_USER}
-${AIRFLOW_PASSWORD}         %{AIRFLOW_PASSWORD}
 ${AIRFLOW_HOST}             %{AIRFLOW_HOST}
 ${AIRFLOW_PORT}             %{AIRFLOW_PORT}
 ${AIRFLOW_NAMESPACE}        %{AIRFLOW_NAMESPACE}
@@ -19,11 +17,14 @@ Library  String
 Library  DateTime
 Library	 Collections
 Library	 RequestsLibrary
+Library  OperatingSystem
 Library  PlatformLibrary  managed_by_operator=${MANAGED_BY_OPERATOR}
 
 
 *** Keywords ***
 Preparation
+    ${AIRFLOW_USER}=    Get File    /var/run/secrets/airflowtests/airflow-user
+    ${AIRFLOW_PASSWORD}=    Get File    /var/run/secrets/airflowtests/airflow-password
     Create Session    auth_session    http://${AIRFLOW_HOST}:${AIRFLOW_PORT}
     &{auth_data}=    Create Dictionary
     ...    username=${AIRFLOW_USER}
@@ -131,3 +132,4 @@ Check Dags Amount
     ${dags_amount} =  Get Length  ${resp_json['dags']}
     Log to console  DAGS COUNT: ${dags_amount}
     RETURN  ${dags_amount}
+

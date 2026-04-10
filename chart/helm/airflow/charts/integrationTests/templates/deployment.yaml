@@ -66,16 +66,6 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             {{- end }}
-            - name: AIRFLOW_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.service.name }}-secret
-                  key: airflow-user
-            - name: AIRFLOW_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.service.name }}-secret
-                  key: airflow-password
             - name: API_SERVICE_NAME
               value: {{ .Values.apiServiceName }}
             - name: SCHEDULER_DEPLOYMENT
@@ -91,6 +81,9 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
+            - name: {{ .Values.service.name }}-secret
+              mountPath: /var/run/secrets/airflowtests
+              readOnly: true
             - name: output
               mountPath: /opt/robot/output
             - name: tmpvolume
@@ -98,6 +91,10 @@ spec:
           terminationMessagePath: /dev/termination-log
           imagePullPolicy: Always
       volumes:
+        - name: {{ .Values.service.name }}-secret
+          secret:
+            secretName: {{ .Values.service.name }}-secret
+            defaultMode: 400
         - name: output
           emptyDir: {}
         - name: tmpvolume
