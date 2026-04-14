@@ -796,11 +796,11 @@ config:
 
 In the above example, MAAS parameters are not needed, if MAAS integration is not used.
 
-**Note**: By default, the `DBAAS_PG_DB_NAME_PREFIX` environment variable is not set. This means that the database name is provided by the DBaaS aggregator. The `DBAAS_PG_DB_NAME_PREFIX` environment variable can be used to set the prefix for the PG database name.
+**Note**: By default, the `DBAAS_PG_DB_NAME_PREFIX` parameter is not set. This means that the database name is provided by the DBaaS aggregator. The `DBAAS_PG_DB_NAME_PREFIX` parameter can be used to set the prefix for the PG database name.
 
 **Note**: For SSL configuration, see [Specifying SSL Connections to Redis and Postgres](#specifying-ssl-connections-to-redis-and-postgres).
 
-**Note**: When DBAAS/MAAS has TLS enabled on API, it is possible to use `DBAAS_API_VERIFY` environment variable for preinstall job and airflow containers to configure TLS verification. By default, it is enabled, but it is possible to set it to `False` in order to disable cert verification. It is also possible to set it to custom path in order to use custom certificate for verification. Alternatively, it is possible to use `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` envs, but it will affect all python requests.
+**Note**: When DBAAS/MAAS has TLS enabled on API, it is possible to use `DBAAS_API_VERIFY` parameter for preinstall job and Airflow containers to configure TLS verification. By default, it is enabled, but it is possible to set it to `False` in order to disable cert verification. It is also possible to set it to custom path in order to use custom certificate for verification. Alternatively, it is possible to use `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` environment variables, but it will affect all python requests.
 
 ## DBaaS Integration for Airflow Connections
 
@@ -836,11 +836,11 @@ config:
     backend_kwargs: "{{ .Values.qs_secrets_backend_params | toJson }}"
 ```
 
-**Note**: By default, if the database does not exist, the request to DBaaS goes to the `/api/v3/dbaas/{airflow_namespace}/databases` address, where `{airflow_namespace}` is the Airflow installation namespace. It is possible to change the request address to the namespace specified in the classifier by setting the `DBAAS_CONN_NAMESPACE_FROM_CONFIG` environment variable to "true".
+**Note**: By default, if the database does not exist, the request to DBaaS goes to the `/api/v3/dbaas/{airflow_namespace}/databases` address, where `{airflow_namespace}` is the Airflow installation namespace. It is possible to change the request address to the namespace specified in the classifier by setting the `DBAAS_CONN_NAMESPACE_FROM_CONFIG` parameter to "true".
 
 **Note**: It is possible to enable more logging in the DBaaS integration package by setting the `DBAAS_INTEGRATION_LOG_LEVEL` environment variable to `DEBUG`. The `config.logging.logging_level` parameter must also be set to debug in this case.
 
-**Note**: When files with DBaaS and other configuration are not found, DBaaS secrets backend will try to read configuration parameters from environment variables.
+**Note**: When file with value of configuration parameter is not found, DBaaS secrets backend will try to read configuration parameters from environment variables. For example, when `/var/run/secrets/airflow/DBAAS_PASSWORD` file is not found, secrets backend will try reading files from `DBAAS_PASSWORD` environment variable. So if using secrets as environment variables is no concern, `extraEnvFrom` can be used instead of `volumes/volumeMounts/extraVolumes/extraVolumeMounts`.
 
 ### MaaS Integration for Airflow Connections
 
@@ -873,7 +873,7 @@ config:
 
 Since Airflow Kafka connection does not include topic, the topic name is not passed to the connection. The following fields are taken from the MaaS response and added to the Kafka connection extra field: `bootstrap.servers`, `sasl.username`, `sasl.password`, `sasl.mechanism`, `security.protocol`.
 
-**Note**: By default, the `X-Origin-Namespace` header of the MaaS request is the same as the namespace in MaaS classifier. To use the Airflow namespace, it is possible to set the `MAAS_CONN_NAMESPACE_FROM_CONFIG` environment variable to `false`.
+**Note**: By default, the `X-Origin-Namespace` header of the MaaS request is the same as the namespace in MaaS classifier. To use the Airflow namespace, it is possible to set the `MAAS_CONN_NAMESPACE_FROM_CONFIG` parameter to `false`.
 
 **Note**: As with DBaaS, additional logging can be enabled by setting the `DBAAS_INTEGRATION_LOG_LEVEL` environment variable to `DEBUG`. The `config.logging.logging_level` parameter must also be set to debug in this case.
 
@@ -965,7 +965,7 @@ enableBuiltInSecretEnvVars: # Disable passing sensitive information as envs sinc
 
 ### Non-DBaaS configuration
 
-Non-DBaaS configuration with reading sensitive information from files is currently not provided by  Qubership platform. But it is possible to do this similarly with DBaaS approach. For this it is necessary to:
+Non-DBaaS configuration without reading sensitive information from environment variables is currently not provided by Qubership platform. But it is possible to do this similarly with DBaaS approach. For this it is necessary to:
 * Implement [custom secrets backend](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/index.html#roll-your-own-secrets-backend). All sensitive configuration option can be retrieved using custom secrets backend instead of environment variables. 
 * Configure default parameters to pass sensitive information not as environment variables. For this it is necessary to disable corresponding environment variables at `enableBuiltInSecretEnvVars`. For passing information to secrets backend it is possible to use `env`/`volumes`/`volumeMounts` parameters.
 
