@@ -840,7 +840,7 @@ config:
 
 **Note**: It is possible to enable more logging in the DBaaS integration package by setting the `DBAAS_INTEGRATION_LOG_LEVEL` environment variable to `DEBUG`. The `config.logging.logging_level` parameter must also be set to debug in this case.
 
-**Note** that when not found, DBaaS secrets backend will try to read configuration parameters parameters from environment variables.
+**Note**: When files with DBaaS and other configuration are not found, DBaaS secrets backend will try to read configuration parameters from environment variables.
 
 ### MaaS Integration for Airflow Connections
 
