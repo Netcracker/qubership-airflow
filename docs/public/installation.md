@@ -21,9 +21,9 @@ This section provides information about the Airflow installation using [slightly
       - [DBaaS Integration](#dbaas-integration)
   - [DBaaS Integration for Airflow Connections](#dbaas-integration-for-airflow-connections)
       - [MaaS Integration for Airflow Connections](#maas-integration-for-airflow-connections)
-    - [Reading sensitive data from files instead of environment variables](#reading-sensitive-data-from-files-instead-of-environment-variables)
-      - [DBaaS integration package](#dbaas-integration-package)
-      - [Non-DBaaS configuration](#non-dbaas-configuration)
+    - [Reading Sensitive Data from Files Instead of Environment Variables](#reading-sensitive-data-from-files-instead-of-environment-variables)
+      - [DBaaS Integration Package](#dbaas-integration-package)
+      - [Non-DBaaS Configuration](#non-dbaas-configuration)
   - [Creating a Secret for Custom Keycloak Client Registration](#creating-a-secret-for-custom-keycloak-client-registration)
   - [Specifying External Broker](#specifying-external-broker)
   - [Specifying SSL Connections to Redis and Postgres](#specifying-ssl-connections-to-redis-and-postgres)
@@ -877,22 +877,22 @@ Since Airflow Kafka connection does not include topic, the topic name is not pas
 
 **Note**: As with DBaaS, additional logging can be enabled by setting the `DBAAS_INTEGRATION_LOG_LEVEL` environment variable to `DEBUG`. The `config.logging.logging_level` parameter must also be set to debug in this case.
 
-## Reading sensitive data from files instead of environment variables
+## Reading Sensitive Data from Files Instead of Environment Variables
 
-Sometimes for better compliance with CIS/OWASP recommendations it might be required to avoid storing sensitive data in environment variables. Two sections below describe how this might be achieved.
+Sometimes for better compliance with CIS/OWASP recommendations, it might be required to avoid storing sensitive data in environment variables. The below two sections provide the information on how this can be achieved.
 
-### DBaaS integration package
+### DBaaS Integration Package
 
-**Note** this configuration is applied by default.
+**Note**: This configuration is applied by default.
 
-When using DBAASSecretsBackend secrets backend, airflow system connections to redis/postgres are not stored in environment variables(they are retrieved from DBaaS). It is possible to configure the same for custom redis/PG/kafka connections. As for DBaaS credentials and other parameters, they are also read from files by default. In addition to it, DBaaS integration package allows to read other airflow sensitive configuration options from files that can be mounted into the pods. These sensitive configuration options include:
+When using DBAASSecretsBackend secrets backend, airflow system connections to redis/postgres are not stored in environment variables as they are retrieved from DBaaS. It is possible to configure the same for custom redis/PG/kafka connections. As for DBaaS credentials and other parameters, they are also read from files by default. In addition to it, DBaaS integration package allows to read other airflow sensitive configuration options from files that can be mounted into the pods. These sensitive configuration options include:
 
 * [Airflow fernet key](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#fernet-key)
 * [API Server secret key](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#secret-key)
 * [JWT Secret](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#jwt-secret)
 * [Keycloak client secret](https://airflow.apache.org/docs/apache-airflow-providers-keycloak/stable/configurations-ref.html#client-secret) for UI/API authentication (works for keycloak provider/QS modified keycloak provider integrations).
 
-In this approach secrets with this data that are normally created by the chart are used (but they are not used for environment variables). For this approach it is necessary to specify the following:
+In this approach, secrets with this data that are normally created by the chart are used (but they are not used for environment variables). For this approach, it is necessary to specify the following:
 
 ```yaml
 env: # Pass these parameters for DBaaS secrets backend to know that they should be loaded from files
@@ -963,11 +963,11 @@ enableBuiltInSecretEnvVars: # Disable passing sensitive information as envs sinc
 
 ```
 
-### Non-DBaaS configuration
+### Non-DBaaS Configuration
 
-Non-DBaaS configuration without reading sensitive information from environment variables is currently not provided by Qubership platform. But it is possible to do this similarly with DBaaS approach. For this it is necessary to:
+Non-DBaaS configuration without reading sensitive information from environment variables is currently not provided by Qubership platform. However, it is possible to do this similarly with DBaaS approach. For this, it is necessary to do the following:
 * Implement [custom secrets backend](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/index.html#roll-your-own-secrets-backend). All sensitive configuration option can be retrieved using custom secrets backend instead of environment variables. 
-* Configure default parameters to pass sensitive information not as environment variables. For this it is necessary to disable corresponding environment variables at `enableBuiltInSecretEnvVars`. For passing information to secrets backend it is possible to use `env`/`volumes`/`volumeMounts` parameters.
+* Configure the default parameters to pass sensitive information not as environment variables. For this, it is necessary to disable corresponding environment variables at `enableBuiltInSecretEnvVars`. For passing information to secrets backend, it is possible to use the  `env`/`volumes`/`volumeMounts` parameters.
 
 ## Creating a Secret for Custom Keycloak Client Registration
 
