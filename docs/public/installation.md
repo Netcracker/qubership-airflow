@@ -21,6 +21,9 @@ This section provides information about the Airflow installation using [slightly
       - [DBaaS Integration](#dbaas-integration)
   - [DBaaS Integration for Airflow Connections](#dbaas-integration-for-airflow-connections)
       - [MaaS Integration for Airflow Connections](#maas-integration-for-airflow-connections)
+    - [Reading Sensitive Data from Files Instead of Environment Variables](#reading-sensitive-data-from-files-instead-of-environment-variables)
+      - [DBaaS Integration Package](#dbaas-integration-package)
+      - [Non-DBaaS Configuration](#non-dbaas-configuration)
   - [Creating a Secret for Custom Keycloak Client Registration](#creating-a-secret-for-custom-keycloak-client-registration)
   - [Specifying External Broker](#specifying-external-broker)
   - [Specifying SSL Connections to Redis and Postgres](#specifying-ssl-connections-to-redis-and-postgres)
@@ -411,8 +414,9 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * Custom preinstall job and its parameters are added. This job can be used to create a database for Airflow and Redis (with or without DBaaS).
 * By default, DBaaS integration is enabled. This means that the parameters for DBaaS integration are passed to Airflow and the custom preinstall job.
 * `data.metadataSecretName` and `data.brokerUrlSecretName` are set to `metadata-secret` and `broker-url-secret`.
-* Airflow configuration environment variables related to broker/database connections are disabled using the `enableBuiltInSecretEnvVars.*` parameter.
-* `extraSecrets.*` and `extraEnvFrom.*` parameters are used to pass environment variables related to the DBaaS integration.
+* Airflow configuration environment variables with sensitive information or related to broker/database connections are disabled using the `enableBuiltInSecretEnvVars.*` parameter. The variables include: `AIRFLOW__CORE__FERNET_KEY`, `AIRFLOW__CORE__SQL_ALCHEMY_CONN`, `AIRFLOW__DATABASE__SQL_ALCHEMY_CONN`, `AIRFLOW_CONN_AIRFLOW_DB`, `AIRFLOW__API__SECRET_KEY`, `AIRFLOW__API_AUTH__JWT_SECRET`.
+* `volumes/volumeMounts` parameters are configured to mount emptyVolume to `/tmp` by default in order to support readOnlyRootFilesystem. Additionaly, secrets that in community version are used as environment variables from above in qubership version are mounted as files through volumes/volumeMounts(and at runtime they are used by Qubership DBaaS integration secrets backend).
+* `extraSecrets.*`  parameters are used to pass data related to the DBaaS integration.
 * The `config.secrets.backend` parameter is set to custom secrets' backend with DBaaS integration (`qsdbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend`).
 * Parameters for direct Prometheus monitoring support are added. Monitoring is enabled by default, along with StatsD monitoring that comes with the Airflow chart.
 * Default StatsD monitoring mappings are edited.
@@ -425,7 +429,6 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * DR sitemanager subchart is added.
 * Certificate object for integration with cert-manager is added.
 * Default security context is set to be in-line with the restricted Pod Security Standards. For more information, refer to the _Pod Security Standards_ documentation at [https://kubernetes.io/docs/concepts/security/pod-security-standards/](https://kubernetes.io/docs/concepts/security/pod-security-standards/). Also, `readOnlyRootFilesystem: true` is set for airflow containers security contexts (except for gitSync/Rclone).
-* `volumes/volumeMounts` parameters are configured to mount emptyVolume to `/tmp` by default in order to support readOnlyRootFilesystem.
 * Added labels required by Qubership release.
 * Status provisioner job and parameters for it are added.
 * For scheduler, webserver and api-server deployments support of custom Qubership rolling update deployment strategies were added. The `useQubershipDeployerUpdateStrategies` parameter is added that can be used to disable Qubership update strategies (must be set to `false`).
@@ -438,9 +441,10 @@ The Helm chart works and uses the same parameters as defined in the community ve
 By default with Qubership changes, Airflow deployment uses DBaaS integration. To install without DBaaS, some changes must be made in the installation parameters:
 
 * Since `data.metadataSecretName` and `data.brokerUrlSecretName` are not set to `~` by default, if you want to use other data parameters, you must manually set `data.metadataSecretName` and `data.brokerUrlSecretName` to `~`.
-* `enableBuiltInSecretEnvVars.AIRFLOW__CORE__SQL_ALCHEMY_CONN`, `enableBuiltInSecretEnvVars.AIRFLOW__DATABASE__SQL_ALCHEMY_CONN`, `enableBuiltInSecretEnvVars.AIRFLOW_CONN_AIRFLOW_DB`, and `enableBuiltInSecretEnvVars.AIRFLOW__CELERY__BROKER_URL` parameters must be set to `true`.
+* `enableBuiltInSecretEnvVars.AIRFLOW__CORE__SQL_ALCHEMY_CONN`, `enableBuiltInSecretEnvVars.AIRFLOW__DATABASE__SQL_ALCHEMY_CONN`, `enableBuiltInSecretEnvVars.AIRFLOW_CONN_AIRFLOW_DB`, and `enableBuiltInSecretEnvVars.AIRFLOW__CELERY__BROKER_URL`, `enableBuiltInSecretEnvVars.AIRFLOW__CORE__FERNET_KEY`, `enableBuiltInSecretEnvVars.AIRFLOW__API__SECRET_KEY`, `enableBuiltInSecretEnvVars.AIRFLOW__API_AUTH__JWT_SECRET` parameters must be set to `true`.
+* `volumes`/`volumeMounts` parameters must be set to `[]` or to the empty volume mountet to `/tmp` (if read only filesystem support is required).
 * The `env` parameter must be set to `[]` or to the required value in the installation environments.
-* `extraSecrets` must contain `{'dbaas-connection-params-main': ~}` to avoid unnecessary DBaaS secret creation. `extraEnvFrom` must be set to `~` or to the required value in your installation.
+* `extraSecrets` must contain `{'dbaas-connection-params-main': ~}` to avoid unnecessary DBaaS secret creation.
 * `config.secrets.backend` must be set to `~`.
 * `customPreinstallJob` must be reconfigured based on the installation requirements.
 
@@ -638,9 +642,15 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
-  extraEnvFrom: |
-    - secretRef:
-        name: 'dbaas-connection-params-preins'
+  extraVolumes:
+    - name: dbaas-connection-params-preins
+      secret:
+        secretName: dbaas-connection-params-preins
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: dbaas-connection-params-preins
+      mountPath: /var/run/secrets/airflow
+      readOnly: true
 ```
 
 The possible use cases that are implemented on the Qubership side are described below.
@@ -717,9 +727,15 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
-  extraEnvFrom: |
-    - secretRef:
-        name: 'dbaas-connection-params-preins'
+  extraVolumes:
+    - name: dbaas-connection-params-preins
+      secret:
+        secretName: dbaas-connection-params-preins
+        defaultMode: 0400
+  extraVolumeMounts:
+    - name: dbaas-connection-params-preins
+      mountPath: /var/run/secrets/airflow
+      readOnly: true
 ```
 
 Platform also provides a DBaaS integration package for Airflow that [implements](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) Airflow custom secrets' backend. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.1.7/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/3.1.7/security/secrets/secrets-backend/index.html). It is intended to be used with the custom preinstall job DBaaS script. The custom secrets' backend gets Redis and PG connections for Airflow from DBaaS. To enable custom secrets' backend, the following parameters must be specified (set by default):
@@ -757,30 +773,34 @@ extraSecrets:
       MAAS_USER: 'insert maas user here'
       MAAS_PASSWORD: 'insert maas password here'
 ...
-extraEnvFrom: |
-  - secretRef:
-      name: 'dbaas-connection-params-main'
+volumes:
 ...
-workers:
+  - name: dbaas-connection-params-main
+    secret:
+      secretName: dbaas-connection-params-main
+      defaultMode: 0400
 ...
-  livenessProbe:
-    enabled: false
+volumeMounts:
+...
+  - name: dbaas-connection-params-main
+    mountPath: /var/run/secrets/airflow
+    readOnly: true
 ...
 config:
 ...
   secrets:
     backend: qsdbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend
-
+...
 
 ```
 
 In the above example, MAAS parameters are not needed, if MAAS integration is not used.
 
-**Note**: By default, the `DBAAS_PG_DB_NAME_PREFIX` environment variable is not set. This means that the database name is provided by the DBaaS aggregator. The `DBAAS_PG_DB_NAME_PREFIX` environment variable can be used to set the prefix for the PG database name.
+**Note**: By default, the `DBAAS_PG_DB_NAME_PREFIX` parameter is not set. This means that the database name is provided by the DBaaS aggregator. The `DBAAS_PG_DB_NAME_PREFIX` parameter can be used to set the prefix for the PG database name.
 
 **Note**: For SSL configuration, see [Specifying SSL Connections to Redis and Postgres](#specifying-ssl-connections-to-redis-and-postgres).
 
-**Note**: When DBAAS/MAAS has TLS enabled on API, it is possible to use `DBAAS_API_VERIFY` environment variable for preinstall job and airflow containers to configure TLS verification. By default, it is enabled, but it is possible to set it to `False` in order to disable cert verification. It is also possible to set it to custom path in order to use custom certificate for verification. Alternatively, it is possible to use `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` envs, but it will affect all python requests.
+**Note**: When DBAAS/MAAS has TLS enabled on API, it is possible to use `DBAAS_API_VERIFY` parameter for preinstall job and Airflow containers to configure TLS verification. By default, it is enabled, but it is possible to set it to `False` in order to disable cert verification. It is also possible to set it to custom path in order to use custom certificate for verification. Alternatively, it is possible to use `REQUESTS_CA_BUNDLE` and `SSL_CERT_FILE` environment variables, but it will affect all python requests.
 
 ## DBaaS Integration for Airflow Connections
 
@@ -816,9 +836,11 @@ config:
     backend_kwargs: "{{ .Values.qs_secrets_backend_params | toJson }}"
 ```
 
-**Note**: By default, if the database does not exist, the request to DBaaS goes to the `/api/v3/dbaas/{airflow_namespace}/databases` address, where `{airflow_namespace}` is the Airflow installation namespace. It is possible to change the request address to the namespace specified in the classifier by setting the `DBAAS_CONN_NAMESPACE_FROM_CONFIG` environment variable to "true".
+**Note**: By default, if the database does not exist, the request to DBaaS goes to the `/api/v3/dbaas/{airflow_namespace}/databases` address, where `{airflow_namespace}` is the Airflow installation namespace. It is possible to change the request address to the namespace specified in the classifier by setting the `DBAAS_CONN_NAMESPACE_FROM_CONFIG` parameter to "true".
 
 **Note**: It is possible to enable more logging in the DBaaS integration package by setting the `DBAAS_INTEGRATION_LOG_LEVEL` environment variable to `DEBUG`. The `config.logging.logging_level` parameter must also be set to debug in this case.
+
+**Note**: When file with value of configuration parameter is not found, DBaaS secrets backend will try to read configuration parameters from environment variables. For example, when `/var/run/secrets/airflow/DBAAS_PASSWORD` file is not found, secrets backend will try reading files from `DBAAS_PASSWORD` environment variable. So if using secrets as environment variables is no concern, `extraEnvFrom` can be used instead of `volumes/volumeMounts/extraVolumes/extraVolumeMounts`.
 
 ### MaaS Integration for Airflow Connections
 
@@ -851,9 +873,101 @@ config:
 
 Since Airflow Kafka connection does not include topic, the topic name is not passed to the connection. The following fields are taken from the MaaS response and added to the Kafka connection extra field: `bootstrap.servers`, `sasl.username`, `sasl.password`, `sasl.mechanism`, `security.protocol`.
 
-**Note**: By default, the `X-Origin-Namespace` header of the MaaS request is the same as the namespace in MaaS classifier. To use the Airflow namespace, it is possible to set the `MAAS_CONN_NAMESPACE_FROM_CONFIG` environment variable to `false`.
+**Note**: By default, the `X-Origin-Namespace` header of the MaaS request is the same as the namespace in MaaS classifier. To use the Airflow namespace, it is possible to set the `MAAS_CONN_NAMESPACE_FROM_CONFIG` parameter to `false`.
 
 **Note**: As with DBaaS, additional logging can be enabled by setting the `DBAAS_INTEGRATION_LOG_LEVEL` environment variable to `DEBUG`. The `config.logging.logging_level` parameter must also be set to debug in this case.
+
+## Reading Sensitive Data from Files Instead of Environment Variables
+
+Sometimes for better compliance with CIS/OWASP recommendations, it might be required to avoid storing sensitive data in environment variables. The below two sections provide the information on how this can be achieved.
+
+### DBaaS Integration Package
+
+**Note**: This configuration is applied by default.
+
+When using DBAASSecretsBackend secrets backend, airflow system connections to redis/postgres are not stored in environment variables as they are retrieved from DBaaS. It is possible to configure the same for custom redis/PG/kafka connections. As for DBaaS credentials and other parameters, they are also read from files by default. In addition to it, DBaaS integration package allows to read other airflow sensitive configuration options from files that can be mounted into the pods. These sensitive configuration options include:
+
+* [Airflow fernet key](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#fernet-key)
+* [API Server secret key](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#secret-key)
+* [JWT Secret](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#jwt-secret)
+* [Keycloak client secret](https://airflow.apache.org/docs/apache-airflow-providers-keycloak/stable/configurations-ref.html#client-secret) for UI/API authentication (works for keycloak provider/QS modified keycloak provider integrations).
+
+In this approach, secrets with this data that are normally created by the chart are used (but they are not used for environment variables). For this approach, it is necessary to specify the following:
+
+```yaml
+env: # Pass these parameters for DBaaS secrets backend to know that they should be loaded from files
+...
+  - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN_SECRET
+    value: airfow_pg_main_conn
+  - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN_SECRET
+    value: airfow_pg_main_conn
+  - name: AIRFLOW__CELERY__BROKER_URL_SECRET
+    value: airfow_celery_redis_main_conn
+  - name: AIRFLOW__CORE__FERNET_KEY_SECRET
+    value: fernet-key
+  - name: AIRFLOW__API__SECRET_KEY_SECRET
+    value: api-secret-key
+  - name: AIRFLOW__API_AUTH__JWT_SECRET_SECRET
+    value: jwt-secret
+...
+volumes: # Add volumes with sensitive data to all airflow containers
+...
+  - name: emtpyvolume1
+    emptyDir: {}
+  - name: dbaas-connection-params-main
+    secret:
+      secretName: dbaas-connection-params-main
+      defaultMode: 0400
+  - name: fernet-key
+    secret:
+      secretName: airflow-fernet-key
+      defaultMode: 0400
+  - name: jwt-secret
+    secret:
+      secretName: airflow-jwt-secret
+      defaultMode: 0400
+  - name: api-secret-key
+    secret:
+      secretName: airflow-api-secret-key
+      defaultMode: 0400
+...
+volumeMounts: # Mount the volumes to all airflow containers
+  - name: emtpyvolume1
+    mountPath: /tmp
+  - name: dbaas-connection-params-main
+    mountPath: /var/run/secrets/airflow
+    readOnly: true
+  - name: fernet-key
+    mountPath: /var/run/secrets/airflow-keys/fernet-key
+    subPath: fernet-key
+    readOnly: true
+  - name: api-secret-key
+    mountPath: /var/run/secrets/airflow-keys/api-secret-key
+    subPath: api-secret-key
+    readOnly: true
+  - name: jwt-secret
+    mountPath: /var/run/secrets/airflow-keys/jwt-secret
+    subPath: jwt-secret
+    readOnly: true
+...
+enableBuiltInSecretEnvVars: # Disable passing sensitive information as envs since they are loaded from files
+...
+  AIRFLOW__CORE__FERNET_KEY: false
+  AIRFLOW__CORE__SQL_ALCHEMY_CONN: false
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: false
+  AIRFLOW_CONN_AIRFLOW_DB: false
+  AIRFLOW__API__SECRET_KEY: false
+  AIRFLOW__API_AUTH__JWT_SECRET: false
+  AIRFLOW__CELERY__BROKER_URL: false
+...
+
+```
+
+### Non-DBaaS Configuration
+
+Non-DBaaS configuration without reading sensitive information from environment variables is currently not provided by Qubership platform. However, it is possible to do this similarly with DBaaS approach. For this, it is necessary to do the following:
+* Implement [custom secrets backend](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/index.html#roll-your-own-secrets-backend). All sensitive configuration option can be retrieved using custom secrets backend instead of environment variables. 
+* Configure the default parameters to pass sensitive information not as environment variables. For this, it is necessary to disable corresponding environment variables at `enableBuiltInSecretEnvVars`. For passing information to secrets backend, it is possible to use the  `env`/`volumes`/`volumeMounts` parameters.
 
 ## Creating a Secret for Custom Keycloak Client Registration
 
@@ -2278,6 +2392,8 @@ Also, the following additional environment variable must be added:
   - name: AIRFLOW_KEYCLOAK_ADMIN_ROLES
     value: airflow_test_role
 ```
+
+**Note**: Airflow Keycloak authentication manager stores JWT with user information recieved from keycloak in cookies and some browsers have a limit on cookie size set to 4KB. Because of it in cases when received from keycloak user information is too large(for example, user has too many roles) authentication might not work and in browser console you will be able to see errors like `Set-Cookie header is ignored in response from url ... The combined size of the name and value must be then or equal to 4096 characters`. When this happens, it is recommended to reconfigure user on keycloak side (for example, to reduce the number of assigned roles).
 
 ### Keycloak With TLS
 
