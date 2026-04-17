@@ -967,6 +967,10 @@ Priority of values are from left to right, meaning if first value is not empty, 
     {{- end }}
   {{- end }}
   {{- if $result }}
+    #---Qubership custom change: add PAAS_PLATFORM support---
+    {{- if eq (default "KUBERNETES" $.PAAS_PLATFORM) "OPENSHIFT" -}}
+     {{- $result = omit $result "runAsUser" "fsGroup" -}}
+    {{- end -}}
     {{- toYaml $result | print }}
   {{- else }}
 runAsUser: {{ $.uid }}
@@ -989,7 +993,12 @@ It is important to pass the local variables scope to this template as it is used
 */}}
 {{- define "localPodSecurityContext" -}}
   {{- if .securityContexts.pod -}}
+  #---Qubership custom change: add PAAS_PLATFORM support---
+    {{- if eq (default "KUBERNETES" $.PAAS_PLATFORM) "OPENSHIFT" -}}
+    {{ toYaml (omit .securityContexts.pod "runAsUser" "fsGroup") | print }}
+    {{- else -}}
     {{ toYaml .securityContexts.pod | print }}
+    {{- end -}}
   {{- else if .securityContext -}}
     {{ toYaml .securityContext | print }}
   {{- else -}}
