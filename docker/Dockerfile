@@ -28,10 +28,12 @@ COPY docker/requirements.txt ${AIRFLOW_USER_HOME}/requirements.txt
 
 COPY docker/createdb.py docker/create_dbs_dbaas.py /bin/
 
-COPY docker/create_system_user_if_missing_nss_wrapper /create_system_user_if_missing_nss_wrapper
+COPY docker/create_system_user_if_missing_nss_wrapper create_system_user_if_missing_nss_wrapper
 
 RUN sed -i '/function create_system_user_if_missing() {/c\function create_system_user_if_missing_old() {' /entrypoint \
-    && sed -i -e '/function create_system_user_if_missing_old/{r \/create_system_user_if_missing_nss_wrapper' -e 'N}' /entrypoint
+    && sed -e '/function create_system_user_if_missing_old/{r create_system_user_if_missing_nss_wrapper' -e 'N}' /entrypoint >> /tmp/entrypoint \
+    && cp /tmp/entrypoint /entrypoint \
+    && rm /tmp/entrypoint create_system_user_if_missing_nss_wrapper
 
 
 USER airflow
