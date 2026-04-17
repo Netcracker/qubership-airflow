@@ -31,7 +31,7 @@ COPY docker/createdb.py docker/create_dbs_dbaas.py /bin/
 COPY docker/create_system_user_if_missing_nss_wrapper.sh /create_system_user_if_missing_nss_wrapper.sh
 
 RUN sed -i '/function create_system_user_if_missing() {/c\function create_system_user_if_missing_old() {' /entrypoint \
-    && sed -i -e '/function create_system_user_if_missing_old/{r create_system_user_if_missing_nss_wrapper.sh' -e 'N}' entrypoint
+    && sed -i -e '/function create_system_user_if_missing_old/{r create_system_user_if_missing_nss_wrapper' -e 'N}' /entrypoint
 
 
 USER airflow
