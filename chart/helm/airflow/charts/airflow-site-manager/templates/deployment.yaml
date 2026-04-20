@@ -29,9 +29,9 @@ spec:
       securityContext:
         {{- if eq (default "KUBERNETES" .Values.PAAS_PLATFORM) "OPENSHIFT" }}
         {{ toYaml (omit .Values.securityContexts.pod "runAsUser" "fsGroup") | nindent 8 }}
-        {{- else -}}
+        {{- else }}
         {{- toYaml .Values.securityContexts.pod | nindent 8 }}
-        {{- end -}}
+        {{- end }}
       volumes:
         - name: tmpvolume
           emptyDir: {}
