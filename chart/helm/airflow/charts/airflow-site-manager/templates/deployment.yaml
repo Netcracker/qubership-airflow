@@ -27,7 +27,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName }}
       {{- end }}
       securityContext:
-        {{- if eq (default "KUBERNETES" $.PAAS_PLATFORM) "OPENSHIFT" -}}
+        {{- if eq (default "KUBERNETES" .Values.PAAS_PLATFORM) "OPENSHIFT" }}
         {{ toYaml (omit .Values.securityContexts.pod "runAsUser" "fsGroup") | nindent 8 }}
         {{- else -}}
         {{- toYaml .Values.securityContexts.pod | nindent 8 }}

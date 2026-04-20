@@ -92,7 +92,13 @@ spec:
       topologySpreadConstraints: {{- toYaml $topologySpreadConstraints | nindent 8 }}
       terminationGracePeriodSeconds: {{ .Values.statsd.terminationGracePeriodSeconds }}
       serviceAccountName: {{ include "statsd.serviceAccountName" . }}
+#---Qubership custom change: support default security context---
+      {{- if eq (default "KUBERNETES" .Values.PAAS_PLATFORM) "OPENSHIFT" }}
+      securityContext:
+        {{- toYaml (omit .Values.statsd.securityContexts.pod "runAsUser" "fsGroup") | nindent 8 }}
+      {{- else }}
       securityContext: {{ $securityContext | nindent 8 }}
+      {{- end }}
       restartPolicy: Always
       imagePullSecrets: {{ include "image_pull_secrets" . | nindent 8 }}
       containers:

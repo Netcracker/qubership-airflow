@@ -993,12 +993,7 @@ It is important to pass the local variables scope to this template as it is used
 */}}
 {{- define "localPodSecurityContext" -}}
   {{- if .securityContexts.pod -}}
-  #---Qubership custom change: add PAAS_PLATFORM support---
-    {{- if eq (default "KUBERNETES" $.PAAS_PLATFORM) "OPENSHIFT" -}}
-    {{ toYaml (omit .securityContexts.pod "runAsUser" "fsGroup") | print }}
-    {{- else -}}
     {{ toYaml .securityContexts.pod | print }}
-    {{- end -}}
   {{- else if .securityContext -}}
     {{ toYaml .securityContext | print }}
   {{- else -}}
