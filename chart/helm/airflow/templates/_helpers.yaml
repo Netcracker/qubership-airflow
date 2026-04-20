@@ -967,7 +967,7 @@ Priority of values are from left to right, meaning if first value is not empty, 
     {{- end }}
   {{- end }}
   {{- if $result }}
-    #---Qubership custom change: add PAAS_PLATFORM support---
+    {{- /* Qubership custom change: add default Openshift/PAAS_PLATFORM support--- */ -}}
     {{- if eq (default "KUBERNETES" $.PAAS_PLATFORM) "OPENSHIFT" -}}
      {{- $result = omit $result "runAsUser" "fsGroup" -}}
     {{- end -}}
