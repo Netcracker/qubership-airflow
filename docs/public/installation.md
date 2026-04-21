@@ -105,8 +105,11 @@ Also, the image contains the following Python libraries/Airflow extras:
 * apache-airflow-providers-fab
 * airflow-exporter
 * Authlib
+* libnss-wrapper
 
 The image contains Python script for the PG database creation.
+
+Image Default Entrypoint is modified in order to avoid modifying/etc/passwd when the username is not set. Instead, [nss_wrapper](https://cwrap.org/nss_wrapper.html) is used.
 
 Also, the image has a package for Qubership DBaaS/MaaS integration.
 
@@ -435,6 +438,9 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * HTTP Route and related objects for api server and parameters for their configuration are added.
 * Since HTTP Route for api server is present, `gateway-api-converter.netcracker.com/ignore: "true"` annotation is added by default to airflow API server ingress to indicate that it does not need to be converted to HTTPRoute. 
 * `values.schema.json` is changed. `values.schema.json` is not stored in this repository, but during the transfer-image build airflow schema is downloaded from airflow repository and modified in a way so only parameters that are used in Qubership platform are left in the schema. The default values for these parameters are changed to default values from Qubership platform. Also new Quberhip platform related parameters are added.
+* `airflowPodSecurityContext` template logic is modified in order to remove `runAsUser` and `fsGroup` from default security if .Values.PAAS_PLATFORM parameter is set to "OPENSHIFT".
+
+**Note**: `volumes` parameter by defaut assumes that Airflow service name is set to `airflow`. If the service name is changed using, for example, `fullnameOverride` parameter, `secretName` fields of secrets in `volumes` parameter must be adjusted accordingly. 
 
 ### Using Non-DBaaS Airflow Installation
 
@@ -1751,6 +1757,8 @@ find /tmp/airflow/dag_bundles/s3_dags -type f -name "*.yaml" -or -name "*.py" -o
 
 ## Using Git Sync
 
+**Note**: This approach is deprecated.
+
 Airflow deployment can use GitSync image to download DAGs from Git. 
 
 **Note**: When using gitSync, pay attention to `dags.gitSync.maxFailures` parameter. If connection to git is unstable, setting this parameter to low value can cause frequent gitSync sideCar restarts. 
@@ -1863,6 +1871,8 @@ config:
 ```
 
 ## Using Rclone to Sync DAGs From Remote Storage
+
+**Note**: This approach is deprecated.
 
 The qubership platform repository includes an [Rclone](https://rclone.org/) docker image with a custom entrypoint that can be used to:
 
