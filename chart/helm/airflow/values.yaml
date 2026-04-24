@@ -385,8 +385,6 @@ allowJobLaunching: false
 env:
   - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN_SECRET
     value: airfow_pg_main_conn
-  - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN_SECRET
-    value: airfow_pg_main_conn
   - name: AIRFLOW__CELERY__BROKER_URL_SECRET
     value: airfow_celery_redis_main_conn
   - name: AIRFLOW__CORE__FERNET_KEY_SECRET
@@ -451,8 +449,6 @@ secret: []
 # in this case disable setting of those variables by setting the relevant configuration to false.
 enableBuiltInSecretEnvVars:
   AIRFLOW__CORE__FERNET_KEY: false
-  # For Airflow <2.3, backward compatibility; moved to [database] in 2.3
-  AIRFLOW__CORE__SQL_ALCHEMY_CONN: false
   AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: false
   AIRFLOW_CONN_AIRFLOW_DB: false
   AIRFLOW__API__SECRET_KEY: false
