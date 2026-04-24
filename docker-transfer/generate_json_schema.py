@@ -25,7 +25,6 @@ values_params_to_keep = [
     "env",
     "volumes",
     "volumeMounts",
-    "enableBuiltInSecretEnvVars.AIRFLOW__CORE__SQL_ALCHEMY_CONN",
     "enableBuiltInSecretEnvVars.AIRFLOW__DATABASE__SQL_ALCHEMY_CONN",
     "enableBuiltInSecretEnvVars.AIRFLOW_CONN_AIRFLOW_DB",
     "extraEnv",
