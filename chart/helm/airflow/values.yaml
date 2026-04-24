@@ -713,7 +713,7 @@ workers:
     # The format below is necessary to get `helm lint` happy
     - |-
       exec \
-      airflow {{ semverCompare ">=2.0.0" .Values.airflowVersion | ternary "celery worker" "worker" }}
+      airflow celery worker
       {{- if and .Values.workers.queue (ne .Values.workers.queue "default") }}
       {{- " -q " }}{{ .Values.workers.queue }}
       {{- end }}
@@ -1043,6 +1043,12 @@ workers:
     # Frequency to attempt to groom logs (in minutes)
     frequencyMinutes: 15
 
+    # Max size of logs in bytes. 0 = disabled
+    maxSizeBytes: 0
+
+    # Max size of logs as a percent of disk usage. 0 = disabled. Ignored if maxSizeBytes is set.
+    maxSizePercent: 0
+
     resources: {}
     #  limits:
     #   cpu: 100m
@@ -1279,8 +1285,7 @@ scheduler:
     timeoutSeconds: 20
     command: ~
 
-  # Airflow 2.0 allows users to run multiple schedulers,
-  # However this feature is only recommended for MySQL 8+ and Postgres
+  # Amount of scheduler replicas
   replicas: 1
   # Max number of old replicasets to retain
   revisionHistoryLimit: ~
@@ -1422,6 +1427,10 @@ scheduler:
     retentionDays: 15
     # frequency to attempt to groom logs, in minutes
     frequencyMinutes: 15
+    # Max size of logs in bytes. 0 = disabled
+    maxSizeBytes: 0
+    # Max size of logs as a percent of disk usage. 0 = disabled. Ignored if maxSizeBytes is set.
+    maxSizePercent: 0
     resources: {}
     #  limits:
     #   cpu: 100m
@@ -1471,7 +1480,7 @@ createUserJob:
     # The format below is necessary to get `helm lint` happy
     - |-
       exec \
-      airflow {{ semverCompare ">=2.0.0" .Values.airflowVersion | ternary "users create" "create_user" }} "$@"
+      airflow users create "$@"
     - --
     # yamllint disable rule:line-length
     - "-r"
@@ -1579,9 +1588,7 @@ migrateDatabaseJob:
     - >-
       exec \
 
-      airflow {{ semverCompare ">=2.7.0" .Values.airflowVersion
-      | ternary "db migrate" (semverCompare ">=2.0.0" .Values.airflowVersion
-      | ternary "db upgrade" "upgradedb") }}
+      airflow db migrate
 
   # Annotations on the database migration pod
   annotations: {}
@@ -2262,6 +2269,10 @@ triggerer:
     retentionDays: 15
     # frequency to attempt to groom logs, in minutes
     frequencyMinutes: 15
+    # Max size of logs in bytes. 0 = disabled
+    maxSizeBytes: 0
+    # Max size of logs as a percent of disk usage. 0 = disabled. Ignored if maxSizeBytes is set.
+    maxSizePercent: 0
     resources: {}
     #  limits:
     #   cpu: 100m
@@ -2488,6 +2499,10 @@ dagProcessor:
     retentionDays: 15
     # frequency to attempt to groom logs, in minutes
     frequencyMinutes: 15
+    # Max size of logs in bytes. 0 = disabled
+    maxSizeBytes: 0
+    # Max size of logs as a percent of disk usage. 0 = disabled. Ignored if maxSizeBytes is set.
+    maxSizePercent: 0
     resources: {}
     #  limits:
     #   cpu: 100m
@@ -2552,7 +2567,7 @@ flower:
     # The format below is necessary to get `helm lint` happy
     - |-
       exec \
-      airflow {{ semverCompare ">=2.0.0" .Values.airflowVersion | ternary "celery flower" "flower" }}
+      airflow celery flower
 
   # Additional network policies as needed (Deprecated - renamed to `flower.networkPolicy.ingress.from`)
   extraNetworkPolicies: []
@@ -3370,9 +3385,6 @@ config:
     # This is ignored when used with the official Docker image
     load_examples: 'False'
     executor: '{{ .Values.executor }}'
-    # For Airflow 1.10, backward compatibility; moved to [logging] in 2.0
-    colored_console_log: 'False'
-    remote_logging: '{{- ternary "True" "False" (or .Values.elasticsearch.enabled .Values.opensearch.enabled) }}'
     auth_manager: "airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager"
   logging:
     logging_config_class: airflow_local_settings.QS_DEFAULT_LOGGING_CONFIG
@@ -3395,8 +3407,6 @@ config:
   webserver:
     # For Airflow 2.X
     enable_proxy_fix: 'True'
-    # For Airflow 1.10
-    rbac: 'True'
   api:
     parameter_to_make_service_monitor_happy: parameter_value_to_make_service_monitor_happy
   celery:
@@ -3405,13 +3415,6 @@ config:
     sync_parallelism: '{{ include "cpu_count" (((.Values.scheduler).resources).limits).cpu }}'
   scheduler:
     standalone_dag_processor: '{{ ternary "True" "False" (or (semverCompare ">=3.0.0" .Values.airflowVersion) (.Values.dagProcessor.enabled | default false)) }}'
-    # statsd params included for Airflow 1.10 backward compatibility; moved to [metrics] in 2.0
-    statsd_on: '{{ ternary "True" "False" .Values.statsd.enabled }}'
-    statsd_port: 9125
-    statsd_prefix: airflow
-    statsd_host: '{{ printf "%s-statsd" (include "airflow.fullname" .) }}'
-    # `run_duration` included for Airflow 1.10 backward compatibility; removed in 2.0.
-    run_duration: 41460
   dag_processor:
     # Dag bundle configuration list in JSON string format.
     # This is automatically generated from .Values.dagProcessor.dagBundleConfigList using the dag_bundle_config_list helper function.
@@ -3432,18 +3435,6 @@ config:
     ccache: '{{ .Values.kerberos.ccacheMountPath }}/{{ .Values.kerberos.ccacheFileName }}'
   celery_kubernetes_executor:
     kubernetes_queue: 'kubernetes'
-  # The `kubernetes` section is deprecated in Airflow >= 2.5.0 due to an airflow.cfg schema change.
-  # The `kubernetes` section can be removed once the helm chart no longer supports Airflow < 2.5.0.
-  kubernetes:
-    namespace: '{{ .Release.Namespace }}'
-    # The following `airflow_` entries are for Airflow 1, and can be removed when it is no longer supported.
-    airflow_configmap: '{{ include "airflow_config" . }}'
-    airflow_local_settings_configmap: '{{ include "airflow_config" . }}'
-    pod_template_file: '{{ include "airflow_pod_template_file" . }}/pod_template_file.yaml'
-    # worker_container_repository: '{{ .Values.images.airflow.repository | default .Values.defaultAirflowRepository }}'
-    # worker_container_tag: '{{ .Values.images.airflow.tag | default .Values.defaultAirflowTag }}'
-    multi_namespace_mode: '{{ ternary "True" "False" .Values.multiNamespaceMode }}'
-  # The `kubernetes_executor` section duplicates the `kubernetes` section in Airflow >= 2.5.0 due to an airflow.cfg schema change.
   kubernetes_executor:
     namespace: '{{ .Release.Namespace }}'
     pod_template_file: '{{ include "airflow_pod_template_file" . }}/pod_template_file.yaml'

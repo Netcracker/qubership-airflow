@@ -22,8 +22,6 @@
 ################################
 ## Airflow triggerer Service
 #################################
-{{- /* Airflow version 2.6.0 is when triggerer logs serve introduced */ -}}
-{{- if semverCompare ">=2.6.0" .Values.airflowVersion }}
 {{- if .Values.triggerer.enabled }}
 apiVersion: v1
 kind: Service
@@ -52,5 +50,4 @@ spec:
       protocol: TCP
       port: {{ .Values.ports.triggererLogs }}
       targetPort: {{ .Values.ports.triggererLogs }}
-{{- end }}
 {{- end }}
