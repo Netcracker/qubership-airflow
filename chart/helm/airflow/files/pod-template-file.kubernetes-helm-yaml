@@ -48,7 +48,7 @@ metadata:
     {{- include "deployment_only_labels_worker_k8s" . | nindent 4 }}
 #---Qubership custom change: Labels for Qubership release---
   annotations:
-    {{- toYaml $podAnnotations | nindent 4 }}
+    {{- tpl (toYaml $podAnnotations) . | nindent 4 }}
     {{- if or .Values.workers.kubernetes.kerberosInitContainer.enabled .Values.workers.kerberosInitContainer.enabled }}
     checksum/kerberos-keytab: {{ include (print $.Template.BasePath "/secrets/kerberos-keytab-secret.yaml") . | sha256sum }}
     {{- end }}
