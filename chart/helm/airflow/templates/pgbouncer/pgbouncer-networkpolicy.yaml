@@ -54,7 +54,6 @@ spec:
         matchLabels:
           tier: airflow
           release: {{ .Release.Name }}
-
     {{- if or $workersKedaEnabled $triggererKedaEnabled }}
       {{- if and $workersKedaEnabled (.Values.workers.celery.keda.namespaceLabels | default .Values.workers.keda.namespaceLabels) }}
     - namespaceSelector:
