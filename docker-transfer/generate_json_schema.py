@@ -8,7 +8,7 @@ from jsonschema import validate
 
 url = (
     "https://raw.githubusercontent.com/apache/airflow/"
-    "d273d99262f93d9af601b3fb3c12f915f4ddbb27/chart/values.schema.json"
+    "c707a8a7d147fbb88c33dad553f607ae37749f99/chart/values.schema.json"
 )
 global_params_to_keep = ["$schema", "description", "type", "definitions"]
 values_params_to_keep = [
