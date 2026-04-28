@@ -559,14 +559,14 @@ data:
   #
   # The 'connection' key is base64-encoded SQLAlchemy connection string, e.g.:
   #   postgresql+psycopg2://airflow:password@postgres/airflow
-  metadataSecretName: ~
+  metadataSecretName: metadata-secret
 
   # If not set, falls back to metadataSecretName. The secret must contain 'connection' key which is
   # a base64-encoded connection string, e.g.:
   #   postgresql+psycopg2://user:password@host/db
   resultBackendSecretName: ~
 
-  brokerUrlSecretName: ~
+  brokerUrlSecretName: broker-url-secret
 
   # If `metadataSecretName` is not specified, pass connection values below
   metadataConnection:
@@ -3964,6 +3964,7 @@ dags:
     subPath: ~
 
   gitSync:
+    rcloneImage: false
     enabled: false
 
     # Git repo clone url
