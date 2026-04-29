@@ -1,4 +1,4 @@
-FROM golang:1.25.9-alpine3.22 as builder
+FROM golang:1.26.2-alpine3.22 as builder
 
 ENV GOSUMDB=off
 
