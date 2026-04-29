@@ -1,9 +1,9 @@
 module site-manager
 
-go 1.25.7
+go 1.25.9
 
 require (
-	github.com/Netcracker/qubership-disaster-recovery-daemon v0.4.12
+	github.com/Netcracker/qubership-disaster-recovery-daemon v0.4.17
 	github.com/golang/glog v1.2.4
 	github.com/pkg/errors v0.9.1
 	k8s.io/api v0.30.0
