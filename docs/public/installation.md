@@ -1638,7 +1638,7 @@ workers:
     - |-
       ls -al > teststart.log; \
       exec \
-      airflow {{ semverCompare ">=2.0.0" .Values.airflowVersion | ternary "celery worker" "worker" }}
+      airflow celery worker
 ...
 ```
 

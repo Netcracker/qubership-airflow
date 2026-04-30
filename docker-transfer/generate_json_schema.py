@@ -8,7 +8,7 @@ from jsonschema import validate
 
 url = (
     "https://raw.githubusercontent.com/apache/airflow/"
-    "b1a6ebc6c5a14c48170de0d5472018905ab5edde/chart/values.schema.json"
+    "9a9f51bfcd270978cf60eadb41a818640c27fa6c/chart/values.schema.json"
 )
 global_params_to_keep = ["$schema", "description", "type", "definitions"]
 values_params_to_keep = [
@@ -25,7 +25,6 @@ values_params_to_keep = [
     "env",
     "volumes",
     "volumeMounts",
-    "enableBuiltInSecretEnvVars.AIRFLOW__CORE__SQL_ALCHEMY_CONN",
     "enableBuiltInSecretEnvVars.AIRFLOW__DATABASE__SQL_ALCHEMY_CONN",
     "enableBuiltInSecretEnvVars.AIRFLOW_CONN_AIRFLOW_DB",
     "extraEnv",
