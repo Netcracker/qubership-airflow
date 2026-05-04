@@ -100,7 +100,7 @@ Also, the image contains the following Python libraries/Airflow extras:
 
 * apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.2.1
 * apache-airflow-providers-git
-* apache-airflow-providers-keycloak==0.5.1
+* apache-airflow-providers-keycloak==0.7.1
 * apache-airflow-providers-amazon
 * apache-airflow-providers-fab
 * airflow-exporter
