@@ -44,6 +44,7 @@ class QSRBACKeycloakAuthManager(KeycloakAuthManager):
         resource_type: KeycloakResource,
         user: KeycloakAuthManagerUser,
         resource_id: str | None = None,
+        team_name: str | None = None,
         attributes: dict[str, str | None] | None = None,
     ) -> bool:
         return self._is_authorized_qs(user)

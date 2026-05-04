@@ -95,7 +95,7 @@ workers:
     - |-
       ./get_hadoop_conf.sh; \
       exec \
-      airflow {{ semverCompare ">=2.0.0" .Values.airflowVersion | ternary "celery worker" "worker" }}
+      airflow celery worker
 ```
 
 When using SSL also specify SSL cert secret and mount it into the pod:

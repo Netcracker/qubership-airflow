@@ -23,16 +23,20 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlsplit
 import logging
 from logging import StreamHandler
 
 from airflow.configuration import conf
 from airflow.exceptions import AirflowException
+from airflow.utils.helpers import render_template, parse_template_string
 
 if TYPE_CHECKING:
     from airflow.logging_config import RemoteLogIO
+    from jinja2 import Template
+
+    from airflow.models.taskinstance import TaskInstance
 
 LOG_LEVEL: str = conf.get_mandatory_value("logging", "LOGGING_LEVEL").upper()
 
@@ -59,6 +63,43 @@ QS_DAG_PARSING_LOGGING_LEVEL: str = conf.get("logging", "QS_DAG_PARSING_LOGGING_
 BASE_LOG_FOLDER: str = os.path.expanduser(conf.get_mandatory_value("logging", "BASE_LOG_FOLDER"))
 
 LOG_FORMAT_AUDIT = conf.get("logging", "LOG_FORMAT_AUDIT")
+
+logger = logging.getLogger(__name__)
+
+
+class TaskHandlerWithCustomFormatterQS(logging.StreamHandler):
+    """Custom implementation of StreamHandler, a class which writes logging records for Airflow."""
+
+    prefix_jinja_template: Template | None = None
+
+    def set_context(self, ti) -> None:
+        """
+        Accept the run-time context (i.e. the current task) and configure the formatter accordingly.
+
+        :param ti:
+        :return:
+        """
+        # Returns if there is no formatter or if the prefix has already been set
+        if ti.raw or self.formatter is None or self.prefix_jinja_template is not None:
+            return
+        prefix = conf.get("logging", "task_log_prefix_template")
+
+        if prefix:
+            _, self.prefix_jinja_template = parse_template_string(prefix)
+            rendered_prefix = self._render_prefix(ti)
+        else:
+            rendered_prefix = ""
+        formatter = logging.Formatter(f"{rendered_prefix}:{self.formatter._fmt}")
+        self.setFormatter(formatter)
+        self.setLevel(self.level)
+
+    def _render_prefix(self, ti: TaskInstance) -> str:
+        if self.prefix_jinja_template:
+            jinja_context = ti.get_template_context()
+            return render_template(self.prefix_jinja_template, cast("MutableMapping[str, Any]", jinja_context),
+                                   native=False)
+        logger.warning("'task_log_prefix_template' is in invalid format, ignoring the variable value")
+        return ""
 
 
 class DagProcessorStdoutHandler(StreamHandler):
@@ -119,7 +160,7 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
             "filters": ["mask_secrets_core"],
         },
         "stdout_task": {
-            "class": "airflow.utils.log.task_handler_with_custom_formatter.TaskHandlerWithCustomFormatter",
+            "class": "airflow_local_settings.TaskHandlerWithCustomFormatterQS",
             "formatter": "airflow",
             "filters": ["mask_secrets_core"],
             "stream": "ext://sys.stdout",
