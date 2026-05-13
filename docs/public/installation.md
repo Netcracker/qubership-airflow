@@ -109,6 +109,8 @@ Also, the image contains the following Python libraries/Airflow extras:
 
 The image contains Python script for the PG database creation.
 
+PYTHONDONTWRITEBYTECODE is set to 1 in order to prevent writing python bytecode and avoid potential issues with RO filesystem and DAG bundles.
+
 Image Default Entrypoint is modified in order to avoid modifying/etc/passwd when the username is not set. Instead, [nss_wrapper](https://cwrap.org/nss_wrapper.html) is used.
 
 Also, the image has a package for Qubership DBaaS/MaaS integration.
