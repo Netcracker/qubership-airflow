@@ -4,9 +4,8 @@ function create_system_user_if_missing() {
     if ! whoami &> /dev/null; then
         export NSS_WRAPPER_PASSWD="/tmp/nss_passwd"
         export NSS_WRAPPER_GROUP="/tmp/nss_group"
-        echo "${USER_NAME:-default}:x:$(id -u):0:${USER_NAME:-default} user:${AIRFLOW_USER_HOME_DIR}:/sbin/nologin" \
-            >> "$NSS_WRAPPER_PASSWD"
-        echo "root:x:$(id -g):" > "$NSS_WRAPPER_GROUP"
+        [ -f "/tmp/$NSS_WRAPPER_PASSWD" ] || echo "${USER_NAME:-default}:x:$(id -u):0:${USER_NAME:-default} user:${AIRFLOW_USER_HOME_DIR}:/sbin/nologin" >> "$NSS_WRAPPER_PASSWD"
+        [ -f "/tmp/$NSS_WRAPPER_GROUP" ] || echo "root:x:$(id -g):" >> "$NSS_WRAPPER_GROUP"
         export LD_PRELOAD='/usr/lib/x86_64-linux-gnu/libnss_wrapper.so'
         export HOME="${AIRFLOW_USER_HOME_DIR}"
     fi
