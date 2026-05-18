@@ -12,7 +12,7 @@ RUN rm -rf /etc/apt/sources.list.d/mysql.list \
     && rm -rf /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \
     && apt-get -y dist-upgrade \
-    && apt-get --no-install-recommends install -y comerr-dev \
+    && apt-get --no-install-recommends install -y comerr-dev ps \
                        unzip \
                        build-essential \
                        manpages-dev \
