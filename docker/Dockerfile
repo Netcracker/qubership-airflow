@@ -41,10 +41,7 @@ RUN sed -i '/function create_system_user_if_missing() {/c\function create_system
 USER airflow
 
 # Avoid writing bytecode for RO filesystem and more reliable DAG bundle syncs
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    NSS_WRAPPER_GROUP="/tmp/nss_group" \
-    NSS_WRAPPER_PASSWD="/tmp/nss_passwd"
-
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # Grant permissions and install python packages
 RUN python3 -m pip install -r ${AIRFLOW_USER_HOME}/requirements.txt --no-cache-dir \
