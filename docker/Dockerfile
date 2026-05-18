@@ -42,7 +42,7 @@ USER airflow
 
 # Avoid writing bytecode for RO filesystem and more reliable DAG bundle syncs
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    NSS_WRAPPER_GROUP="/etc/group/nss_group" \
+    NSS_WRAPPER_GROUP="/tmp/nss_group" \
     NSS_WRAPPER_PASSWD="/tmp/nss_passwd"
 
 
