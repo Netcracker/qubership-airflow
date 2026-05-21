@@ -75,7 +75,7 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         ) as namespace_file:
             self.namespace = namespace_file.read()
 
-    def get_conn_value(self, conn_id: str):
+    def get_conn_value(self, conn_id: str, team_name: str | None = None) -> str | None:
         if self.qs_secrets_backend_properties == {}:
             return None
         if f"{conn_id}_dbaas" in self.qs_secrets_backend_properties:
