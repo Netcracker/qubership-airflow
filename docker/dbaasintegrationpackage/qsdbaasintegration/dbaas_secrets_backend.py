@@ -4,6 +4,7 @@ import json
 import logging
 import base64
 import ssl
+from pathlib import Path
 
 from airflow.secrets.base_secrets import BaseSecretsBackend
 
@@ -61,6 +62,7 @@ dbaas_api_verify = read_secret_var_from_file("DBAAS_API_VERIFY", True)
 dbaas_ssl_verification_main = read_secret_var_from_file(
     "DBAAS_SSL_VERIFICATION_MAIN", "DISABLED"
 )
+dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
 
 
 class DBAASSecretsBackend(BaseSecretsBackend):
@@ -70,10 +72,32 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         self.api_verify = (
             False if dbaas_api_verify in negative_values else dbaas_api_verify
         )
-        with open(
-            "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-        ) as namespace_file:
-            self.namespace = namespace_file.read()
+        self.m2m_enabled = (
+            False if dbaas_m2m_enabled in negative_values else dbaas_m2m_enabled
+        )
+        self.maas_auth = (maas_user, maas_password)
+        self.dbaas_auth = (dbaas_user, dbaas_password)
+        self.namespace = Path('/var/run/secrets/kubernetes.io/serviceaccount/namespace').read_text()
+
+    def requests_with_correct_auth(self, address, headers, data, requests_method, target_service):
+        if self.m2m_enabled:
+            token = Path('/var/run/secrets/tokens/dbaas/token').read_text()
+            headers['Authorization'] = f'Bearer {token}'
+            if requests_method == "POST":
+                return requests.post(address, headers=headers, data=data, verify=self.api_verify)
+            elif requests_method == "PUT":
+                return requests.put(address, headers=headers, data=data, verify=self.api_verify)
+        else:
+            auth = None
+            if target_service == "MaaS":
+                auth = self.maas_auth
+            elif target_service == "DBaaS":
+                auth = self.dbaas_auth
+            if requests_method == "POST":
+                return requests.post(address, headers=headers, data=data, auth=auth, verify=self.api_verify)
+            elif requests_method == "PUT":
+                return requests.put(address, headers=headers, data=data, auth=auth, verify=self.api_verify)
+
 
     def get_conn_value(self, conn_id: str, team_name: str | None = None) -> str | None:
         if self.qs_secrets_backend_properties == {}:
