@@ -77,16 +77,24 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         )
         self.maas_auth = (maas_user, maas_password)
         self.dbaas_auth = (dbaas_user, dbaas_password)
-        self.namespace = Path('/var/run/secrets/kubernetes.io/serviceaccount/namespace').read_text()
+        self.namespace = Path(
+            "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+        ).read_text()
 
-    def requests_with_correct_auth(self, address, headers, data, requests_method, target_service="DBaaS"):
+    def requests_with_correct_auth(
+        self, address, headers, data, requests_method, target_service="DBaaS"
+    ):
         if self.m2m_enabled:
-            token = Path('/var/run/secrets/tokens/dbaas/token').read_text()
-            headers['Authorization'] = f'Bearer {token}'
+            token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
+            headers["Authorization"] = f"Bearer {token}"
             if requests_method == "POST":
-                return requests.post(address, headers=headers, data=data, verify=self.api_verify)
+                return requests.post(
+                    address, headers=headers, data=data, verify=self.api_verify
+                )
             elif requests_method == "PUT":
-                return requests.put(address, headers=headers, data=data, verify=self.api_verify)
+                return requests.put(
+                    address, headers=headers, data=data, verify=self.api_verify
+                )
         else:
             auth = None
             if target_service == "MaaS":
@@ -94,9 +102,21 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             elif target_service == "DBaaS":
                 auth = self.dbaas_auth
             if requests_method == "POST":
-                return requests.post(address, headers=headers, data=data, auth=auth, verify=self.api_verify)
+                return requests.post(
+                    address,
+                    headers=headers,
+                    data=data,
+                    auth=auth,
+                    verify=self.api_verify,
+                )
             elif requests_method == "PUT":
-                return requests.put(address, headers=headers, data=data, auth=auth, verify=self.api_verify)
+                return requests.put(
+                    address,
+                    headers=headers,
+                    data=data,
+                    auth=auth,
+                    verify=self.api_verify,
+                )
 
     def get_conn_value(self, conn_id: str, team_name: str | None = None) -> str | None:
         if self.qs_secrets_backend_properties == {}:
@@ -260,7 +280,8 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/{db_type}",
             headers=headers,
             data=json.dumps(dbaas_by_classifier_data),
-            requests_method="POST")
+            requests_method="POST",
+        )
         if response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
         logging.debug(
@@ -271,7 +292,8 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             address=f"{dbaas_host}/api/v3/dbaas/{namespace}/databases",
             headers=headers,
             data=json.dumps(dbaas_data),
-            requests_method="PUT")
+            requests_method="PUT",
+        )
         if response.status_code == 201 or response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
         else:
@@ -346,7 +368,8 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/postgresql",
             headers=headers,
             data=json.dumps(data),
-            requests_method="POST")
+            requests_method="POST",
+        )
         if response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
         logging.warning(
@@ -366,7 +389,8 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases",
             headers=headers,
             data=json.dumps(data),
-            requests_method="PUT")
+            requests_method="PUT",
+        )
         if response.status_code == 201 or response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
         else:
@@ -386,7 +410,6 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             "DBAAS_REDIS_MICROSERVICE_NAME", "airflow"
         )
         headers = {"Content-Type": "application/json"}
-        auth = (dbaas_user, dbaas_password)
         data = {
             "originService": dbaas_redis_microservice_name,
             "classifier": {
@@ -400,7 +423,8 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/redis",
             headers=headers,
             data=json.dumps(data),
-            requests_method="POST")
+            requests_method="POST",
+        )
         if response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
         logging.warning(
@@ -422,7 +446,8 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases",
             headers=headers,
             data=json.dumps(data),
-            requests_method="PUT")
+            requests_method="PUT",
+        )
         if response.status_code == 201 or response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
         else:
@@ -453,8 +478,8 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         if "tls" in redis_connection and redis_connection["tls"] in positive_values:
             redis_prefix = "rediss://"
             if (
-                    dbaas_ssl_verification_main == "ENABLED"
-                    or dbaas_ssl_verification_main == "CERT_PATH:system"
+                dbaas_ssl_verification_main == "ENABLED"
+                or dbaas_ssl_verification_main == "CERT_PATH:system"
             ):
                 redis_ssl_mode = "?ssl_cert_reqs=CERT_REQUIRED"
             elif dbaas_ssl_verification_main.startswith("CERT_PATH:"):
