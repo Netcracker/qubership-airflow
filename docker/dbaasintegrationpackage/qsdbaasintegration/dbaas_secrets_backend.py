@@ -354,7 +354,6 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             "DBAAS_PG_MICROSERVICE_NAME", "airflow"
         )
         headers = {"Content-Type": "application/json"}
-        auth = (dbaas_user, dbaas_password)
         data = {
             "originService": dbaas_pg_microservice_name,
             "classifier": {
