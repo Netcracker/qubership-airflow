@@ -13,7 +13,7 @@ logging.basicConfig(
 
 
 def read_secret_var_from_file(
-        env_name, default_value=None, secret_folder="/var/run/secrets/airflow"
+    env_name, default_value=None, secret_folder="/var/run/secrets/airflow"
 ):
     try:
         with open(f"{secret_folder}/{env_name}", "r") as file:
@@ -50,9 +50,10 @@ dbaas_redis_microservice_name = read_secret_var_from_file(
 )
 dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
 
+
 def get_namespace():
     with open(
-            "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+        "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
     ) as namespace_file:
         return namespace_file.read()
 
@@ -158,59 +159,25 @@ def grant_permissions_for_sas():
         "metadata": {
             "name": f"{helm_release_name}-dbPolicy",
             "namespace": f"{get_namespace()}",
-            "microserviceName": f"{dbaas_pg_microservice_name}"
+            "microserviceName": f"{dbaas_pg_microservice_name}",
         },
         "spec": {
             "services": [
+                {"name": f"{helm_release_name}-api-server", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-create-user-job", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-dag-processor", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-database-cleanup", "roles": ["admin"]},
                 {
-                    "name": f"{helm_release_name}-api-server",
-                    "roles": [
-                        "admin"
-                    ]
-                }, {
-                    "name": f"{helm_release_name}-create-user-job",
-                    "roles": [
-                        "admin"
-                    ]
-                }, {
-                    "name": f"{helm_release_name}-dag-processor",
-                    "roles": [
-                        "admin"
-                    ]
-                }, {
-                    "name": f"{helm_release_name}-database-cleanup",
-                    "roles": [
-                        "admin"
-                    ]
-                }, {
                     "name": f"{helm_release_name}-migrate-database-job",
-                    "roles": [
-                        "admin"
-                    ]
-                }, {
-                    "name": f"{helm_release_name}-scheduler",
-                    "roles": [
-                        "admin"
-                    ]
-                }, {
-                    "name": f"{helm_release_name}-worker",
-                    "roles": [
-                        "admin"
-                    ]
-                }, {
-                    "name": f"{helm_release_name}-triggerer",
-                    "roles": [
-                        "admin"
-                    ]
-                }, {
-                    "name": f"{helm_release_name}-flower",
-                    "roles": [
-                        "admin"
-                    ]
-                }
+                    "roles": ["admin"],
+                },
+                {"name": f"{helm_release_name}-scheduler", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-worker", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-triggerer", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-flower", "roles": ["admin"]},
             ],
-            "disableGlobalPermissions": False
-        }
+            "disableGlobalPermissions": False,
+        },
     }
     response = requests.post(
         f"{dbaas_host}/api/declarations/v1/apply",
