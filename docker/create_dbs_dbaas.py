@@ -238,5 +238,5 @@ def create_redis_secret():
 create_pg_secret()
 if airflow_executor != "KubernetesExecutor":
     create_redis_secret()
-if dbaas_m2m_enabled:
+if dbaas_m2m_enabled not in negative_values:
     grant_permissions_for_sas()
