@@ -5,6 +5,7 @@ import logging
 
 from kubernetes import client as client, config as k8s_config
 from kubernetes.client import ApiException
+from pathlib import Path
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] [%(filename)s] [thread=%(threadName)s] %(message)s",
@@ -35,12 +36,17 @@ airflow_executor = read_secret_var_from_file("AIRFLOW_EXECUTOR", "CeleryExecutor
 negative_values = ("false", "False", "no", "No", False)
 dbaas_api_verify = read_secret_var_from_file("DBAAS_API_VERIFY", True)
 api_verify = False if dbaas_api_verify in negative_values else dbaas_api_verify
+dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
 
 k8s_config.load_incluster_config()
 k8s_client = client.ApiClient()
 v1_apps_api = client.CoreV1Api(k8s_client)
 headers = {"Content-Type": "application/json"}
 auth = (dbaas_user, dbaas_password)
+if dbaas_m2m_enabled and not dbaas_user:
+    token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
+    headers["Authorization"] = f"Bearer {token}"
+    auth = None
 helm_release_name = os.getenv("HELM_RELEASE_NAME", "airflow")
 dbaas_pg_microservice_name = read_secret_var_from_file(
     "DBAAS_PG_MICROSERVICE_NAME", "airflow"
@@ -48,7 +54,6 @@ dbaas_pg_microservice_name = read_secret_var_from_file(
 dbaas_redis_microservice_name = read_secret_var_from_file(
     "DBAAS_REDIS_MICROSERVICE_NAME", "airflow"
 )
-dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
 
 
 def get_namespace():
