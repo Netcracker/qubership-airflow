@@ -4498,6 +4498,7 @@ customPreinstallJob:
   labels: {}
   resources: {}
   useHelmHooks: true
+  runOnUpdate: false
   jobAnnotations: {}
   priorityClassName: ~
   serviceAccount:

@@ -15,7 +15,11 @@ metadata:
 {{ toYaml . | indent 4 }}
 {{- end }}
   annotations:
+    {{- if .Values.customPreinstallJob.runOnUpdate }}
+    "helm.sh/hook": "pre-install,pre-upgrade"
+    {{- else }}
     "helm.sh/hook": "pre-install"
+    {{- end }}
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
     "helm.sh/hook-weight": "-11"
 {{- if $configMapContent.data }}

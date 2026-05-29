@@ -162,6 +162,11 @@
           "type": "boolean",
           "default": true
         },
+        "runOnUpdate": {
+          "description": "Specify if custom preinstall job will be run during helm update",
+          "type": "boolean",
+          "default": false
+        },
         "jobAnnotations": {
           "description": "Annotations to add to custom preinstall job.",
           "type": "object",
