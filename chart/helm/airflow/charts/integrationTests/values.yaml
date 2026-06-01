@@ -5,6 +5,9 @@ secret:
   airflow:
     user: "admin"
     password: "admin"
+  dbaas:
+    user: ""
+    password: ""
 
 serviceAccount:
   create: true
