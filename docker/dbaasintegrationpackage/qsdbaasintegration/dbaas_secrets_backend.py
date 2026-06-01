@@ -7,6 +7,7 @@ import ssl
 from pathlib import Path
 
 from airflow.secrets.base_secrets import BaseSecretsBackend
+from airflow.secrets.local_filesystem import LocalFilesystemBackend
 
 logging_level = os.getenv("DBAAS_INTEGRATION_LOG_LEVEL", logging.INFO)
 
@@ -63,11 +64,23 @@ dbaas_ssl_verification_main = read_secret_var_from_file(
     "DBAAS_SSL_VERIFICATION_MAIN", "DISABLED"
 )
 dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
+local_filesystem_backend_enabled = (
+    read_secret_var_from_file("LOCAL_FILESYSTEM_BACKEND", True) in positive_values
+)
 
 
-class DBAASSecretsBackend(BaseSecretsBackend):
+class DBAASSecretsBackend(
+    LocalFilesystemBackend if local_filesystem_backend_enabled else BaseSecretsBackend
+):
     def __init__(self, **kwargs):
-        super().__init__()
+        if local_filesystem_backend_enabled:
+            super().__init__(
+                variables_file_path=kwargs.get("variables_file_path"),
+                connections_file_path=kwargs.get("connections_file_path"),
+                configs_file_path=kwargs.get("configs_file_path"),
+            )
+        else:
+            super().__init__()
         self.qs_secrets_backend_properties = kwargs
         self.api_verify = (
             False if dbaas_api_verify in negative_values else dbaas_api_verify
@@ -503,7 +516,17 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         )
         return redis_full_address
 
+    def get_connection(self, conn_id: str, team_name: str | None = None):
+        value = self.get_conn_value(conn_id=conn_id, team_name=team_name)
+        if value:
+            return self.deserialize_connection(conn_id=conn_id, value=value)
+        elif local_filesystem_backend_enabled:
+            return super().get_connection(conn_id, team_name)
+        return None
+
     def get_variable(self, key: str):
+        if local_filesystem_backend_enabled:
+            return super().get_variable(key)
         return None
 
     def get_config(self, key: str):
@@ -542,5 +565,7 @@ class DBAASSecretsBackend(BaseSecretsBackend):
                 secret_folder=key_folder,
                 filename=keycloak_secret_filename,
             )
+        elif local_filesystem_backend_enabled:
+            return super().get_config(key)
         else:
             return None
