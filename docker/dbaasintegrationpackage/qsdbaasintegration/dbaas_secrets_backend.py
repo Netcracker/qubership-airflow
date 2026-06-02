@@ -55,10 +55,10 @@ dbaas_conn_namespace_from_config = read_secret_var_from_file(
 maas_conn_namespace_from_config = read_secret_var_from_file(
     "MAAS_CONN_NAMESPACE_FROM_CONFIG", "true"
 )
-
 maas_host = read_secret_var_from_file("MAAS_HOST")
 maas_user = read_secret_var_from_file("MAAS_USER")
 maas_password = read_secret_var_from_file("MAAS_PASSWORD")
+
 dbaas_api_verify = read_secret_var_from_file("DBAAS_API_VERIFY", True)
 dbaas_ssl_verification_main = read_secret_var_from_file(
     "DBAAS_SSL_VERIFICATION_MAIN", "DISABLED"
