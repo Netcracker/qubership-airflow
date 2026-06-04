@@ -17,5 +17,5 @@ roleRef:
   name: custom-preinstall-job-role
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.customPreinstallJob.serviceAccount.name }}
+  name: {{ tpl .Values.customPreinstallJob.serviceAccount.name . | quote }}
 {{- end }}

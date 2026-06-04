@@ -63,7 +63,7 @@ spec:
       securityContext: {{ $securityContext | nindent 8 }}
       activeDeadlineSeconds: 600
 {{- if and .Values.customPreinstallJob.enabled .Values.customPreinstallJob.serviceAccount.create }}
-      serviceAccountName: {{ .Values.customPreinstallJob.serviceAccount.name }}
+      serviceAccountName: {{ tpl .Values.customPreinstallJob.serviceAccount.name . | quote }}
 {{- end }}
 {{- if .Values.customPreinstallJob.extraVolumes }}
       volumes:
