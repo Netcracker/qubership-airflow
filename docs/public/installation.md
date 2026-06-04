@@ -1021,6 +1021,21 @@ enableBuiltInSecretEnvVars: # Disable passing sensitive information as envs sinc
 
 ```
 
+Additionally, by default, secrets backend will fall back to [Airflow Local Filesystem Secrets Backend](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/local-filesystem-secrets-backend.html) when configurations/connections/variables are not found. Because of this it is possible to pass files with configurations/connections/variables using volumes/volumeMounts parameters (or extraVolumes/exraVolumeMonts parameters, if you want to pass these files only to some containers). Parameters for Airflow Local Filesystem Secrets Backend can be passed in qs_secrets_backend_params along with connections definitions, for example:
+
+```yaml
+qs_secrets_backend_params:
+  connections_file_path: /tmp/connections.json
+  postgres_test_conn_1_dbaas:
+...
+config:
+  secrets:
+    backend: qsdbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend
+    backend_kwargs: "{{ .Values.qs_secrets_backend_params | toJson }}"
+```
+
+If falling back to Airflow Local Filesystem Secrets Backend is not needed, it can be disabled by setting `LOCAL_FILESYSTEM_BACKEND` `dbaas-connection-params-main` secret parameter or environment variable to `False`.
+
 ### Non-DBaaS Configuration
 
 Non-DBaaS configuration without reading sensitive information from environment variables is currently not provided by Qubership platform. However, it is possible to do this similarly with DBaaS approach. For this, it is necessary to do the following:
