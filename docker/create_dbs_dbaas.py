@@ -47,7 +47,7 @@ if dbaas_m2m_enabled and not dbaas_user:
     token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
     headers["Authorization"] = f"Bearer {token}"
     auth = None
-helm_release_name = os.getenv("HELM_RELEASE_NAME", "airflow")
+helm_release_name = read_secret_var_from_file("HELM_RELEASE_NAME", "airflow")
 dbaas_pg_microservice_name = read_secret_var_from_file(
     "DBAAS_PG_MICROSERVICE_NAME", "airflow"
 )
