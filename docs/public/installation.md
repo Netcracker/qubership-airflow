@@ -606,10 +606,14 @@ It is possible to add custom permissions using a Kubernetes role for this job if
 |customPreinstallJob.env|Specifies the environment for the job container.|
 |customPreinstallJob.extraEnvFrom|Specifies the extraEnvFrom for the job container.|
 |customPreinstallJob.serviceAccount.create|Specifies if the service account for the job should be created.|
+|customPreinstallJob.serviceAccount.name|Specifies preinstall job service account name (can be templated).|
 |customPreinstallJob.role.create|Specifies if the role for the job should be created.|
 |customPreinstallJob.role.rules|Specifies the rules for the job role.|
 |customPreinstallJob.command|Specifies the command for the job.|
 |customPreinstallJob.args|Specifies the arguments for the job.|
+|customPreinstallJob.useHelmHooks|Specifies if helm hooks will annotations will be applied by default.|
+|customPreinstallJob.runOnUpdate|Specifies if the preinstall job will also run pre-update.|
+|customPreinstallJob.jobAnnotations|Specifies additional annotations for the job.|
 
 By default, the parameters for [DBaaS to Create Postgres and Redis Databases](#dbaas-integration) are set with Qubership release requirements. These parameters need modification based on your cloud setup:
 
@@ -618,8 +622,13 @@ customPreinstallJob:
   enabled: true
   labels: {}
   resources: {}
+  useHelmHooks: true
+  runOnUpdate: false
+  jobAnnotations: {}
+  priorityClassName: ~
   serviceAccount:
     create: true
+    name: airflow
   role:
     create: true
     rules:
@@ -635,14 +644,14 @@ customPreinstallJob:
   securityContexts:
     pod: {}
     container: {}
-  command: ~
-  args: ["python", "/bin/create_dbs_dbaas.py"]
+  command:
+    - python
+  args:
+    - /bin/create_dbs_dbaas.py
   extraSecrets:
     'dbaas-connection-params-preins':
       stringData: |
         DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
-        DBAAS_USER: 'insert dbaas user here'
-        DBAAS_PASSWORD: 'insert dbaas password here'
         DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
         DBAAS_PG_BACKUP_DISABLED: 'true'
         DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -650,15 +659,28 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
+        DBAAS_M2M_ENABLED: 'true'
+  extraEnvFrom: ~
   extraVolumes:
     - name: dbaas-connection-params-preins
       secret:
         secretName: dbaas-connection-params-preins
         defaultMode: 0400
+    - name: dbaas-m2m-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: dbaas
+              expirationSeconds: 3600
+              path: token
+        defaultMode: 420
   extraVolumeMounts:
     - name: dbaas-connection-params-preins
       mountPath: /var/run/secrets/airflow
       readOnly: true
+    - name: dbaas-m2m-token
+      readOnly: true
+      mountPath: /var/run/secrets/tokens/dbaas
 ```
 
 The possible use cases that are implemented on the Qubership side are described below.
@@ -705,6 +727,7 @@ customPreinstallJob:
   resources: {}
   serviceAccount:
     create: true
+    name: airflow
   role:
     create: true
     rules:
@@ -726,8 +749,6 @@ customPreinstallJob:
     'dbaas-connection-params-preins':
       stringData: |
         DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
-        DBAAS_USER: 'insert dbaas user here'
-        DBAAS_PASSWORD: 'insert dbaas password here'
         DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
         DBAAS_PG_BACKUP_DISABLED: 'true'
         DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -735,16 +756,31 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
+        DBAAS_M2M_ENABLED: 'true'
   extraVolumes:
     - name: dbaas-connection-params-preins
       secret:
         secretName: dbaas-connection-params-preins
         defaultMode: 0400
+    - name: dbaas-m2m-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: dbaas
+              expirationSeconds: 3600
+              path: token
+        defaultMode: 420
   extraVolumeMounts:
     - name: dbaas-connection-params-preins
       mountPath: /var/run/secrets/airflow
       readOnly: true
+    - name: dbaas-m2m-token
+      readOnly: true
+      mountPath: /var/run/secrets/tokens/dbaas
 ```
+
+In the above example, please note `DBAAS_M2M_ENABLED` parameter. When it is set to `true`, the script will grant DBaaS permissions to all airflow service accounts for created PG/redis databases. `HELM_RELEASE_NAME` environment variable (or `dbaas-connection-params-preins` secret parameter) can be used to define service account names, by default it's `airflow`, so service account name example would be `airflow-dag-processor`. Authentication used will depend on whether `DBAAS_USER`/`DBAAS_PASSWORD` parameters are specified. If they are, login to DBaaS in the script will be done using these credentials, if not, authentication will be done using k8s token (that is mounted using `customPreinstallJob.extraVolumes`/`customPreinstallJob.extraVolumeMounts`). If `DBAAS_M2M_ENABLED` parameter is set to false, permissions to airflow service accounts will not be granted in DBaaS.
+Note that `DBAAS_M2M_ENABLED` parameters and `customPreinstallJob.runOnUpdate` can be used to run preinstall job during airflow update in order to update database permissions when migrating from password authenticatin in DBaaS to m2m.
 
 Platform also provides a DBaaS integration package for Airflow that [implements](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) Airflow custom secrets' backend. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.2.1/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/3.2.1/security/secrets/secrets-backend/index.html). It is intended to be used with the custom preinstall job DBaaS script. The custom secrets' backend gets Redis and PG connections for Airflow from DBaaS. To enable custom secrets' backend, the following parameters must be specified (set by default):
 
