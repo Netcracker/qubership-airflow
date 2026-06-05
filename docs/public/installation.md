@@ -851,7 +851,7 @@ config:
 
 In the above example, MAAS parameters are not needed, if MAAS integration is not used.
 
-For DBaaS, by default, m2m authentication using k8s service accounts is used. However, if needed, it is possible to use password authentication. For this `DBAAS_M2M_ENABLED` parameter must be set to `false`, and `DBAAS_USER`/`DBAAS_PASSWORD` parameters must be specified in stringData of `dbaas-connection-params-main` secret. Also no need to pass `dbaas-m2m-token` volume/volumeMount.
+For DBaaS, by default, m2m authentication using k8s service accounts is used. However, if needed, it is possible to use password authentication. For this `DBAAS_M2M_ENABLED` parameter must be set to `false`, and `DBAAS_USER`/`DBAAS_PASSWORD` parameters must be specified in stringData of `dbaas-connection-params-main` secret. Also no need to pass `dbaas-m2m-token` volume/volumeMount in this case.
 
 **Note**: By default, the `DBAAS_PG_DB_NAME_PREFIX` parameter is not set. This means that the database name is provided by the DBaaS aggregator. The `DBAAS_PG_DB_NAME_PREFIX` parameter can be used to set the prefix for the PG database name.
 
