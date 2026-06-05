@@ -590,6 +590,7 @@ airflow-site-manager:
 ## Custom Preinstall Job
 
 **Note**: To disable the job, set `customPreinstallJob.enabled` to false.
+**Note**: To disable the job only for update, set `customPreinstallJob.runOnUpdate` to false.
 
 In addition to official Airflow helm chart, this helm chart provides a custom preinstall job that is based on helm pre-install hook and can execute custom command before the Airflow installation. For more information, refer to [https://helm.sh/docs/topics/charts_hooks/](https://helm.sh/docs/topics/charts_hooks/). 
 It is possible to add custom permissions using a Kubernetes role for this job if needed (for example, if the job is used to create Kubernetes objects). The job supports the following parameters:
@@ -780,7 +781,7 @@ customPreinstallJob:
 ```
 
 In the above example, please note `DBAAS_M2M_ENABLED` parameter. When it is set to `true`, the script will grant DBaaS permissions to all airflow service accounts for created PG/redis databases. `HELM_RELEASE_NAME` environment variable (or `dbaas-connection-params-preins` secret parameter) can be used to define service account names, by default it's `airflow`, so service account name example would be `airflow-dag-processor`. Authentication used will depend on whether `DBAAS_USER`/`DBAAS_PASSWORD` parameters are specified. If they are, login to DBaaS in the script will be done using these credentials, if not, authentication will be done using k8s token (that is mounted using `customPreinstallJob.extraVolumes`/`customPreinstallJob.extraVolumeMounts`). If `DBAAS_M2M_ENABLED` parameter is set to false, permissions to airflow service accounts will not be granted in DBaaS. In this case `dbaas-m2m-token` extraVolumes/extraVolumeMounts are not needed.
-Note that `DBAAS_M2M_ENABLED` parameters and `customPreinstallJob.runOnUpdate` can be used to run preinstall job during airflow update in order to update database permissions when migrating from password authenticatin in DBaaS to m2m.
+Note that `DBAAS_M2M_ENABLED` parameters and `customPreinstallJob.runOnUpdate` can be used to run preinstall job during airflow update in order to update database permissions when migrating from password authentication in DBaaS to m2m.
 
 Platform also provides a DBaaS integration package for Airflow that [implements](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) Airflow custom secrets' backend. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.2.1/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/3.2.1/security/secrets/secrets-backend/index.html). It is intended to be used with the custom preinstall job DBaaS script. The custom secrets' backend gets Redis and PG connections for Airflow from DBaaS. To enable custom secrets' backend, the following parameters must be specified (set by default):
 
