@@ -2837,6 +2837,8 @@ config:
 |integrationTests.service.name|Specifies the name of Airflow integration tests' service.|
 |integrationTests.secret.airflow.user|Specifies the user for authentication in Airflow.|
 |integrationTests.secret.airflow.password|Specifies the password for authentication in Airflow.|
+|integrationTests.secret.dbaas.user|Specifies the user for authentication in DBaaS.|
+|integrationTests.secret.dbaas.password|Specifies the password for authentication in DBaaS.|
 |integrationTests.serviceAccount.create|Specifies whether the service account for Airflow integration tests is to be deployed or not.|
 |integrationTests.serviceAccount.name|Specifies the name of the service account that is used to deploy Airflow integration tests.|
 |integrationTests.image|Specifies the Docker image of Airflow integration tests.|

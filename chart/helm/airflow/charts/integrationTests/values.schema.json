@@ -39,16 +39,16 @@
           }
         },
         "dbaas": {
-          "description": "Airflow credentials configuration for integration tests.",
+          "description": "DBaaS credentials configuration for integration tests.",
           "type": "object",
           "properties": {
             "user": {
-              "description": "Specifies the user for authentication in Airflow.",
+              "description": "Specifies the user for authentication in DBaaS.",
               "type": "string",
               "default": "admin"
             },
             "password": {
-              "description": "Specifies the password for authentication in Airflow.",
+              "description": "Specifies the password for authentication in DBaaS.",
               "type": "string",
               "default": "admin"
             }
