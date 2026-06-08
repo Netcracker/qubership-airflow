@@ -5,6 +5,7 @@ import logging
 
 from kubernetes import client as client, config as k8s_config
 from kubernetes.client import ApiException
+from pathlib import Path
 
 logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] [%(filename)s] [thread=%(threadName)s] %(message)s",
@@ -35,10 +36,24 @@ airflow_executor = read_secret_var_from_file("AIRFLOW_EXECUTOR", "CeleryExecutor
 negative_values = ("false", "False", "no", "No", False)
 dbaas_api_verify = read_secret_var_from_file("DBAAS_API_VERIFY", True)
 api_verify = False if dbaas_api_verify in negative_values else dbaas_api_verify
+dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
 
 k8s_config.load_incluster_config()
 k8s_client = client.ApiClient()
 v1_apps_api = client.CoreV1Api(k8s_client)
+headers = {"Content-Type": "application/json"}
+auth = (dbaas_user, dbaas_password)
+if dbaas_m2m_enabled and not dbaas_user:
+    token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
+    headers["Authorization"] = f"Bearer {token}"
+    auth = None
+helm_release_name = read_secret_var_from_file("HELM_RELEASE_NAME", "airflow")
+dbaas_pg_microservice_name = read_secret_var_from_file(
+    "DBAAS_PG_MICROSERVICE_NAME", "airflow"
+)
+dbaas_redis_microservice_name = read_secret_var_from_file(
+    "DBAAS_REDIS_MICROSERVICE_NAME", "airflow"
+)
 
 
 def get_namespace():
@@ -68,10 +83,6 @@ def get_redis_database():
     dbaas_redis_backup_disabled = read_secret_var_from_file(
         "DBAAS_REDIS_BACKUP_DISABLED", "true"
     )
-    dbaas_redis_microservice_name = read_secret_var_from_file(
-        "DBAAS_REDIS_MICROSERVICE_NAME", "airflow"
-    )
-    headers = {"Content-Type": "application/json"}
     data = {
         "backupDisabled": dbaas_redis_backup_disabled,
         "type": "redis",
@@ -87,8 +98,6 @@ def get_redis_database():
     dbaas_redis_db_name_prefix = read_secret_var_from_file("DBAAS_REDIS_DB_NAME_PREFIX")
     if dbaas_redis_db_name_prefix is not None:
         data["namePrefix"] = dbaas_redis_db_name_prefix
-
-    auth = (dbaas_user, dbaas_password)
 
     response = requests.put(
         f"{dbaas_host}/api/v3/dbaas/{get_namespace()}/databases",
@@ -113,10 +122,6 @@ def get_pg_database():
     dbaas_pg_backup_disabled = read_secret_var_from_file(
         "DBAAS_PG_BACKUP_DISABLED", "true"
     )
-    dbaas_pg_microservice_name = read_secret_var_from_file(
-        "DBAAS_PG_MICROSERVICE_NAME", "airflow"
-    )
-    headers = {"Content-Type": "application/json"}
     data = {
         "backupDisabled": dbaas_pg_backup_disabled,
         "type": "postgresql",
@@ -132,8 +137,6 @@ def get_pg_database():
     dbaas_pg_db_name_prefix = read_secret_var_from_file("DBAAS_PG_DB_NAME_PREFIX")
     if dbaas_pg_db_name_prefix is not None:
         data["namePrefix"] = dbaas_pg_db_name_prefix
-
-    auth = (dbaas_user, dbaas_password)
 
     response = requests.put(
         f"{dbaas_host}/api/v3/dbaas/{get_namespace()}/databases",
@@ -151,6 +154,62 @@ def get_pg_database():
             "[error_code=AIRFLOW-8301] Could not get DBAAS PG database. Response code: %s",
             response.status_code,
         )
+
+
+def grant_permissions_for_sas():
+    data = {
+        "apiVersion": "core.netcracker.com/v1",
+        "kind": "DBaaS",
+        "subKind": "DbPolicy",
+        "metadata": {
+            "name": f"{helm_release_name}-dbPolicy",
+            "namespace": f"{get_namespace()}",
+            "microserviceName": f"{dbaas_pg_microservice_name}",
+        },
+        "spec": {
+            "services": [
+                {"name": f"{helm_release_name}-api-server", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-create-user-job", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-dag-processor", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-database-cleanup", "roles": ["admin"]},
+                {
+                    "name": f"{helm_release_name}-migrate-database-job",
+                    "roles": ["admin"],
+                },
+                {"name": f"{helm_release_name}-scheduler", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-worker", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-triggerer", "roles": ["admin"]},
+                {"name": f"{helm_release_name}-flower", "roles": ["admin"]},
+            ],
+            "disableGlobalPermissions": False,
+        },
+    }
+    response = requests.post(
+        f"{dbaas_host}/api/declarations/v1/apply",
+        headers=headers,
+        data=json.dumps(data),
+        auth=auth,
+        verify=api_verify,
+    )
+    if response.status_code not in [200, 201]:
+        logging.error(
+            "[error_code=AIRFLOW-8309] Could not add permissions to DBAAS database. Response code: %s",
+            response.status_code,
+        )
+    if dbaas_pg_microservice_name != dbaas_redis_microservice_name:
+        data["metadata"]["microserviceName"] = f"{dbaas_redis_microservice_name}"
+        response = requests.post(
+            f"{dbaas_host}/api/declarations/v1/apply",
+            headers=headers,
+            data=json.dumps(data),
+            auth=auth,
+            verify=api_verify,
+        )
+        if response.status_code not in [200, 201]:
+            logging.error(
+                "[error_code=AIRFLOW-8310] Could not add permissions to redis database. Response code: %s",
+                response.status_code,
+            )
 
 
 def create_pg_secret():
@@ -184,3 +243,5 @@ def create_redis_secret():
 create_pg_secret()
 if airflow_executor != "KubernetesExecutor":
     create_redis_secret()
+if dbaas_m2m_enabled not in negative_values:
+    grant_permissions_for_sas()

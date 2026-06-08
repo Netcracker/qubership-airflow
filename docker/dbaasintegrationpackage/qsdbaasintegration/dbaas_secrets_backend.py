@@ -4,8 +4,10 @@ import json
 import logging
 import base64
 import ssl
+from pathlib import Path
 
 from airflow.secrets.base_secrets import BaseSecretsBackend
+from airflow.secrets.local_filesystem import LocalFilesystemBackend
 
 logging_level = os.getenv("DBAAS_INTEGRATION_LOG_LEVEL", logging.INFO)
 
@@ -53,27 +55,81 @@ dbaas_conn_namespace_from_config = read_secret_var_from_file(
 maas_conn_namespace_from_config = read_secret_var_from_file(
     "MAAS_CONN_NAMESPACE_FROM_CONFIG", "true"
 )
-
 maas_host = read_secret_var_from_file("MAAS_HOST")
 maas_user = read_secret_var_from_file("MAAS_USER")
 maas_password = read_secret_var_from_file("MAAS_PASSWORD")
+
 dbaas_api_verify = read_secret_var_from_file("DBAAS_API_VERIFY", True)
 dbaas_ssl_verification_main = read_secret_var_from_file(
     "DBAAS_SSL_VERIFICATION_MAIN", "DISABLED"
 )
+dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
+local_filesystem_backend_enabled = (
+    read_secret_var_from_file("LOCAL_FILESYSTEM_BACKEND", True) in positive_values
+)
 
 
-class DBAASSecretsBackend(BaseSecretsBackend):
+class DBAASSecretsBackend(
+    LocalFilesystemBackend if local_filesystem_backend_enabled else BaseSecretsBackend
+):
     def __init__(self, **kwargs):
-        super().__init__()
+        if local_filesystem_backend_enabled:
+            super().__init__(
+                variables_file_path=kwargs.get("variables_file_path"),
+                connections_file_path=kwargs.get("connections_file_path"),
+                configs_file_path=kwargs.get("configs_file_path"),
+            )
+        else:
+            super().__init__()
         self.qs_secrets_backend_properties = kwargs
         self.api_verify = (
             False if dbaas_api_verify in negative_values else dbaas_api_verify
         )
-        with open(
+        self.m2m_enabled = (
+            False if dbaas_m2m_enabled in negative_values else dbaas_m2m_enabled
+        )
+        self.maas_auth = (maas_user, maas_password)
+        self.dbaas_auth = (dbaas_user, dbaas_password)
+        self.namespace = Path(
             "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-        ) as namespace_file:
-            self.namespace = namespace_file.read()
+        ).read_text()
+
+    def requests_with_correct_auth(
+        self, address, headers, data, requests_method, target_service="DBaaS"
+    ):
+        if self.m2m_enabled:
+            token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
+            headers["Authorization"] = f"Bearer {token}"
+            if requests_method == "POST":
+                return requests.post(
+                    address, headers=headers, data=data, verify=self.api_verify
+                )
+            elif requests_method == "PUT":
+                return requests.put(
+                    address, headers=headers, data=data, verify=self.api_verify
+                )
+        else:
+            auth = None
+            if target_service == "MaaS":
+                auth = self.maas_auth
+            elif target_service == "DBaaS":
+                auth = self.dbaas_auth
+            if requests_method == "POST":
+                return requests.post(
+                    address,
+                    headers=headers,
+                    data=data,
+                    auth=auth,
+                    verify=self.api_verify,
+                )
+            elif requests_method == "PUT":
+                return requests.put(
+                    address,
+                    headers=headers,
+                    data=data,
+                    auth=auth,
+                    verify=self.api_verify,
+                )
 
     def get_conn_value(self, conn_id: str, team_name: str | None = None) -> str | None:
         if self.qs_secrets_backend_properties == {}:
@@ -221,7 +277,6 @@ class DBAASSecretsBackend(BaseSecretsBackend):
 
     def get_conn_from_dbaas(self, dbaas_data):
         headers = {"Content-Type": "application/json"}
-        auth = (dbaas_user, dbaas_password)
         if dbaas_conn_namespace_from_config in positive_values:
             logging.debug("Using namespace from config for dbaas request")
             namespace = dbaas_data["classifier"]["namespace"]
@@ -234,12 +289,11 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             dbaas_by_classifier_data.update(
                 {"originService": dbaas_data["originService"]}
             )
-        response = requests.post(
-            f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/{db_type}",
+        response = self.requests_with_correct_auth(
+            address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/{db_type}",
             headers=headers,
             data=json.dumps(dbaas_by_classifier_data),
-            auth=auth,
-            verify=self.api_verify,
+            requests_method="POST",
         )
         if response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
@@ -247,12 +301,11 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             f"Could not get airflow DAG database by classifier {dbaas_by_classifier_data},"
             f" trying to get by database ..."
         )
-        response = requests.put(
-            f"{dbaas_host}/api/v3/dbaas/{namespace}/databases",
+        response = self.requests_with_correct_auth(
+            address=f"{dbaas_host}/api/v3/dbaas/{namespace}/databases",
             headers=headers,
             data=json.dumps(dbaas_data),
-            auth=auth,
-            verify=self.api_verify,
+            requests_method="PUT",
         )
         if response.status_code == 201 or response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
@@ -314,7 +367,6 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             "DBAAS_PG_MICROSERVICE_NAME", "airflow"
         )
         headers = {"Content-Type": "application/json"}
-        auth = (dbaas_user, dbaas_password)
         data = {
             "originService": dbaas_pg_microservice_name,
             "classifier": {
@@ -324,12 +376,11 @@ class DBAASSecretsBackend(BaseSecretsBackend):
                 "isServiceDb": "true",
             },
         }
-        response = requests.post(
-            f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/postgresql",
+        response = self.requests_with_correct_auth(
+            address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/postgresql",
             headers=headers,
             data=json.dumps(data),
-            auth=auth,
-            verify=self.api_verify,
+            requests_method="POST",
         )
         if response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
@@ -346,12 +397,11 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         dbaas_pg_db_name_prefix = read_secret_var_from_file("DBAAS_PG_DB_NAME_PREFIX")
         if dbaas_pg_db_name_prefix is not None:
             data["namePrefix"] = dbaas_pg_db_name_prefix
-        response = requests.put(
-            f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases",
+        response = self.requests_with_correct_auth(
+            address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases",
             headers=headers,
             data=json.dumps(data),
-            auth=auth,
-            verify=self.api_verify,
+            requests_method="PUT",
         )
         if response.status_code == 201 or response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
@@ -372,7 +422,6 @@ class DBAASSecretsBackend(BaseSecretsBackend):
             "DBAAS_REDIS_MICROSERVICE_NAME", "airflow"
         )
         headers = {"Content-Type": "application/json"}
-        auth = (dbaas_user, dbaas_password)
         data = {
             "originService": dbaas_redis_microservice_name,
             "classifier": {
@@ -382,12 +431,11 @@ class DBAASSecretsBackend(BaseSecretsBackend):
                 "isServiceDb": "true",
             },
         }
-        response = requests.post(
-            f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/redis",
+        response = self.requests_with_correct_auth(
+            address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/redis",
             headers=headers,
             data=json.dumps(data),
-            auth=auth,
-            verify=self.api_verify,
+            requests_method="POST",
         )
         if response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
@@ -406,13 +454,11 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         )
         if dbaas_redis_db_name_prefix is not None:
             data["namePrefix"] = dbaas_redis_db_name_prefix
-
-        response = requests.put(
-            f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases",
+        response = self.requests_with_correct_auth(
+            address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases",
             headers=headers,
             data=json.dumps(data),
-            auth=auth,
-            verify=self.api_verify,
+            requests_method="PUT",
         )
         if response.status_code == 201 or response.status_code == 200:
             return json.loads(response.content)["connectionProperties"]
@@ -470,7 +516,17 @@ class DBAASSecretsBackend(BaseSecretsBackend):
         )
         return redis_full_address
 
+    def get_connection(self, conn_id: str, team_name: str | None = None):
+        value = self.get_conn_value(conn_id=conn_id, team_name=team_name)
+        if value:
+            return self.deserialize_connection(conn_id=conn_id, value=value)
+        elif local_filesystem_backend_enabled:
+            return super().get_connection(conn_id, team_name)
+        return None
+
     def get_variable(self, key: str):
+        if local_filesystem_backend_enabled:
+            return super().get_variable(key)
         return None
 
     def get_config(self, key: str):
@@ -509,5 +565,7 @@ class DBAASSecretsBackend(BaseSecretsBackend):
                 secret_folder=key_folder,
                 filename=keycloak_secret_filename,
             )
+        elif local_filesystem_backend_enabled:
+            return super().get_config(key)
         else:
             return None

@@ -162,6 +162,11 @@
           "type": "boolean",
           "default": true
         },
+        "runOnUpdate": {
+          "description": "Specify if custom preinstall job will be run during helm update",
+          "type": "boolean",
+          "default": true
+        },
         "jobAnnotations": {
           "description": "Annotations to add to custom preinstall job.",
           "type": "object",
@@ -188,6 +193,11 @@
               "description": "Whether to create custom preinstall job service account",
               "type": "boolean",
               "default": true
+            },
+            "name": {
+              "description": "Name for custom preinstall job service account",
+              "type": "string",
+              "default": "airflow"
             }
           }
         },
@@ -295,7 +305,7 @@
           "type": "object",
           "default": {
             "dbaas-connection-params-preins": {
-              "stringData": "DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'\nDBAAS_USER: 'insert dbaas user here'\nDBAAS_PASSWORD: 'insert dbaas password here'\nDBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'\nDBAAS_PG_BACKUP_DISABLED: 'true'\nDBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'\nDBAAS_REDIS_DB_OWNER: 'insert dbaas redis password here'\nDBAAS_REDIS_BACKUP_DISABLED: 'true'\nDBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'\nAIRFLOW_EXECUTOR: '{{ .Values.executor }}'\n"
+              "stringData": "DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'\nDBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'\nDBAAS_PG_BACKUP_DISABLED: 'true'\nDBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'\nDBAAS_REDIS_DB_OWNER: 'insert dbaas redis password here'\nDBAAS_REDIS_BACKUP_DISABLED: 'true'\nDBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'\nAIRFLOW_EXECUTOR: '{{ .Values.executor }}'\nDBAAS_M2M_ENABLED: 'true'\n"
             }
           },
           "additionalProperties": {
@@ -365,6 +375,21 @@
                 "secretName": "dbaas-connection-params-preins",
                 "defaultMode": 256
               }
+            },
+            {
+              "name": "dbaas-m2m-token",
+              "projected": {
+                "sources": [
+                  {
+                    "serviceAccountToken": {
+                      "audience": "dbaas",
+                      "expirationSeconds": 3600,
+                      "path": "token"
+                    }
+                  }
+                ],
+                "defaultMode": 420
+              }
             }
           ],
           "items": {
@@ -379,6 +404,11 @@
               "name": "dbaas-connection-params-preins",
               "mountPath": "/var/run/secrets/airflow",
               "readOnly": true
+            },
+            {
+              "name": "dbaas-m2m-token",
+              "readOnly": true,
+              "mountPath": "/var/run/secrets/tokens/dbaas"
             }
           ],
           "items": {

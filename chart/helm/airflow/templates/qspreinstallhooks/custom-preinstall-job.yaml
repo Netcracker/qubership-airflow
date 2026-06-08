@@ -31,7 +31,11 @@ metadata:
 #---Qubership custom change: Labels for Qubership release---
   {{- $annotations := dict }}
   {{- if .Values.customPreinstallJob.useHelmHooks }}
+    {{- if .Values.customPreinstallJob.runOnUpdate }}
+    {{- $_ := set $annotations "helm.sh/hook" "pre-install,pre-upgrade" }}
+    {{- else }}
     {{- $_ := set $annotations "helm.sh/hook" "pre-install" }}
+    {{- end }}
     {{- $_ := set $annotations "helm.sh/hook-weight" "-10" }}
     {{- $_ := set $annotations "helm.sh/hook-delete-policy" "before-hook-creation,hook-succeeded" }}
   {{- end }}
@@ -59,7 +63,7 @@ spec:
       securityContext: {{ $securityContext | nindent 8 }}
       activeDeadlineSeconds: 600
 {{- if and .Values.customPreinstallJob.enabled .Values.customPreinstallJob.serviceAccount.create }}
-      serviceAccountName: custom-preinstall-job-service-account
+      serviceAccountName: {{ tpl .Values.customPreinstallJob.serviceAccount.name . | quote }}
 {{- end }}
 {{- if .Values.customPreinstallJob.extraVolumes }}
       volumes:

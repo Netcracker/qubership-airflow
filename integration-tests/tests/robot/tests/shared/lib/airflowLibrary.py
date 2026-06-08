@@ -15,10 +15,18 @@ def get_pg_connection_properties(
     for secret in secrets.items:
         if dbaas_secret == secret.metadata.name:
             dbaas_host = base64.b64decode(secret.data.get("DBAAS_HOST")).decode()
-            dbaas_user = base64.b64decode(secret.data.get("DBAAS_USER")).decode()
-            dbaas_password = base64.b64decode(
-                secret.data.get("DBAAS_PASSWORD")
-            ).decode()
+            try:
+                with open("/var/run/secrets/airflowtests/dbaas-user", "r") as file:
+                    dbaas_user = file.read()
+            except FileNotFoundError:
+                dbaas_user = base64.b64decode(secret.data.get("DBAAS_USER")).decode()
+            try:
+                with open("/var/run/secrets/airflowtests/dbaas-password", "r") as file:
+                    dbaas_password = file.read()
+            except FileNotFoundError:
+                dbaas_password = base64.b64decode(
+                    secret.data.get("DBAAS_USER")
+                ).decode()
             dbaas_pg_db_owner = base64.b64decode(
                 secret.data.get("DBAAS_PG_DB_OWNER")
             ).decode()

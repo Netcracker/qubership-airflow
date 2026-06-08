@@ -421,7 +421,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * `data.metadataSecretName` and `data.brokerUrlSecretName` are set to `metadata-secret` and `broker-url-secret`.
 * Airflow configuration environment variables with sensitive information or related to broker/database connections are disabled using the `enableBuiltInSecretEnvVars.*` parameter. The variables include: `AIRFLOW__CORE__FERNET_KEY`, `AIRFLOW__CORE__SQL_ALCHEMY_CONN`, `AIRFLOW__DATABASE__SQL_ALCHEMY_CONN`, `AIRFLOW_CONN_AIRFLOW_DB`, `AIRFLOW__API__SECRET_KEY`, `AIRFLOW__API_AUTH__JWT_SECRET`.
 * `volumes/volumeMounts` parameters are configured to mount emptyVolume to `/tmp` by default in order to support readOnlyRootFilesystem. Additionaly, secrets that in community version are used as environment variables from above in qubership version are mounted as files through volumes/volumeMounts(and at runtime they are used by Qubership DBaaS integration secrets backend).
-* `extraSecrets.*`  parameters are used to pass data related to the DBaaS integration.
+* `extraSecrets.*/volumes/volumeMounts`  parameters are used to pass data related to the DBaaS integration.
 * The `config.secrets.backend` parameter is set to custom secrets' backend with DBaaS integration (`qsdbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend`).
 * Parameters for direct Prometheus monitoring support are added. Monitoring is enabled by default, along with StatsD monitoring that comes with the Airflow chart.
 * Default StatsD monitoring mappings are edited.
@@ -442,7 +442,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * `values.schema.json` is changed. `values.schema.json` is not stored in this repository, but during the transfer-image build airflow schema is downloaded from airflow repository and modified in a way so only parameters that are used in Qubership platform are left in the schema. The default values for these parameters are changed to default values from Qubership platform. Also new Quberhip platform related parameters are added.
 * `airflowPodSecurityContext` template logic is modified in order to remove `runAsUser` and `fsGroup` from default security if .Values.PAAS_PLATFORM parameter is set to "OPENSHIFT".
 
-**Note**: `volumes` parameter by defaut assumes that Airflow service name is set to `airflow`. If the service name is changed using, for example, `fullnameOverride` parameter, `secretName` fields of secrets in `volumes` parameter must be adjusted accordingly. 
+**Note**: `volumes` parameter by default assumes that Airflow service name is set to `airflow`. If the service name is changed using, for example, `fullnameOverride` parameter, `secretName` fields of secrets in `volumes` parameter must be adjusted accordingly. 
 
 ### Using Non-DBaaS Airflow Installation
 
@@ -590,6 +590,7 @@ airflow-site-manager:
 ## Custom Preinstall Job
 
 **Note**: To disable the job, set `customPreinstallJob.enabled` to false.
+**Note**: To disable the job only for update, set `customPreinstallJob.runOnUpdate` to false.
 
 In addition to official Airflow helm chart, this helm chart provides a custom preinstall job that is based on helm pre-install hook and can execute custom command before the Airflow installation. For more information, refer to [https://helm.sh/docs/topics/charts_hooks/](https://helm.sh/docs/topics/charts_hooks/). 
 It is possible to add custom permissions using a Kubernetes role for this job if needed (for example, if the job is used to create Kubernetes objects). The job supports the following parameters:
@@ -606,10 +607,14 @@ It is possible to add custom permissions using a Kubernetes role for this job if
 |customPreinstallJob.env|Specifies the environment for the job container.|
 |customPreinstallJob.extraEnvFrom|Specifies the extraEnvFrom for the job container.|
 |customPreinstallJob.serviceAccount.create|Specifies if the service account for the job should be created.|
+|customPreinstallJob.serviceAccount.name|Specifies preinstall job service account name (can be templated).|
 |customPreinstallJob.role.create|Specifies if the role for the job should be created.|
 |customPreinstallJob.role.rules|Specifies the rules for the job role.|
 |customPreinstallJob.command|Specifies the command for the job.|
 |customPreinstallJob.args|Specifies the arguments for the job.|
+|customPreinstallJob.useHelmHooks|Specifies if helm hooks will annotations will be applied by default.|
+|customPreinstallJob.runOnUpdate|Specifies if the preinstall job will also run pre-update.|
+|customPreinstallJob.jobAnnotations|Specifies additional annotations for the job.|
 
 By default, the parameters for [DBaaS to Create Postgres and Redis Databases](#dbaas-integration) are set with Qubership release requirements. These parameters need modification based on your cloud setup:
 
@@ -618,8 +623,13 @@ customPreinstallJob:
   enabled: true
   labels: {}
   resources: {}
+  useHelmHooks: true
+  runOnUpdate: false
+  jobAnnotations: {}
+  priorityClassName: ~
   serviceAccount:
     create: true
+    name: airflow
   role:
     create: true
     rules:
@@ -635,14 +645,14 @@ customPreinstallJob:
   securityContexts:
     pod: {}
     container: {}
-  command: ~
-  args: ["python", "/bin/create_dbs_dbaas.py"]
+  command:
+    - python
+  args:
+    - /bin/create_dbs_dbaas.py
   extraSecrets:
     'dbaas-connection-params-preins':
       stringData: |
         DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
-        DBAAS_USER: 'insert dbaas user here'
-        DBAAS_PASSWORD: 'insert dbaas password here'
         DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
         DBAAS_PG_BACKUP_DISABLED: 'true'
         DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -650,15 +660,28 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
+        DBAAS_M2M_ENABLED: 'true'
+  extraEnvFrom: ~
   extraVolumes:
     - name: dbaas-connection-params-preins
       secret:
         secretName: dbaas-connection-params-preins
         defaultMode: 0400
+    - name: dbaas-m2m-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: dbaas
+              expirationSeconds: 3600
+              path: token
+        defaultMode: 420
   extraVolumeMounts:
     - name: dbaas-connection-params-preins
       mountPath: /var/run/secrets/airflow
       readOnly: true
+    - name: dbaas-m2m-token
+      readOnly: true
+      mountPath: /var/run/secrets/tokens/dbaas
 ```
 
 The possible use cases that are implemented on the Qubership side are described below.
@@ -705,6 +728,7 @@ customPreinstallJob:
   resources: {}
   serviceAccount:
     create: true
+    name: airflow
   role:
     create: true
     rules:
@@ -726,8 +750,6 @@ customPreinstallJob:
     'dbaas-connection-params-preins':
       stringData: |
         DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
-        DBAAS_USER: 'insert dbaas user here'
-        DBAAS_PASSWORD: 'insert dbaas password here'
         DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
         DBAAS_PG_BACKUP_DISABLED: 'true'
         DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -735,16 +757,31 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
+        DBAAS_M2M_ENABLED: 'true'
   extraVolumes:
     - name: dbaas-connection-params-preins
       secret:
         secretName: dbaas-connection-params-preins
         defaultMode: 0400
+    - name: dbaas-m2m-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: dbaas
+              expirationSeconds: 3600
+              path: token
+        defaultMode: 420
   extraVolumeMounts:
     - name: dbaas-connection-params-preins
       mountPath: /var/run/secrets/airflow
       readOnly: true
+    - name: dbaas-m2m-token
+      readOnly: true
+      mountPath: /var/run/secrets/tokens/dbaas
 ```
+
+In the above example, please note the `DBAAS_M2M_ENABLED` parameter. When it is set to `true`, the script will grant DBaaS permissions to all airflow service accounts for created PG/redis databases. `HELM_RELEASE_NAME` environment variable (or `dbaas-connection-params-preins` secret parameter) can be used to define service account names. By default it's `airflow`, so service account name example would be `airflow-dag-processor`. Authentication used will depend on whether `DBAAS_USER`/`DBAAS_PASSWORD` parameters are specified. If they are, login to DBaaS in the script will be done using these credentials, if not, authentication will be done using k8s token (that is mounted using `customPreinstallJob.extraVolumes`/`customPreinstallJob.extraVolumeMounts`). If `DBAAS_M2M_ENABLED` parameter is set to false, permissions to airflow service accounts will not be granted in DBaaS. In this case, `dbaas-m2m-token` extraVolumes/extraVolumeMounts are not needed.
+Note that `DBAAS_M2M_ENABLED` parameters and `customPreinstallJob.runOnUpdate` can be used to run preinstall job during airflow update in order to update database permissions when migrating from password authentication in DBaaS to m2m.
 
 Platform also provides a DBaaS integration package for Airflow that [implements](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) Airflow custom secrets' backend. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.2.1/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/3.2.1/security/secrets/secrets-backend/index.html). It is intended to be used with the custom preinstall job DBaaS script. The custom secrets' backend gets Redis and PG connections for Airflow from DBaaS. To enable custom secrets' backend, the following parameters must be specified (set by default):
 
@@ -768,8 +805,6 @@ extraSecrets:
   'dbaas-connection-params-main':
     stringData: |
       DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
-      DBAAS_USER: 'insert dbaas user here'
-      DBAAS_PASSWORD: 'insert dbaas password here'
       DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
       DBAAS_PG_BACKUP_DISABLED: 'true'
       DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -780,6 +815,7 @@ extraSecrets:
       MAAS_HOST: 'insert.api.maas.addres.here.svc'
       MAAS_USER: 'insert maas user here'
       MAAS_PASSWORD: 'insert maas password here'
+      DBAAS_M2M_ENABLED: 'true'
 ...
 volumes:
 ...
@@ -787,12 +823,23 @@ volumes:
     secret:
       secretName: dbaas-connection-params-main
       defaultMode: 0400
+  - name: dbaas-m2m-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            audience: dbaas
+            expirationSeconds: 3600
+            path: token
+      defaultMode: 420
 ...
 volumeMounts:
 ...
   - name: dbaas-connection-params-main
     mountPath: /var/run/secrets/airflow
     readOnly: true
+  - name: dbaas-m2m-token
+    readOnly: true
+    mountPath: /var/run/secrets/tokens/dbaas
 ...
 config:
 ...
@@ -803,6 +850,8 @@ config:
 ```
 
 In the above example, MAAS parameters are not needed, if MAAS integration is not used.
+
+For DBaaS, by default, m2m authentication using k8s service accounts is used. However, if needed, it is possible to use password authentication. For this, `DBAAS_M2M_ENABLED` parameter must be set to `false`, and `DBAAS_USER`/`DBAAS_PASSWORD` parameters must be specified in stringData of `dbaas-connection-params-main` secret. Also, no need to pass `dbaas-m2m-token` volume/volumeMount in this case.
 
 **Note**: By default, the `DBAAS_PG_DB_NAME_PREFIX` parameter is not set. This means that the database name is provided by the DBaaS aggregator. The `DBAAS_PG_DB_NAME_PREFIX` parameter can be used to set the prefix for the PG database name.
 
@@ -851,6 +900,8 @@ config:
 **Note**: When file with value of configuration parameter is not found, DBaaS secrets backend will try to read configuration parameters from environment variables. For example, when `/var/run/secrets/airflow/DBAAS_PASSWORD` file is not found, secrets backend will try reading files from `DBAAS_PASSWORD` environment variable. So if using secrets as environment variables is no concern, `extraEnvFrom` can be used instead of `volumes/volumeMounts/extraVolumes/extraVolumeMounts`.
 
 ### MaaS Integration for Airflow Connections
+
+**Note**: For MaaS m2m authentication is currently not supported, so MAAS_USER and MAAS_PASSWORD must be specified.
 
 [Platform-provided DBaaS integration package for Airflow](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) also allows to get Kafka connections from MaaS. The approach works mostly the same as with DBaaS connection, but the structure of JSON connection config is a bit different. To get Kafka connection, it is necessary to specify the data [for MaaS request](https://github.com/Netcracker/qubership-maas/blob/main/docs/rest-api.md#get-or-create-kafka-topic) to `{maas_host}/api/v1/kafka/topic` in the `maas_request_data` field, additional properties for connection in the `connection_properties` field (is used to fill the extra field of the connection, can be used to overwrite the properties received from MaaS) and the connection type in the `maas_type` field. All these three fields should be added to the field with "${connection_name}_maas" name. 
 
@@ -970,6 +1021,21 @@ enableBuiltInSecretEnvVars: # Disable passing sensitive information as envs sinc
 ...
 
 ```
+
+Additionally, by default, secrets backend will fall back to [Airflow Local Filesystem Secrets Backend](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/local-filesystem-secrets-backend.html) when configurations/connections/variables are not found. Because of this, it is possible to pass files with configurations/connections/variables using volumes/volumeMounts parameters (or extraVolumes/exraVolumeMonts parameters, if you want to pass these files only to some containers). Parameters for Airflow Local Filesystem Secrets Backend can be passed in qs_secrets_backend_params along with connections definitions, for example:
+
+```yaml
+qs_secrets_backend_params:
+  connections_file_path: /tmp/connections.json
+  postgres_test_conn_1_dbaas:
+...
+config:
+  secrets:
+    backend: qsdbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend
+    backend_kwargs: "{{ .Values.qs_secrets_backend_params | toJson }}"
+```
+
+If falling back to Airflow Local Filesystem Secrets Backend is not needed, it can be disabled by setting `LOCAL_FILESYSTEM_BACKEND` `dbaas-connection-params-main` secret parameter or environment variable to `False`.
 
 ### Non-DBaaS Configuration
 
@@ -2771,6 +2837,8 @@ config:
 |integrationTests.service.name|Specifies the name of Airflow integration tests' service.|
 |integrationTests.secret.airflow.user|Specifies the user for authentication in Airflow.|
 |integrationTests.secret.airflow.password|Specifies the password for authentication in Airflow.|
+|integrationTests.secret.dbaas.user|Specifies the user for authentication in DBaaS.|
+|integrationTests.secret.dbaas.password|Specifies the password for authentication in DBaaS.|
 |integrationTests.serviceAccount.create|Specifies whether the service account for Airflow integration tests is to be deployed or not.|
 |integrationTests.serviceAccount.name|Specifies the name of the service account that is used to deploy Airflow integration tests.|
 |integrationTests.image|Specifies the Docker image of Airflow integration tests.|

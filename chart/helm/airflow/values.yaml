@@ -410,6 +410,14 @@ volumes:
     secret:
       secretName: airflow-api-secret-key
       defaultMode: 0400
+  - name: dbaas-m2m-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            audience: dbaas
+            expirationSeconds: 3600
+            path: token
+      defaultMode: 420
 
 # VolumeMounts for all Airflow containers
 volumeMounts:
@@ -430,6 +438,9 @@ volumeMounts:
     mountPath: /var/run/secrets/airflow-keys/jwt-secret
     subPath: jwt-secret
     readOnly: true
+  - name: dbaas-m2m-token
+    readOnly: true
+    mountPath: /var/run/secrets/tokens/dbaas
 
 # Secrets for all Airflow containers
 secret: []
@@ -479,8 +490,6 @@ extraSecrets:
     stringData: |
       DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
       DBAAS_USER: 'insert dbaas user here'
-      DBAAS_PASSWORD: 'insert dbaas password here'
-      DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
       DBAAS_PG_BACKUP_DISABLED: 'true'
       DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
       DBAAS_REDIS_DB_OWNER: 'insert dbaas redis password here'
@@ -490,6 +499,9 @@ extraSecrets:
       MAAS_HOST: 'insert.api.maas.addres.here.svc'
       MAAS_USER: 'insert maas user here'
       MAAS_PASSWORD: 'insert maas password here'
+      DBAAS_M2M_ENABLED: 'true'
+#      DBAAS_PASSWORD: 'insert dbaas password here when not using m2m'
+#      DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here when not using m2m'
 # eg:
 # extraSecrets:
 #   '{{ .Release.Name }}-airflow-connections':
@@ -4486,10 +4498,12 @@ customPreinstallJob:
   labels: {}
   resources: {}
   useHelmHooks: true
+  runOnUpdate: true
   jobAnnotations: {}
   priorityClassName: ~
   serviceAccount:
     create: true
+    name: airflow
   role:
     create: true
     rules:
@@ -4513,8 +4527,6 @@ customPreinstallJob:
     'dbaas-connection-params-preins':
       stringData: |
         DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
-        DBAAS_USER: 'insert dbaas user here'
-        DBAAS_PASSWORD: 'insert dbaas password here'
         DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
         DBAAS_PG_BACKUP_DISABLED: 'true'
         DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -4522,16 +4534,28 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
+        DBAAS_M2M_ENABLED: 'true'
   extraEnvFrom: ~
   extraVolumes:
     - name: dbaas-connection-params-preins
       secret:
         secretName: dbaas-connection-params-preins
         defaultMode: 0400
+    - name: dbaas-m2m-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              audience: dbaas
+              expirationSeconds: 3600
+              path: token
+        defaultMode: 420
   extraVolumeMounts:
     - name: dbaas-connection-params-preins
       mountPath: /var/run/secrets/airflow
       readOnly: true
+    - name: dbaas-m2m-token
+      readOnly: true
+      mountPath: /var/run/secrets/tokens/dbaas
 
 
 #customPreinstallJob:
