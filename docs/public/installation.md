@@ -442,7 +442,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * `values.schema.json` is changed. `values.schema.json` is not stored in this repository, but during the transfer-image build airflow schema is downloaded from airflow repository and modified in a way so only parameters that are used in Qubership platform are left in the schema. The default values for these parameters are changed to default values from Qubership platform. Also new Quberhip platform related parameters are added.
 * `airflowPodSecurityContext` template logic is modified in order to remove `runAsUser` and `fsGroup` from default security if .Values.PAAS_PLATFORM parameter is set to "OPENSHIFT".
 
-**Note**: `volumes` parameter by defaut assumes that Airflow service name is set to `airflow`. If the service name is changed using, for example, `fullnameOverride` parameter, `secretName` fields of secrets in `volumes` parameter must be adjusted accordingly. 
+**Note**: `volumes` parameter by default assumes that Airflow service name is set to `airflow`. If the service name is changed using, for example, `fullnameOverride` parameter, `secretName` fields of secrets in `volumes` parameter must be adjusted accordingly. 
 
 ### Using Non-DBaaS Airflow Installation
 
