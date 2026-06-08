@@ -421,7 +421,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * `data.metadataSecretName` and `data.brokerUrlSecretName` are set to `metadata-secret` and `broker-url-secret`.
 * Airflow configuration environment variables with sensitive information or related to broker/database connections are disabled using the `enableBuiltInSecretEnvVars.*` parameter. The variables include: `AIRFLOW__CORE__FERNET_KEY`, `AIRFLOW__CORE__SQL_ALCHEMY_CONN`, `AIRFLOW__DATABASE__SQL_ALCHEMY_CONN`, `AIRFLOW_CONN_AIRFLOW_DB`, `AIRFLOW__API__SECRET_KEY`, `AIRFLOW__API_AUTH__JWT_SECRET`.
 * `volumes/volumeMounts` parameters are configured to mount emptyVolume to `/tmp` by default in order to support readOnlyRootFilesystem. Additionaly, secrets that in community version are used as environment variables from above in qubership version are mounted as files through volumes/volumeMounts(and at runtime they are used by Qubership DBaaS integration secrets backend).
-* `extraSecrets.*`  parameters are used to pass data related to the DBaaS integration.
+* `extraSecrets.*/volumes/volumeMounts`  parameters are used to pass data related to the DBaaS integration.
 * The `config.secrets.backend` parameter is set to custom secrets' backend with DBaaS integration (`qsdbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend`).
 * Parameters for direct Prometheus monitoring support are added. Monitoring is enabled by default, along with StatsD monitoring that comes with the Airflow chart.
 * Default StatsD monitoring mappings are edited.
