@@ -27,6 +27,11 @@ kind: Ingress
 metadata:
   name: {{ $fullname }}-ingress
   labels:
+#---Qubership custom change: Labels for Qubership release---
+    app.kubernetes.io/component: 'ingress'
+    deployment.netcracker.com/ingress-type: 'public-network'
+    deployment.netcracker.com/ingress-audience-type: 'ops-user'
+#---Qubership custom change: Labels for Qubership release---
     tier: airflow
     component: airflow-ingress
     release: {{ .Release.Name }}
