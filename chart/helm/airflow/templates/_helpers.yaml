@@ -882,7 +882,7 @@ Priority of values are from left to right, meaning if first value is not empty, 
   {{- if $result }}
     {{- /* Qubership custom change: add default Openshift/PAAS_PLATFORM support--- */ -}}
     {{- if eq (default "KUBERNETES" $.PAAS_PLATFORM) "OPENSHIFT" -}}
-     {{- $result = omit $result "runAsUser" "fsGroup" -}}
+     {{- $result = omit $result "runAsUser" "fsGroup" "runAsGroup" -}}
     {{- end -}}
     {{- toYaml $result | print }}
   {{- else }}

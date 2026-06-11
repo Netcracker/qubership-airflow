@@ -29,6 +29,7 @@ securityContexts:
   pod:
     runAsUser: 50000
     runAsNonRoot: true
+    runAsGroup: 50000
     fsGroup: 50000
     seccompProfile:
       type: RuntimeDefault
