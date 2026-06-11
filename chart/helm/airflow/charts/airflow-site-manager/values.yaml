@@ -75,6 +75,7 @@ securityContexts:
     runAsUser: 50000
     runAsNonRoot: true
     fsGroup: 50000
+    runAsGroup: 50000
     seccompProfile:
       type: RuntimeDefault
   container:

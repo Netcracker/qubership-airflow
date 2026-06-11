@@ -95,7 +95,7 @@ spec:
       {{- /* Qubership custom change: add default Openshift/PAAS_PLATFORM support--- */ -}}
       {{- if eq (default "KUBERNETES" .Values.PAAS_PLATFORM) "OPENSHIFT" }}
       securityContext:
-        {{- toYaml (omit .Values.statsd.securityContexts.pod "runAsUser" "fsGroup") | nindent 8 }}
+        {{- toYaml (omit .Values.statsd.securityContexts.pod "runAsUser" "fsGroup" "runAsGroup") | nindent 8 }}
       {{- else }}
       securityContext: {{ $securityContext | nindent 8 }}
       {{- end }}
