@@ -1026,7 +1026,7 @@ Additionally, by default, secrets backend will fall back to [Airflow Local Files
 
 ```yaml
 qs_secrets_backend_params:
-  connections_file_path: /tmp/connections.json
+  connections_file_path: /airflowdata/connections.json
   postgres_test_conn_1_dbaas:
 ...
 config:
