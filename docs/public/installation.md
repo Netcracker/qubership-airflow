@@ -106,7 +106,7 @@ Also, the image has a package for Qubership DBaaS/MaaS integration.
 
 ## Deployment Schema
 
-For more information about the deployment schema, refer to the [Overview](/docs/public/architecture.md).
+For more information about the deployment schema, refer to the [Overview](/docs/architecture.md).
 
 **Note**: In the Quberhip tested configuration, the Airflow executor is set to Celery executor or Kubernetes executor. By default, the Celery executor is used. To use a Kubernetes executor, set the executor parameter to KubernetesExecutor: `executor: "KubernetesExecutor"`. Also, `rbac.create` parameter must be set to `true` to allow airflow to launch kubernetes executor workers.
 
@@ -442,7 +442,7 @@ By default with Qubership changes, Airflow deployment uses DBaaS integration. To
 
 ## Airflow Site Manager and DR Deployment
 
-Airflow supports deployment in the active-standby DR scheme. [Airflow Site Manager](/docs/public/airflow-site-manager.md) is used for the DR deployment. 
+Airflow supports deployment in the active-standby DR scheme. [Airflow Site Manager](/docs/airflow-site-manager.md) is used for the DR deployment. 
 
 * On an active site,  
   * Airflow components such as API Server, Scheduler, Workers, Flower are scaled up and should be deployed with replicas>0. The Flower component can be skipped.  
@@ -569,7 +569,7 @@ airflow-site-manager:
               servicePort: 8080
 ```
 
-**Note**: There is another option for PG replication that can be used with Hadoop deployments. For more information, see [Airflow HDFS DR Sync DAG](/docs/public/dr-sync-dag.md).
+**Note**: There is another option for PG replication that can be used with Hadoop deployments. For more information, see [Airflow HDFS DR Sync DAG](/docs/dr-sync-dag.md).
 
 ## Custom Preinstall Job
 
@@ -1441,7 +1441,7 @@ With the `QS_DEFAULT_LOGGING_CONFIG` logging config class, it is also possible t
 
 When the `QS_DEFAULT_LOGGING_CONFIG` logging config class is used, the events related to audit are logged with the '[AUDIT]' mark.
 
-For more information about audit logs, refer to [Airflow Audit Logs](/docs/public/audit-logs.md). Note that it is possible to configure the audit log level and format. 
+For more information about audit logs, refer to [Airflow Audit Logs](/docs/audit-logs.md). Note that it is possible to configure the audit log level and format. 
 
 For example:
 
@@ -2474,7 +2474,7 @@ Qubership platform Grafana Dashboard is installed when the `platformAirflowMonit
 platformAirflowMonitoring: true
 ```
 
-The dashboard has panels that use airflow-exporter plugin and that use StatsD Prometheus exporter metrics. For more information about dashboard, refer to _[Cloud Platform Monitoring Guide](/docs/public/monitoring.md)_.
+The dashboard has panels that use airflow-exporter plugin and that use StatsD Prometheus exporter metrics. For more information about dashboard, refer to _[Cloud Platform Monitoring Guide](/docs/monitoring.md)_.
 
 ### Prometheus Alerts
 
@@ -2517,7 +2517,7 @@ prometheusRule:
     maxDagRunDuration: 3600
 ```
 
-For more information about alerts, refer to _[Cloud Platform Monitoring Guide](/docs/public/monitoring.md)_.
+For more information about alerts, refer to _[Cloud Platform Monitoring Guide](/docs/monitoring.md)_.
 
 You can also specify custom alerts. For example, you can specify the alert for log leaning dag running too long:
 

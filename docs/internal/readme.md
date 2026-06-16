@@ -67,11 +67,11 @@ The changes can be merged to main if:
 
 ### Deploy to k8s
 
-See [installation.md](/docs/public/installation.md)
+See [installation.md](/docs/installation.md)
 
 ## How to debug and troubleshoot
 
-For general configuration troubleshooting, refer to [troubleshooting.md](/docs/public/troubleshooting.md)
+For general configuration troubleshooting, refer to [troubleshooting.md](/docs/troubleshooting.md)
 
 Most common issues and respective most common place where to look for a problem:
 

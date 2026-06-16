@@ -10,7 +10,7 @@ The following topics are described in this section:
 * [REST API](#rest-api)
   * [Contract](#contract)
   * [Security](#security)
-* [Airflow Service Installation Procedure](/docs/public/installation.md#airflow-site-manager-and-dr-deployment)
+* [Airflow Service Installation Procedure](/docs/installation.md#airflow-site-manager-and-dr-deployment)
 * [Handling Split-Brain](#handling-split-brain)
 * [Alerts Suppression on 'standby' Site](#alerts-suppression-on-standby-site)
 
@@ -24,7 +24,7 @@ For more details, refer to [site manager](https://github.com/Netcracker/DRNaviga
 
 The following image shows the architecture, scaling, and flow for Airflow site manager.
 
-![Scale up/down scheme](/docs/public/images/dr_design.drawio.png)
+![Scale up/down scheme](/docs/images/dr_design.drawio.png)
 
 In the active mode, Airflow is scaled up.  
 In the standby mode, Airflow is scaled down to 0 replicas.
@@ -105,7 +105,7 @@ The REST API information is given below.
 
 If `SITE_MANAGER_SERVICE_ACCOUNT_NAME` and `SITE_MANAGER_NAMESPACE` are enabled, the Airflow Site-Manager endpoints are secured using Kubernetes JWT Service Account Tokens.
 Airflow Site-Manager requires a "Authorization": "Bearer <TOKEN>" Header to be set for the requests.
-For the configuration details, refer to the [Configuring Airflow Service](/docs/public/installation.md#airflow-site-manager-and-dr-deployment) section.
+For the configuration details, refer to the [Configuring Airflow Service](/docs/installation.md#airflow-site-manager-and-dr-deployment) section.
 
 ### Contract
 

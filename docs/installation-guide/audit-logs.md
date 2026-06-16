@@ -145,4 +145,4 @@ This tab contains events such as:
 * cli_delete_user
 * cli_create_user
 
-![Logs](/docs/public/images/airflow-ui-logs.png)
+![Logs](/docs/images/airflow-ui-logs.png)

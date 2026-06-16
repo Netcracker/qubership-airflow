@@ -55,7 +55,7 @@ technologies being used by this application.
 
 The following image shows high level overview of Airflow.
 
-![High Level Airflow Overview](/docs/public/images/airflow_hl_overview.drawio.png)
+![High Level Airflow Overview](/docs/images/airflow_hl_overview.drawio.png)
 
 For more information, refer to [https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html).
 
@@ -110,11 +110,11 @@ The Qubership version supports two executors for the Airflow deployment: `celery
 
 **Celery executor**:
 
-![alt text](/docs/public/images/airflow_arch_celery.drawio.png "Airflow Celery Executor Kubernetes deployment")
+![alt text](/docs/images/airflow_arch_celery.drawio.png "Airflow Celery Executor Kubernetes deployment")
 
 **Kubernetes executor**:
 
-![Airflow Kubernetes Executor Kubernetes deployment](/docs/public/images/airflow_arch_kubernetes.drawio.png)
+![Airflow Kubernetes Executor Kubernetes deployment](/docs/images/airflow_arch_kubernetes.drawio.png)
 
 Following the above pictures, let us describe the main parts of the Airflow K8s deployment:
 
@@ -145,9 +145,9 @@ For HA deployment, it is possible to deploy multiple scheduler/webserver/worker 
 
 In DR deployment, Airflow uses the same database on both sides, but on one side, Airflow pods are scaled down (PG database is replicated using PG mechanisms). For DR deployment, the sitemanager Airflow pod is used. After PG switchover, the DR sitemanager downscales Airflow pods on one side and upscales it on the other. The deployment schema is as shown in the following image:
 
-![DR airflow schema](/docs/public/images/dr_design.drawio.png)
+![DR airflow schema](/docs/images/dr_design.drawio.png)
 
-For more information, refer to the qubership [Airflow Site Manager](/docs/public/airflow-site-manager.md) section.
+For more information, refer to the qubership [Airflow Site Manager](/docs/airflow-site-manager.md) section.
 
 ## Integration with Managed Services
 

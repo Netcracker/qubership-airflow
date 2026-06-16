@@ -78,7 +78,7 @@ This section is based on the official Airflow metrics and shows metrics related 
 
 It displays the overall information about the Airflow Site Manager service.
 
-![Airflow SM Overview](/docs/public/images/airflow_sm_overview.png)
+![Airflow SM Overview](/docs/images/airflow_sm_overview.png)
 
 * `Airflow Site Manager State` - Displays the state of the Airflow Site Manager. The states are `UP`, `DOWN`, and `Not Installed`.
 * `Pod Status` - Displays the status of an Airflow Site Manager pod. The possible values are `Failed`, `Pending`, `Running`, `Succeeded`, and `Unknown`. 

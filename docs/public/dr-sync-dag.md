@@ -6,7 +6,7 @@ DR DAG consists of three parts: The HDFS part, responsible for copying HDFS file
 
 ## HDFS Part
 
-![HDFS sync scheme for a folder](/docs/public/images/DRscheme.drawio.png)
+![HDFS sync scheme for a folder](/docs/images/DRscheme.drawio.png)
 
 DR synchronization works based on HDFS snapshots and is performed by Airflow DAG tasks. 
 

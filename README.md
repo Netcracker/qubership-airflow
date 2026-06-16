@@ -10,14 +10,14 @@ These images can be found on [packages tab](https://github.com/orgs/Netcracker/p
 
 ## Table of Contents
 
-* [Installation Guide](/docs/public/installation.md)
-* [Maintenance Guide](/docs/public/maintenance.md)
-* [Audit Logs](/docs/public/audit-logs.md)
-* [Running Spark Applications](/docs/public/how-to-run-spark-apps.md)
-* [Monitoring](/docs/public/monitoring.md)
-* [Performance](/docs/public/performance.md)
-* [Troubleshooting Guide](/docs/public/troubleshooting.md)
-* [Airflow Site Manager](/docs/public/airflow-site-manager.md)
+* [Installation Guide](/docs/installation.md)
+* [Maintenance Guide](/docs/maintenance.md)
+* [Audit Logs](/docs/audit-logs.md)
+* [Running Spark Applications](/docs/how-to-run-spark-apps.md)
+* [Monitoring](/docs/monitoring.md)
+* [Performance](/docs/performance.md)
+* [Troubleshooting Guide](/docs/troubleshooting.md)
+* [Airflow Site Manager](/docs/airflow-site-manager.md)
 
 Apache airflow engine and helm charts.  
 For more information see
@@ -65,4 +65,4 @@ Main values.yaml file changes:
 * Airflow config is modified in order to set different images for k8s executor pods.
 * New parameters related to custom Qubership certManager integration, monitoring, Site-Manager, integration tests, statusProvisioner and pre-install job are added.
 
-For more information about the helm chart changes, please refer to [installation.md](/docs/public/installation.md).
+For more information about the helm chart changes, please refer to [installation.md](/docs/installation.md).

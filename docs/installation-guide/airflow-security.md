@@ -19,16 +19,16 @@ Additionally, when writing DAGs, users can access KubeAPI in order to execute cu
 ## Secure Protocols
 
 Airflow supports secure connection to various services:
-* For configuration of secure connection to DBaaS/MaaS API, refer to the [DBaaS Integration](/docs/public/installation.md#dbaas-integration) section in the _Airflow Service Installation Procedure_.
-* For configuration of secure connections recieved from DBaaS/MaaS, refer to the [Using SSL with Connections Received from DBaaS](/docs/public/installation.md#using-ssl-with-connections-received-from-dbaas) section in the _Airflow Service Installation Procedure_.
+* For configuration of secure connection to DBaaS/MaaS API, refer to the [DBaaS Integration](/docs/installation.md#dbaas-integration) section in the _Airflow Service Installation Procedure_.
+* For configuration of secure connections recieved from DBaaS/MaaS, refer to the [Using SSL with Connections Received from DBaaS](/docs/installation.md#using-ssl-with-connections-received-from-dbaas) section in the _Airflow Service Installation Procedure_.
 * For configuration TLS for providers
 When configuring TLS for manually created connections, refer to the _Official Airflow Provider Documentation_ at https://airflow.apache.org/docs/#providers-packages-docs-apache-airflow-providers-index-html.
-* For configuring TLS for airflow logs in S3, refer to the [Using S3 Remote Storage for Storing Task Logs with Kubernetes Executor](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor) section in the _Airflow Service Installation Procedure_.
-* For enabling TLS on airflow user interface, refer to the [Using S3 Remote Storage for Storing Task Logs with Kubernetes Executor](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor) section in the _Airflow Service Installation Procedure_.
-* For enabling TLS on airflow ingresses, refer to the [Enabling HTTPS for Airflow Ingresses](/docs/public/installation.md#enabling-https-for-airflow-ingresses) section in the _Airflow Service Installation Procedure_.
-* For enabling TLS on airflow user interface inside Kubernetes, refer to the [Enabling TLS on airflow UI inside kubernetes](/docs/public/installation.md#enabling-tls-on-airflow-ui-inside-kubernetes) section in the _Airflow Service Installation Procedure_.
-* For configuring airflow with TLS IDP, refer to the [Keycloak With TLS](/docs/public/installation.md#keycloak-with-tls) section in the _Airflow Service Installation Procedure_.
-* For configuring Rclone TLS, refer to the [Using TLS for Rclone Endpoint](/docs/public/installation.md#using-tls-for-rclone-endpoint) section in the _Airflow Service Installation Procedure_.
+* For configuring TLS for airflow logs in S3, refer to the [Using S3 Remote Storage for Storing Task Logs with Kubernetes Executor](/docs/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor) section in the _Airflow Service Installation Procedure_.
+* For enabling TLS on airflow user interface, refer to the [Using S3 Remote Storage for Storing Task Logs with Kubernetes Executor](/docs/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor) section in the _Airflow Service Installation Procedure_.
+* For enabling TLS on airflow ingresses, refer to the [Enabling HTTPS for Airflow Ingresses](/docs/installation.md#enabling-https-for-airflow-ingresses) section in the _Airflow Service Installation Procedure_.
+* For enabling TLS on airflow user interface inside Kubernetes, refer to the [Enabling TLS on airflow UI inside kubernetes](/docs/installation.md#enabling-tls-on-airflow-ui-inside-kubernetes) section in the _Airflow Service Installation Procedure_.
+* For configuring airflow with TLS IDP, refer to the [Keycloak With TLS](/docs/installation.md#keycloak-with-tls) section in the _Airflow Service Installation Procedure_.
+* For configuring Rclone TLS, refer to the [Using TLS for Rclone Endpoint](/docs/installation.md#using-tls-for-rclone-endpoint) section in the _Airflow Service Installation Procedure_.
 
 ## Local Accounts
 
@@ -72,4 +72,4 @@ When using LDAP/IDP, account should be blocked on the IDP side (AUTH_ROLES_SYNC_
 
 ## Security Related Events Logs
 
-It is possible too see some security related events in Web user interface on the **Browse** -> **Audit Logs** tab. In pod logs, it is possible to use [Audit logging](/docs/public/installation.md#audit-logs). When using IDP(Keycloak), user management operations are executed on IDP side. Without IDP user management operations performed in the user interface are not logged itself per second, but it is possible to find them in the logs by request address, for example, for adding user `10.227.209.117 - - [18/Dec/2024:13:37:39 +0000] "GET /users/add` . The same goes for login/logout events: `10.227.209.117 - - [18/Dec/2024:13:55:09 +0000] "POST /logout/` or `10.227.209.117 - - [18/Dec/2024:13:55:26 +0000] "GET /login/` . For failed login event, it is possible to audit log, for example: `[2024-12-18T13:58:57.716+0000] {override.py:2214} INFO - [AUDIT] Login Failed for user: wsdf`.
+It is possible too see some security related events in Web user interface on the **Browse** -> **Audit Logs** tab. In pod logs, it is possible to use [Audit logging](/docs/installation.md#audit-logs). When using IDP(Keycloak), user management operations are executed on IDP side. Without IDP user management operations performed in the user interface are not logged itself per second, but it is possible to find them in the logs by request address, for example, for adding user `10.227.209.117 - - [18/Dec/2024:13:37:39 +0000] "GET /users/add` . The same goes for login/logout events: `10.227.209.117 - - [18/Dec/2024:13:55:09 +0000] "POST /logout/` or `10.227.209.117 - - [18/Dec/2024:13:55:26 +0000] "GET /login/` . For failed login event, it is possible to audit log, for example: `[2024-12-18T13:58:57.716+0000] {override.py:2214} INFO - [AUDIT] Login Failed for user: wsdf`.

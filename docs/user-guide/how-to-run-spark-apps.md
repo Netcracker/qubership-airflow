@@ -99,11 +99,11 @@ You can add the connection using any one of the following ways:
 
 * Using Airflow UI 
   1. Login to the Airflow UI and navigate to the Admin > Connections menu.
-    ![alt text](/docs/public/images/airflow-connections-menu.png "Airflow Connections")
+    ![alt text](/docs/images/airflow-connections-menu.png "Airflow Connections")
   2. Add a connection of the `Kubernetes Cluster Connection` type.
     The connection name should be `kubernetes_default`.  
     The checkbox **In cluster configuration** should be checked if airflow and Spark operator are deployed on the same Kubernetes. Otherwise, the Kubernetes connection parameters should be specified.
-    ![alt text](/docs/public/images/airflow-kubernetes-connection.png "Airflow Kubernetes Connection")
+    ![alt text](/docs/images/airflow-kubernetes-connection.png "Airflow Kubernetes Connection")
     
 * Add the connection during the Airflow deployment or upgrade by specifying the connection in the Airflow deployment parameters:
   
