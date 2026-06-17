@@ -1512,7 +1512,7 @@ logs:
 
 ### Enabling Custom Logging Config Class
 
-**WARNING: Writing task logs to stdout at the moment is not supported for airflow 3.**.
+**WARNING: This section is deprecated and might be removed in the future. Additionally, writing task logs to stdout at the moment is not supported for airflow 3.**.
 
 It is possible to enable the `QS_DEFAULT_LOGGING_CONFIG` logging config class, which comes with the qubership chart: 
 

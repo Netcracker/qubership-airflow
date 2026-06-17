@@ -1,3 +1,5 @@
+**WARNING: This section is deprecated and might be removed in the future.**
+
 Auditing helps to maintain and secure the logs of critical activities in an Airflow service environment.
 
 Topics covered in this section:
