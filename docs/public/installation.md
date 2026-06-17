@@ -1556,10 +1556,11 @@ config:
 
 * To write logs only to stdout. To do so, it is necessary to specify:
 
-`workers.persistence.enabled=false`
-
 ```yaml
 ...
+workers:
+  persistence:
+    enabled: false
 airflowLocalSettings:  |-
     {{ .Files.Get "qs_files/qs_platform_logging_config.py" }}
 ...
