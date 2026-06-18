@@ -186,6 +186,22 @@ jobs:
           skip_upload: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      
+      - name: Wait until release exists
+        run: |
+          for i in {1..12}; do
+            if gh release view "${{ inputs.release }}" >/dev/null 2>&1; then
+              echo "Release found"
+              exit 0
+            fi
+            echo "Waiting for release to be created..."
+            sleep 5
+          done
+
+          echo "Release not found after waiting"
+          exit 1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
 
       - name: "Release-drafter"
         uses: netcracker/release-drafter@v1.0.1
@@ -197,6 +213,7 @@ jobs:
           version: ${{ inputs.release }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Upload Assets
         uses: netcracker/qubership-workflow-hub/actions/assets-action@v2.4.0
         with:
