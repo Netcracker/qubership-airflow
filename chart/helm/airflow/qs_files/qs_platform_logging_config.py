@@ -198,6 +198,26 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
             "handlers": ["audit"],
             "level": AUDIT_LOG_LEVEL,
             "propagate": False,
+        },
+        "airflow.api_fastapi.auth": {
+            "handlers": ["audit"],
+            "level": AUDIT_LOG_LEVEL,
+            "propagate": False,
+        },
+        "airflow.providers.simple.auth_manager": {
+            "handlers": ["audit"],
+            "level": AUDIT_LOG_LEVEL,
+            "propagate": False,
+        },
+        "airflow.providers.keycloak.auth_manager": {
+            "handlers": ["audit"],
+            "level": AUDIT_LOG_LEVEL,
+            "propagate": False,
+        },
+        "qskeycloakintegration.qs_keycloak_integration": {
+            "handlers": ["audit"],
+            "level": AUDIT_LOG_LEVEL,
+            "propagate": False,
         }
     },
     "root": {

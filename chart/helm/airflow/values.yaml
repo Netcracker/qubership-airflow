@@ -354,7 +354,7 @@ airflowPodAnnotations: {}
 airflowConfigAnnotations: {}
 
 # `airflow_local_settings` file as a string (templated).
-airflowLocalSettings: '{{ .Files.Get "qs_files/qs_platform_logging_config.py" }}'
+airflowLocalSettings: ~
 
 # Enable RBAC (default on most clusters these days)
 rbac:
@@ -4175,16 +4175,16 @@ config:
     executor: '{{ .Values.executor }}'
     auth_manager: "airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager"
   logging:
-    logging_config_class: airflow_local_settings.QS_DEFAULT_LOGGING_CONFIG
-    qs_logging_type: filesystem
-    task_log_prefix_template: "[DAG_ID]:'{{ \"{{ ti.dag_id }}\" }}' [TASK_ID]:'{{ \"{{ ti.task_id }}\" }}' [TIMESTAMP]:'{{ \"{{ ts }}\" }}' [TRY_NUMBER]:'{{ \"{{ ti.try_number }}\" }}'"
     remote_logging: '{{- ternary "True" "False" (or .Values.elasticsearch.enabled .Values.opensearch.enabled) }}'
     colored_console_log: 'False'
-    audit_log_level: INFO
-    # QS logging DAG processing parameters
+    # QS logging parameters
+    # logging_config_class: airflow_local_settings.QS_DEFAULT_LOGGING_CONFIG
+    # qs_logging_type: filesystem
+    # task_log_prefix_template: "[DAG_ID]:'{{ \"{{ ti.dag_id }}\" }}' [TASK_ID]:'{{ \"{{ ti.task_id }}\" }}' [TIMESTAMP]:'{{ \"{{ ts }}\" }}' [TRY_NUMBER]:'{{ \"{{ ti.try_number }}\" }}'"
     # qs_processor_logging_level: INFO
     # qs_dag_parsing_logging_level: INFO
-    log_format_audit: '[%%(asctime)s] {%%(filename)s:%%(lineno)d} %%(levelname)s - [AUDIT] %%(message)s'
+    # audit_log_level: INFO
+    # log_format_audit: '[%%(asctime)s] {%%(filename)s:%%(lineno)d} %%(levelname)s - [AUDIT] %%(message)s'
   metrics:
     statsd_on: '{{ ternary "True" "False" .Values.statsd.enabled }}'
     statsd_port: 9125

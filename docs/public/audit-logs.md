@@ -1,3 +1,5 @@
+**WARNING: This section is deprecated and might be removed in the future.**
+
 Auditing helps to maintain and secure the logs of critical activities in an Airflow service environment.
 
 Topics covered in this section:
@@ -26,7 +28,7 @@ When using Qubership Airflow logging configuration, audit logs contain the '[AUD
 
 # Audit Logs Formatting
 
-By default, Airflow logs audit events. To distinguish the logs, the following has been added to [QS_DEFAULT_LOGGING_CONFIG](../../chart/helm/airflow/qs_files/qs_platform_logging_config.py):
+With enabled`QS_DEFAULT_LOGGING_CONFIG` logging config class Airflow logs audit events. To distinguish the logs, the following has been added to [QS_DEFAULT_LOGGING_CONFIG](../../chart/helm/airflow/qs_files/qs_platform_logging_config.py):
 
 * Audit log formatter to add '[AUDIT]' to audit logs
 * Audit log handler
