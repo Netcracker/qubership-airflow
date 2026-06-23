@@ -481,7 +481,7 @@ class DBAASSecretsBackend(
         elif "name" in redis_connection:
             redis_dbname = redis_connection["name"]
         else:
-            logging.warning(
+            logging.info(
                 "DBAAS returned connection string for redis does not contain database name"
             )
             redis_dbname = redis_db_name
@@ -524,9 +524,9 @@ class DBAASSecretsBackend(
             return super().get_connection(conn_id, team_name)
         return None
 
-    def get_variable(self, key: str):
+    def get_variable(self, key: str, team_name: str | None = None):
         if local_filesystem_backend_enabled:
-            return super().get_variable(key)
+            return super().get_variable(key, team_name=team_name)
         return None
 
     def get_config(self, key: str):
