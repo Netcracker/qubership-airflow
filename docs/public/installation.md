@@ -111,7 +111,10 @@ The image contains Python script for the PG database creation.
 
 PYTHONDONTWRITEBYTECODE is set to 1 in order to prevent writing python bytecode and avoid potential issues with RO filesystem and DAG bundles.
 
-Image Default Entrypoint is modified in order to avoid modifying `/etc/passwd` when the username is not set. Instead, [nss_wrapper](https://cwrap.org/nss_wrapper.html) is used. Workaround for [https://github.com/apache/airflow/issues/17546](https://github.com/apache/airflow/issues/17546) is also removed from Entrypoint since MySQL is not supported by Qubership platform.
+Image Default Entrypoint is modified to avoid the modification of `/etc/passwd` when the username is not set. Instead, [nss_wrapper](https://cwrap.org/nss_wrapper.html) is used. Since celery workers use py-setproctitle that can cause [issues with environment variables](https://github.com/dvarrazzo/py-setproctitle#environment-variables). Therefore, with nss_wrapper, additionally `LNAME` environment variable is exported in Entrypoint to provide the username for python processes. 
+**Note**: Alternatively, it is possible to set `SPT_NOENV` environment variable instead of setting `LNAME` to avoid clobbering `/proc/PID/environ`. 
+
+Workaround for [https://github.com/apache/airflow/issues/17546](https://github.com/apache/airflow/issues/17546) is also removed from Entrypoint since MySQL is not supported by Qubership platform.
 
 Also, the image has a package for Qubership DBaaS/MaaS integration.
 
