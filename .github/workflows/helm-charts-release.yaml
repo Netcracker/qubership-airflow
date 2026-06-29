@@ -119,8 +119,9 @@ jobs:
         uses: netcracker/qubership-workflow-hub/actions/charts-values-update-action@v2.4.0
         with:
           release-version: ${{ inputs.release }}
-          chart-version: "1.19.0-dev"
+          chart-version: "1.22.0-dev"
           config-file: .github/helm-charts-release-config.yaml
+          default-tag: ${{inputs.release}}
         env:
           ${{ insert }}: ${{ vars }}
       - name: "Debug"
@@ -192,6 +193,7 @@ jobs:
           for i in {1..12}; do
             if gh release view "${{ inputs.release }}" >/dev/null 2>&1; then
               echo "Release found"
+              sleep 60
               exit 0
             fi
             echo "Waiting for release to be created..."
