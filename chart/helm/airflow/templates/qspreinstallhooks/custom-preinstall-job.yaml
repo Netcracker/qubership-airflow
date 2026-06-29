@@ -74,6 +74,10 @@ spec:
           {{- include "custom_job_custom_airflow_environment_from" . | default "\n  []" | indent 10 }}
           env:
           {{- include "custom_job_custom_airflow_environment" . | indent 10 }}
+          {{- if and .Values.integrationTests.enabled .Values.integrationTests.dbaasM2mEnabled }}
+          - name: IT_SA_NAME
+            value: {{ .Values.integrationTests.serviceAccount.name | default "airflow-integration-tests" | quote }}
+          {{- end }}
           image: {{ template "airflow_image" . }}
           imagePullPolicy: {{ .Values.images.airflow.pullPolicy }}
           securityContext: {{ $containerSecurityContext | nindent 12 }}

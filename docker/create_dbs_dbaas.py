@@ -48,6 +48,7 @@ if dbaas_m2m_enabled and not dbaas_user:
     headers["Authorization"] = f"Bearer {token}"
     auth = None
 helm_release_name = read_secret_var_from_file("HELM_RELEASE_NAME", "airflow")
+it_sa_name = os.getenv("IT_SA_NAME")
 dbaas_pg_microservice_name = read_secret_var_from_file(
     "DBAAS_PG_MICROSERVICE_NAME", "airflow"
 )
@@ -180,7 +181,8 @@ def grant_permissions_for_sas():
                 {"name": f"{helm_release_name}-worker", "roles": ["admin"]},
                 {"name": f"{helm_release_name}-triggerer", "roles": ["admin"]},
                 {"name": f"{helm_release_name}-flower", "roles": ["admin"]},
-            ],
+            ]
+            + ([{"name": it_sa_name, "roles": ["admin"]}] if it_sa_name else []),
             "disableGlobalPermissions": False,
         },
     }

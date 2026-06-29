@@ -4492,6 +4492,7 @@ airflow-site-manager:
 
 integrationTests:
   enabled: false
+  dbaasM2mEnabled: false
 
 # dbaas logic:
 #

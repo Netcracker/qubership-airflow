@@ -3,7 +3,9 @@ import requests
 import json
 import logging
 import base64
+import os
 import re
+from pathlib import Path
 
 pl_lib = PlatformLibrary(managed_by_operator="true")
 
@@ -49,7 +51,17 @@ def get_pg_connection_properties(
                     "isServiceDb": "true",
                 },
             }
-            auth = (dbaas_user, dbaas_password)
+            m2m_enabled = os.getenv("DBAAS_M2M_ENABLED", "").lower() not in (
+                "",
+                "false",
+                "no",
+            )
+            if m2m_enabled:
+                token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
+                headers["Authorization"] = f"Bearer {token}"
+                auth = None
+            else:
+                auth = (dbaas_user, dbaas_password)
             response = requests.put(
                 f"{dbaas_host}/api/v3/dbaas/{namespace}/databases",
                 headers=headers,
