@@ -9,7 +9,7 @@ The topics covered in this section are as follows:
 * [Task does not Execute and Worker Logs Contain Redis Connection Error](#task-does-not-execute-and-worker-logs-contain-redis-connection-error)
 * [Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible](#task-fails-with-error-and-no-logs-available-while-the-logs-for-other-successful-tasks-are-visible)
 * [Wrong Protocol Resolution in redirect_uri in IDP Integration](#wrong-protocol-resolution-in-redirect_uri-in-idp-integration)
-* [Airflow Logs are not Available for Some Attempts in Tasks with Multpile Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multpile-tries)
+* [Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multiple-tries)
 * [Airflow API Server Startup Failed due to Insufficient Resources](#airflow-api-server-startup-failed-due-to-insufficient-resources)
 * [Error Codes](#error-codes)
 
@@ -188,9 +188,9 @@ class CustomAuthRemoteUserView(AuthOAuthView):
 
 ```
 
-# Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries 
+# Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries
 
-This issue can be observed in airflow setups with multiple workers and with log stored on workers. In this case, airflow logs are present in the airflow user interface for the latest try of a task with multpile tries but are missing for some of other tries. The issue happens because airflow task log reader tries to find the logs only on the worker, where the latest attempt was executed. Hence, if previous tries were executed on different workers, the logs will not be visible in airflow user interface. The logs for the previous attemts can be found on other workers in the **/opt/airflow/logs** folder. To check on what worker previous attempts were executed, it is possible to check `Details` tab of a task and pick required Task Try on this tab. If it is critical to view the task logs in the user interface, it is recommended to configure the remote logging storage. It can be done similarly to [logging configuration for kubernetes executor workers](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor).
+This issue can be observed in airflow setups with multiple workers and with log stored on workers. In this case, airflow logs are present in the airflow user interface for the latest try of a task with multiple tries but are missing for some of other tries. The issue happens because airflow task log reader tries to find the logs only on the worker, where the latest attempt was executed. Hence, if previous tries were executed on different workers, the logs will not be visible in airflow user interface. The logs for the previous attemts can be found on other workers in the **/opt/airflow/logs** folder. To check on what worker previous attempts were executed, it is possible to check `Details` tab of a task and pick required Task Try on this tab. If it is critical to view the task logs in the user interface, it is recommended to configure the remote logging storage. It can be done similarly to [logging configuration for kubernetes executor workers](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor).
 
 # Airflow API Server Startup Failed due to Insufficient Resources
  
