@@ -335,7 +335,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)       | 0.1       | 256     | 1          |
 | Migrate database job (`*`)(`**`)      | 0.5       | 512     | 1          |
 | Create User Job (`*`)(`**`)           | 0.5       | 512     | 1          |
-| Cleanup Databae job (`*`)(`**`)       | 0.5       | 512     | 1          |
+| Cleanup Database job (`*`)(`**`)       | 0.5       | 512     | 1          |
 | Custom Preinstall Job (`*`)(`**`)     | 0.1       | 512     | 1          |
 | GitSync(Rclone) sidecar (`*`)         | 0.2       | 512     | 2          |
 | StatsD prometheus exporter (`*`)      | 0.1       | 256     | 1          |
@@ -368,7 +368,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)       | 0.1 | 320     | 1          |
 | Migrate database job (`*`)(`**`)      | 1   | 1024    | 1          |
 | Create User Job (`*`)(`**`)           | 0.5 | 512     | 1          |
-| Cleanup Databae job (`*`)(`**`)       | 0.5 | 512     | 1          |
+| Cleanup Database job (`*`)(`**`)       | 0.5 | 512     | 1          |
 | Custom Preinstall Job (`*`)(`**`)     | 0.1 | 512     | 1          |
 | GitSync(Rclone) sidecar (`*`)         | 0.4 | 768     | 2          |
 | StatsD prometheus exporter (`*`)      | 0.8 | 1024    | 1          |
@@ -399,7 +399,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)      | 0.1 | 320     | 1                    |
 | Migrate database job (`*`)(`**`)     | 1   | 1024    | 1                    |
 | Create User Job (`*`)(`**`)          | 0.5 | 512     | 1                    |
-| Cleanup Databae job (`*`)(`**`)      | 0.5 | 768     | 1                    |
+| Cleanup Database job (`*`)(`**`)      | 0.5 | 768     | 1                    |
 | Custom Preinstall Job (`*`)(`**`)    | 0.1 | 512     | 1                    |
 | GitSync(Rclone) sidecar (`*`)        | 0.4 | 768     | 5                    |
 | StatsD prometheus exporter (`*`)     | 0.8 | 1024    | 1                    |
@@ -600,7 +600,7 @@ It is possible to add custom permissions using a Kubernetes role for this job if
 
 |Name|Description|
 |---|---|
-|customPreinstallJob.enable|Specifies if the custom predeploy job is deployed.|
+|customPreinstallJob.enabled|Specifies if the custom predeploy job is deployed.|
 |customPreinstallJob.labels|Specifies the podLabels for the job. They are added to global labels and to labels required by the cloud release.|
 |customPreinstallJob.resources|Specifies the resources for the job.|
 |customPreinstallJob.extraSecrets|Specifies the extra secrets that can be deployed with the job.|
@@ -929,7 +929,7 @@ qs_secrets_backend_params:
     maas_type: kafka
 config:
   secrets:
-    backend: qsbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend # used by default
+    backend: qsdbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend # used by default
     backend_kwargs: "{{ .Values.qs_secrets_backend_params | toJson }}"
 ```
 
@@ -974,7 +974,7 @@ env: # Pass these parameters for DBaaS secrets backend to know that they should 
 ...
 volumes: # Add volumes with sensitive data to all airflow containers
 ...
-  - name: emtpyvolume1
+  - name: emptyvolume1
     emptyDir: {}
   - name: dbaas-connection-params-main
     secret:
@@ -994,7 +994,7 @@ volumes: # Add volumes with sensitive data to all airflow containers
       defaultMode: 0400
 ...
 volumeMounts: # Mount the volumes to all airflow containers
-  - name: emtpyvolume1
+  - name: emptyvolume1
     mountPath: /tmp
   - name: dbaas-connection-params-main
     mountPath: /var/run/secrets/airflow
@@ -1756,7 +1756,7 @@ config:
 
 ### Configuring Git Connection for Git DAG Bundle
 
-To use Git DAG Bundle, it is necessary to configure the git connection. For more information about configuring git connection, please refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning). 
+To use Git DAG Bundle, it is necessary to configure the git connection. For more information about configuring git connection, please refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow-providers-git/stable/connections/git.html](https://airflow.apache.org/docs/apache-airflow-providers-git/stable/connections/git.html). 
 
 **Note**: When using HTTPS authentication, the connection parameters are used to form authenticated URL for `git` command. This means that when using environment variable, username/password must be URL-encoded twice. For example, for `username`/`pass@word` environment varible configuration would look like this:
 
