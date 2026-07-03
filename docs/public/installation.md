@@ -335,7 +335,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)       | 0.1       | 256     | 1          |
 | Migrate database job (`*`)(`**`)      | 0.5       | 512     | 1          |
 | Create User Job (`*`)(`**`)           | 0.5       | 512     | 1          |
-| Cleanup Databae job (`*`)(`**`)       | 0.5       | 512     | 1          |
+| Cleanup Database job (`*`)(`**`)       | 0.5       | 512     | 1          |
 | Custom Preinstall Job (`*`)(`**`)     | 0.1       | 512     | 1          |
 | GitSync(Rclone) sidecar (`*`)         | 0.2       | 512     | 2          |
 | StatsD prometheus exporter (`*`)      | 0.1       | 256     | 1          |
@@ -368,7 +368,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)       | 0.1 | 320     | 1          |
 | Migrate database job (`*`)(`**`)      | 1   | 1024    | 1          |
 | Create User Job (`*`)(`**`)           | 0.5 | 512     | 1          |
-| Cleanup Databae job (`*`)(`**`)       | 0.5 | 512     | 1          |
+| Cleanup Database job (`*`)(`**`)       | 0.5 | 512     | 1          |
 | Custom Preinstall Job (`*`)(`**`)     | 0.1 | 512     | 1          |
 | GitSync(Rclone) sidecar (`*`)         | 0.4 | 768     | 2          |
 | StatsD prometheus exporter (`*`)      | 0.8 | 1024    | 1          |
@@ -399,7 +399,7 @@ The profile resources are shown below:
 | Worker log groomer sidecar(`*`)      | 0.1 | 320     | 1                    |
 | Migrate database job (`*`)(`**`)     | 1   | 1024    | 1                    |
 | Create User Job (`*`)(`**`)          | 0.5 | 512     | 1                    |
-| Cleanup Databae job (`*`)(`**`)      | 0.5 | 768     | 1                    |
+| Cleanup Database job (`*`)(`**`)      | 0.5 | 768     | 1                    |
 | Custom Preinstall Job (`*`)(`**`)    | 0.1 | 512     | 1                    |
 | GitSync(Rclone) sidecar (`*`)        | 0.4 | 768     | 5                    |
 | StatsD prometheus exporter (`*`)     | 0.8 | 1024    | 1                    |
@@ -600,7 +600,7 @@ It is possible to add custom permissions using a Kubernetes role for this job if
 
 |Name|Description|
 |---|---|
-|customPreinstallJob.enable|Specifies if the custom predeploy job is deployed.|
+|customPreinstallJob.enabled|Specifies if the custom predeploy job is deployed.|
 |customPreinstallJob.labels|Specifies the podLabels for the job. They are added to global labels and to labels required by the cloud release.|
 |customPreinstallJob.resources|Specifies the resources for the job.|
 |customPreinstallJob.extraSecrets|Specifies the extra secrets that can be deployed with the job.|
@@ -929,7 +929,7 @@ qs_secrets_backend_params:
     maas_type: kafka
 config:
   secrets:
-    backend: qsbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend # used by default
+    backend: qsdbaasintegration.dbaas_secrets_backend.DBAASSecretsBackend # used by default
     backend_kwargs: "{{ .Values.qs_secrets_backend_params | toJson }}"
 ```
 
@@ -974,7 +974,7 @@ env: # Pass these parameters for DBaaS secrets backend to know that they should 
 ...
 volumes: # Add volumes with sensitive data to all airflow containers
 ...
-  - name: emtpyvolume1
+  - name: emptyvolume1
     emptyDir: {}
   - name: dbaas-connection-params-main
     secret:
@@ -994,7 +994,7 @@ volumes: # Add volumes with sensitive data to all airflow containers
       defaultMode: 0400
 ...
 volumeMounts: # Mount the volumes to all airflow containers
-  - name: emtpyvolume1
+  - name: emptyvolume1
     mountPath: /tmp
   - name: dbaas-connection-params-main
     mountPath: /var/run/secrets/airflow
@@ -1756,7 +1756,7 @@ config:
 
 ### Configuring Git Connection for Git DAG Bundle
 
-To use Git DAG Bundle, it is necessary to configure the git connection. For more information about configuring git connection, please refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#disable-bundle-versioning). 
+To use Git DAG Bundle, it is necessary to configure the git connection. For more information about configuring git connection, please refer to the _Official Airflow Documentation_ at [https://airflow.apache.org/docs/apache-airflow-providers-git/stable/connections/git.html](https://airflow.apache.org/docs/apache-airflow-providers-git/stable/connections/git.html). 
 
 **Note**: When using HTTPS authentication, the connection parameters are used to form authenticated URL for `git` command. This means that when using environment variable, username/password must be URL-encoded twice. For example, for `username`/`pass@word` environment varible configuration would look like this:
 
@@ -2825,26 +2825,17 @@ statusProvisioner:
 
 ## Integration Tests
 
-**Note**: Airflow integration tests require API authentication to be enabled. During the Airflow installation with tests, the following parameter should be specified:
-
-```
-config:
-  ...
-  api:
-    auth_backend: airflow.providers.fab.auth_manager.api.auth.backend.basic_auth
-  ...
-```
-
 |Name|Description|
 |---|---|
 |integrationTests.enabled|Specifies if the integration tests' components are deployed.|
 |integrationTests.service.name|Specifies the name of Airflow integration tests' service.|
 |integrationTests.secret.airflow.user|Specifies the user for authentication in Airflow.|
 |integrationTests.secret.airflow.password|Specifies the password for authentication in Airflow.|
-|integrationTests.secret.dbaas.user|Specifies the user for authentication in DBaaS.|
-|integrationTests.secret.dbaas.password|Specifies the password for authentication in DBaaS.|
+|integrationTests.secret.dbaas.user|Specifies the user for authentication in DBaaS. Only used when `dbaasM2mEnabled` is `false`.|
+|integrationTests.secret.dbaas.password|Specifies the password for authentication in DBaaS. Only used when `dbaasM2mEnabled` is `false`.|
 |integrationTests.serviceAccount.create|Specifies whether the service account for Airflow integration tests is to be deployed or not.|
 |integrationTests.serviceAccount.name|Specifies the name of the service account that is used to deploy Airflow integration tests.|
+|integrationTests.dbaasM2mEnabled|Enables M2M authentication for DBaaS requests using a Kubernetes projected service account token. When enabled, `secret.dbaas.user` and `secret.dbaas.password` are ignored.|
 |integrationTests.image|Specifies the Docker image of Airflow integration tests.|
 |integrationTests.tags|Specifies the tags combined together with `AND`, `OR`, and `NOT` operators that select test cases to run.|
 |integrationTests.airflowHost|Specifies the host name of the Airflow API server.|
@@ -2852,11 +2843,15 @@ config:
 |integrationTests.workerServiceName|Specifies the name of the Airflow Worker service.|
 |integrationTests.apiServiceName|Specifies the name of the Airflow API service.|
 |integrationTests.schedulerDeployment|Specifies the name of the Airflow Scheduler deployment.|
+|integrationTests.dagProcessorDeployment|Specifies the name of the DAG Processor deployment.|
 |integrationTests.prometheusHost|Specifies the host name of the Prometheus service.|
 |integrationTests.prometheusPort|Specifies the port of the Prometheus service.|
 |integrationTests.executorType|Specifies the type of worker executor. The possible value is `CeleryExecutor` or `KubernetesExecutor`.|
-|integrationTests.securityContexts|Specifies the pod security context for the Airflow integration tests' pod.|
+|integrationTests.securityContexts|Specifies the pod and container security contexts for the Airflow integration tests' pod.|
 |integrationTests.statusWritingEnabled|Specifies the writing status of integration tests' execution to the specified Custom Resource.|
+|integrationTests.isShortStatusMessage|Specifies whether to use a short status message format.|
+|integrationTests.onlyIntegrationTests|Specifies if only integration tests should be run, not affecting deploy status.|
+|integrationTests.resources|Specifies the resource requests and limits for the integration tests' container.|
 |integrationTests.priorityClassName|Specifies the priority class name for integration tests.|
 
 ```yaml
@@ -2868,9 +2863,13 @@ integrationTests:
     airflow:
       user: "admin"
       password: "admin"
+    dbaas:
+      user: ""
+      password: ""
   serviceAccount:
     create: true
     name: "airflow-integration-tests"
+  dbaasM2mEnabled: true
   image: "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
   tags: "smoke"
   airflowHost: "airflow-api-server"
@@ -2878,13 +2877,27 @@ integrationTests:
   workerServiceName: "airflow-worker"
   apiServiceName: "airflow-api-server"
   schedulerDeployment: "airflow-scheduler"
+  dagProcessorDeployment: "airflow-dag-processor"
   prometheusHost: ""
   prometheusPort: 9090
   executorType: "CeleryExecutor"
   statusWritingEnabled: "true"
+  isShortStatusMessage: "true"
+  onlyIntegrationTests: "false"
   securityContexts:
-    pod: {}
-    container: {}
+    pod:
+      runAsUser: 50000
+      runAsNonRoot: true
+      runAsGroup: 50000
+      fsGroup: 50000
+      seccompProfile:
+        type: RuntimeDefault
+    container:
+      capabilities:
+        drop:
+          - ALL
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
   resources: {}
 ```
 

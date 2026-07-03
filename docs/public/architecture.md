@@ -7,7 +7,7 @@ The following topics describe the architectural features of the Airflow service.
   * [Scheduler](#scheduler)
   * [Executor](#executor)
   * [Workers](#workers)
-  * [Webserver](#webserver)
+  * [API server](#api-server)
   * [DAG Storage](#dag-storage)
   * [StatsD Exporter](#statsd-exporter)
   * [DR Site Manager](#dr-site-manager)
@@ -34,7 +34,7 @@ The modifications and additional features include the following:
 
 * Support of DR deployment.
 * Custom pre-install job support (can be used to create database directly or through qubership DBAAS).
-* Custom Airflow secrets backend to get Airflow Redis, PG and Kafka connections from Qubesrhip DBaaS/MaaS. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/index.html).
+* Custom Airflow secrets backend to get Airflow Redis, PG and Kafka connections from Qubership DBaaS/MaaS. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/stable/security/secrets/secrets-backend/index.html).
 * Additional Python logging configuration to support writing logs to stdout(Only for airflow 2 for now).
 * LDAP and IDP(Keycloak) security integrations using [airflow FAB provider](https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/index.html).
 * Monitoring integrations for [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/metrics.html) and [Airflow plugin](https://github.com/epoch8/airflow-exporter).
@@ -151,7 +151,7 @@ For more information, refer to the qubership [Airflow Site Manager](/docs/public
 
 ## Integration with Managed Services
 
-Tnformation about Intergration with managed services is provided below.
+Information about Integration with managed services is provided below.
 
 ### Google Cloud
 

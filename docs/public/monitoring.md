@@ -8,7 +8,7 @@ The Airflow Overview dashboard provides information about Airflow status, pods, 
 
 The following is a list of dashboard variables:
 
-* `datsource` - Specifies the datasource for the dashboard.
+* `datasource` - Specifies the datasource for the dashboard.
 * `airflow_namespace` - Specifies the Airflow namespace.
 * `dag_id` - Specifies the dag_id.
 * `task_id` - Specifies the task_id.
@@ -62,7 +62,7 @@ This section is based on the official Airflow metrics and shows metrics related 
 * `DAG processing last run seconds ago` - Shows time in seconds since last DAG processing.
 * `Average dag processing duration` - Shows milliseconds taken to load the given DAG file.
 
-## Stasd DAG and Task Execution Metrics
+## StatsD DAG and Task Execution Metrics
 
 This section is based on the official Airflow metrics and shows metrics related to DAG and task execution. The following panels are available:
 

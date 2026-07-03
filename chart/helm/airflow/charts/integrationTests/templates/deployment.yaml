@@ -82,6 +82,10 @@ spec:
               value: {{ .Values.prometheusPort | quote }}
             - name: RANDOM_RUN_TRIGGER
               value: {{ randAlphaNum 10 | quote }}
+            {{- if .Values.dbaasM2mEnabled }}
+            - name: DBAAS_M2M_ENABLED
+              value: "true"
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
@@ -92,6 +96,11 @@ spec:
               mountPath: /opt/robot/output
             - name: tmpvolume
               mountPath: /tmp
+            {{- if .Values.dbaasM2mEnabled }}
+            - name: dbaas-m2m-token
+              mountPath: /var/run/secrets/tokens/dbaas
+              readOnly: true
+            {{- end }}
           terminationMessagePath: /dev/termination-log
           imagePullPolicy: Always
       volumes:
@@ -103,3 +112,13 @@ spec:
           emptyDir: {}
         - name: tmpvolume
           emptyDir: {}
+        {{- if .Values.dbaasM2mEnabled }}
+        - name: dbaas-m2m-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: dbaas
+                  expirationSeconds: 3600
+                  path: token
+            defaultMode: 420
+        {{- end }}
