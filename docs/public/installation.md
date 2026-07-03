@@ -2825,26 +2825,17 @@ statusProvisioner:
 
 ## Integration Tests
 
-**Note**: Airflow integration tests require API authentication to be enabled. During the Airflow installation with tests, the following parameter should be specified:
-
-```
-config:
-  ...
-  api:
-    auth_backend: airflow.providers.fab.auth_manager.api.auth.backend.basic_auth
-  ...
-```
-
 |Name|Description|
 |---|---|
 |integrationTests.enabled|Specifies if the integration tests' components are deployed.|
 |integrationTests.service.name|Specifies the name of Airflow integration tests' service.|
 |integrationTests.secret.airflow.user|Specifies the user for authentication in Airflow.|
 |integrationTests.secret.airflow.password|Specifies the password for authentication in Airflow.|
-|integrationTests.secret.dbaas.user|Specifies the user for authentication in DBaaS.|
-|integrationTests.secret.dbaas.password|Specifies the password for authentication in DBaaS.|
+|integrationTests.secret.dbaas.user|Specifies the user for authentication in DBaaS. Only used when `dbaasM2mEnabled` is `false`.|
+|integrationTests.secret.dbaas.password|Specifies the password for authentication in DBaaS. Only used when `dbaasM2mEnabled` is `false`.|
 |integrationTests.serviceAccount.create|Specifies whether the service account for Airflow integration tests is to be deployed or not.|
 |integrationTests.serviceAccount.name|Specifies the name of the service account that is used to deploy Airflow integration tests.|
+|integrationTests.dbaasM2mEnabled|Enables M2M authentication for DBaaS requests using a Kubernetes projected service account token. When enabled, `secret.dbaas.user` and `secret.dbaas.password` are ignored.|
 |integrationTests.image|Specifies the Docker image of Airflow integration tests.|
 |integrationTests.tags|Specifies the tags combined together with `AND`, `OR`, and `NOT` operators that select test cases to run.|
 |integrationTests.airflowHost|Specifies the host name of the Airflow API server.|
@@ -2852,11 +2843,15 @@ config:
 |integrationTests.workerServiceName|Specifies the name of the Airflow Worker service.|
 |integrationTests.apiServiceName|Specifies the name of the Airflow API service.|
 |integrationTests.schedulerDeployment|Specifies the name of the Airflow Scheduler deployment.|
+|integrationTests.dagProcessorDeployment|Specifies the name of the DAG Processor deployment.|
 |integrationTests.prometheusHost|Specifies the host name of the Prometheus service.|
 |integrationTests.prometheusPort|Specifies the port of the Prometheus service.|
 |integrationTests.executorType|Specifies the type of worker executor. The possible value is `CeleryExecutor` or `KubernetesExecutor`.|
-|integrationTests.securityContexts|Specifies the pod security context for the Airflow integration tests' pod.|
+|integrationTests.securityContexts|Specifies the pod and container security contexts for the Airflow integration tests' pod.|
 |integrationTests.statusWritingEnabled|Specifies the writing status of integration tests' execution to the specified Custom Resource.|
+|integrationTests.isShortStatusMessage|Specifies whether to use a short status message format.|
+|integrationTests.onlyIntegrationTests|Specifies if only integration tests should be run, not affecting deploy status.|
+|integrationTests.resources|Specifies the resource requests and limits for the integration tests' container.|
 |integrationTests.priorityClassName|Specifies the priority class name for integration tests.|
 
 ```yaml
@@ -2868,9 +2863,13 @@ integrationTests:
     airflow:
       user: "admin"
       password: "admin"
+    dbaas:
+      user: ""
+      password: ""
   serviceAccount:
     create: true
     name: "airflow-integration-tests"
+  dbaasM2mEnabled: true
   image: "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
   tags: "smoke"
   airflowHost: "airflow-api-server"
@@ -2878,13 +2877,27 @@ integrationTests:
   workerServiceName: "airflow-worker"
   apiServiceName: "airflow-api-server"
   schedulerDeployment: "airflow-scheduler"
+  dagProcessorDeployment: "airflow-dag-processor"
   prometheusHost: ""
   prometheusPort: 9090
   executorType: "CeleryExecutor"
   statusWritingEnabled: "true"
+  isShortStatusMessage: "true"
+  onlyIntegrationTests: "false"
   securityContexts:
-    pod: {}
-    container: {}
+    pod:
+      runAsUser: 50000
+      runAsNonRoot: true
+      runAsGroup: 50000
+      fsGroup: 50000
+      seccompProfile:
+        type: RuntimeDefault
+    container:
+      capabilities:
+        drop:
+          - ALL
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
   resources: {}
 ```
 
