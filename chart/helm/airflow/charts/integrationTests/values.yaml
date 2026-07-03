@@ -13,7 +13,7 @@ serviceAccount:
   create: true
   name: "airflow-integration-tests"
 
-dbaasM2mEnabled: false
+dbaasM2mEnabled: true
 
 image: "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
 tags: "smoke"
