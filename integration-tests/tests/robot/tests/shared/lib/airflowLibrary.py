@@ -32,7 +32,9 @@ def get_pg_connection_properties(
                     with open("/var/run/secrets/airflowtests/dbaas-user", "r") as file:
                         dbaas_user = file.read()
                 except FileNotFoundError:
-                    dbaas_user = base64.b64decode(secret.data.get("DBAAS_USER")).decode()
+                    dbaas_user = base64.b64decode(
+                        secret.data.get("DBAAS_USER")
+                    ).decode()
                 try:
                     with open(
                         "/var/run/secrets/airflowtests/dbaas-password", "r"
