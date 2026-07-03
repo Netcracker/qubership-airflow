@@ -17,18 +17,33 @@ def get_pg_connection_properties(
     for secret in secrets.items:
         if dbaas_secret == secret.metadata.name:
             dbaas_host = base64.b64decode(secret.data.get("DBAAS_HOST")).decode()
-            try:
-                with open("/var/run/secrets/airflowtests/dbaas-user", "r") as file:
-                    dbaas_user = file.read()
-            except FileNotFoundError:
-                dbaas_user = base64.b64decode(secret.data.get("DBAAS_USER")).decode()
-            try:
-                with open("/var/run/secrets/airflowtests/dbaas-password", "r") as file:
-                    dbaas_password = file.read()
-            except FileNotFoundError:
-                dbaas_password = base64.b64decode(
-                    secret.data.get("DBAAS_USER")
-                ).decode()
+            headers = {"Content-Type": "application/json"}
+            m2m_enabled = os.getenv("DBAAS_M2M_ENABLED", "").lower() not in (
+                "",
+                "false",
+                "no",
+            )
+            if m2m_enabled:
+                token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
+                headers["Authorization"] = f"Bearer {token}"
+                auth = None
+            else:
+                try:
+                    with open("/var/run/secrets/airflowtests/dbaas-user", "r") as file:
+                        dbaas_user = file.read()
+                except FileNotFoundError:
+                    dbaas_user = base64.b64decode(secret.data.get("DBAAS_USER")).decode()
+                try:
+                    with open(
+                        "/var/run/secrets/airflowtests/dbaas-password", "r"
+                    ) as file:
+                        dbaas_password = file.read()
+                except FileNotFoundError:
+                    dbaas_password = base64.b64decode(
+                        secret.data.get("DBAAS_PASSWORD")
+                    ).decode()
+                auth = (dbaas_user, dbaas_password)
+
             dbaas_pg_db_owner = base64.b64decode(
                 secret.data.get("DBAAS_PG_DB_OWNER")
             ).decode()
@@ -38,7 +53,6 @@ def get_pg_connection_properties(
             dbaas_pg_microservice_name = base64.b64decode(
                 secret.data.get("DBAAS_PG_MICROSERVICE_NAME")
             ).decode()
-            headers = {"Content-Type": "application/json"}
             data = {
                 "backupDisabled": dbaas_pg_backup_disabled,
                 "type": "postgresql",
@@ -51,17 +65,6 @@ def get_pg_connection_properties(
                     "isServiceDb": "true",
                 },
             }
-            m2m_enabled = os.getenv("DBAAS_M2M_ENABLED", "").lower() not in (
-                "",
-                "false",
-                "no",
-            )
-            if m2m_enabled:
-                token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
-                headers["Authorization"] = f"Bearer {token}"
-                auth = None
-            else:
-                auth = (dbaas_user, dbaas_password)
             response = requests.put(
                 f"{dbaas_host}/api/v3/dbaas/{namespace}/databases",
                 headers=headers,
