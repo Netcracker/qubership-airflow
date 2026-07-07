@@ -225,6 +225,11 @@
       "description": "Enables M2M (machine-to-machine) authentication for DBaaS requests using a Kubernetes projected service account token instead of basic auth credentials.",
       "type": "boolean",
       "default": true
+    },
+    "maasM2mEnabled": {
+      "description": "Enables M2M (machine-to-machine) authentication for MaaS requests using a Kubernetes projected service account token instead of basic auth credentials.",
+      "type": "boolean",
+      "default": true
     }
   }
 }

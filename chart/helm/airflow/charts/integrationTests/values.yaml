@@ -14,6 +14,7 @@ serviceAccount:
   name: "airflow-integration-tests"
 
 dbaasM2mEnabled: true
+maasM2mEnabled: true
 
 image: "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
 tags: "smoke"
