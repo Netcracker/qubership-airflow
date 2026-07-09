@@ -419,6 +419,14 @@ volumes:
             expirationSeconds: 3600
             path: token
       defaultMode: 420
+  - name: maas-m2m-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            audience: maas
+            expirationSeconds: 3600
+            path: token
+      defaultMode: 420
 
 # VolumeMounts for all Airflow containers
 volumeMounts:
@@ -442,6 +450,9 @@ volumeMounts:
   - name: dbaas-m2m-token
     readOnly: true
     mountPath: /var/run/secrets/tokens/dbaas
+  - name: maas-m2m-token
+    readOnly: true
+    mountPath: /var/run/secrets/tokens/maas
 
 # Secrets for all Airflow containers
 secret: []
@@ -498,11 +509,12 @@ extraSecrets:
       DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
       AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
       MAAS_HOST: 'insert.api.maas.addres.here.svc'
-      MAAS_USER: 'insert maas user here'
-      MAAS_PASSWORD: 'insert maas password here'
       DBAAS_M2M_ENABLED: 'true'
+      MAAS_M2M_ENABLED: 'true'
 #      DBAAS_PASSWORD: 'insert dbaas password here when not using m2m'
 #      DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here when not using m2m'
+#      MAAS_USER: 'insert maas user here when using maas and not using m2m'
+#      MAAS_PASSWORD: 'insert maas password here'
 # eg:
 # extraSecrets:
 #   '{{ .Release.Name }}-airflow-connections':
@@ -4493,6 +4505,7 @@ airflow-site-manager:
 integrationTests:
   enabled: false
   dbaasM2mEnabled: true
+  maasM2mEnabled: true
 
 # dbaas logic:
 #

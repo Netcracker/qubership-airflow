@@ -86,6 +86,10 @@ spec:
             - name: DBAAS_M2M_ENABLED
               value: "true"
             {{- end }}
+            {{- if .Values.maasM2mEnabled }}
+            - name: MAAS_M2M_ENABLED
+              value: "true"
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
@@ -99,6 +103,11 @@ spec:
             {{- if .Values.dbaasM2mEnabled }}
             - name: dbaas-m2m-token
               mountPath: /var/run/secrets/tokens/dbaas
+              readOnly: true
+            {{- end }}
+            {{- if .Values.maasM2mEnabled }}
+            - name: maas-m2m-token
+              mountPath: /var/run/secrets/tokens/maas
               readOnly: true
             {{- end }}
           terminationMessagePath: /dev/termination-log
@@ -118,6 +127,16 @@ spec:
             sources:
               - serviceAccountToken:
                   audience: dbaas
+                  expirationSeconds: 3600
+                  path: token
+            defaultMode: 420
+        {{- end }}
+        {{- if .Values.maasM2mEnabled }}
+        - name: maas-m2m-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  audience: maas
                   expirationSeconds: 3600
                   path: token
             defaultMode: 420

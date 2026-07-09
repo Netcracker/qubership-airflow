@@ -64,6 +64,7 @@ dbaas_ssl_verification_main = read_secret_var_from_file(
     "DBAAS_SSL_VERIFICATION_MAIN", "DISABLED"
 )
 dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
+maas_m2m_enabled = read_secret_var_from_file("MAAS_M2M_ENABLED", True)
 local_filesystem_backend_enabled = (
     read_secret_var_from_file("LOCAL_FILESYSTEM_BACKEND", True) in positive_values
 )
@@ -88,6 +89,9 @@ class DBAASSecretsBackend(
         self.m2m_enabled = (
             False if dbaas_m2m_enabled in negative_values else dbaas_m2m_enabled
         )
+        self.maas_m2m_enabled = (
+            False if maas_m2m_enabled in negative_values else maas_m2m_enabled
+        )
         self.maas_auth = (maas_user, maas_password)
         self.dbaas_auth = (dbaas_user, dbaas_password)
         self.namespace = Path(
@@ -97,8 +101,16 @@ class DBAASSecretsBackend(
     def requests_with_correct_auth(
         self, address, headers, data, requests_method, target_service="DBaaS"
     ):
-        if self.m2m_enabled:
-            token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
+        use_m2m = (target_service == "MaaS" and self.maas_m2m_enabled) or (
+            target_service == "DBaaS" and self.m2m_enabled
+        )
+        if use_m2m:
+            token_path = (
+                "/var/run/secrets/tokens/maas/token"
+                if target_service == "MaaS"
+                else "/var/run/secrets/tokens/dbaas/token"
+            )
+            token = Path(token_path).read_text()
             headers["Authorization"] = f"Bearer {token}"
             if requests_method == "POST":
                 return requests.post(
@@ -173,14 +185,12 @@ class DBAASSecretsBackend(
             "Content-Type": "application/json",
             "X-Origin-Namespace": maas_headers_namespace,
         }
-        auth = (maas_user, maas_password)
-        maas_kafka_api_address = f"{maas_host}/api/v1/kafka/topic"
-        response = requests.post(
-            maas_kafka_api_address,
+        response = self.requests_with_correct_auth(
+            address=f"{maas_host}/api/v1/kafka/topic",
             headers=headers,
             data=json.dumps(maas_data),
-            auth=auth,
-            verify=self.api_verify,
+            requests_method="POST",
+            target_service="MaaS",
         )
         if response.status_code == 201 or response.status_code == 200:
             return json.loads(response.content)

@@ -816,9 +816,10 @@ extraSecrets:
       DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
       AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
       MAAS_HOST: 'insert.api.maas.addres.here.svc'
-      MAAS_USER: 'insert maas user here'
-      MAAS_PASSWORD: 'insert maas password here'
       DBAAS_M2M_ENABLED: 'true'
+      MAAS_M2M_ENABLED: 'true'
+#      MAAS_USER: 'insert maas user here when not using m2m'
+#      MAAS_PASSWORD: 'insert maas password here when not using m2m'
 ...
 volumes:
 ...
@@ -834,6 +835,14 @@ volumes:
             expirationSeconds: 3600
             path: token
       defaultMode: 420
+  - name: maas-m2m-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            audience: maas
+            expirationSeconds: 3600
+            path: token
+      defaultMode: 420
 ...
 volumeMounts:
 ...
@@ -843,6 +852,9 @@ volumeMounts:
   - name: dbaas-m2m-token
     readOnly: true
     mountPath: /var/run/secrets/tokens/dbaas
+  - name: maas-m2m-token
+    readOnly: true
+    mountPath: /var/run/secrets/tokens/maas
 ...
 config:
 ...
@@ -855,6 +867,8 @@ config:
 In the above example, MAAS parameters are not needed, if MAAS integration is not used.
 
 For DBaaS, by default, m2m authentication using k8s service accounts is used. However, if needed, it is possible to use password authentication. For this, `DBAAS_M2M_ENABLED` parameter must be set to `false`, and `DBAAS_USER`/`DBAAS_PASSWORD` parameters must be specified in stringData of `dbaas-connection-params-main` secret. Also, no need to pass `dbaas-m2m-token` volume/volumeMount in this case.
+
+For MaaS, by default, m2m authentication using k8s service accounts is used. However, if needed, it is possible to use password authentication. For this, `MAAS_M2M_ENABLED` parameter must be set to `false`, and `MAAS_USER`/`MAAS_PASSWORD` parameters must be specified in stringData of `dbaas-connection-params-main` secret. Also, no need to pass `maas-m2m-token` volume/volumeMount in this case.
 
 **Note**: By default, the `DBAAS_PG_DB_NAME_PREFIX` parameter is not set. This means that the database name is provided by the DBaaS aggregator. The `DBAAS_PG_DB_NAME_PREFIX` parameter can be used to set the prefix for the PG database name.
 
@@ -904,8 +918,6 @@ config:
 
 ### MaaS Integration for Airflow Connections
 
-**Note**: For MaaS m2m authentication is currently not supported, so MAAS_USER and MAAS_PASSWORD must be specified.
-
 [Platform-provided DBaaS integration package for Airflow](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) also allows to get Kafka connections from MaaS. The approach works mostly the same as with DBaaS connection, but the structure of JSON connection config is a bit different. To get Kafka connection, it is necessary to specify the data [for MaaS request](https://github.com/Netcracker/qubership-maas/blob/main/docs/rest-api.md#get-or-create-kafka-topic) to `{maas_host}/api/v1/kafka/topic` in the `maas_request_data` field, additional properties for connection in the `connection_properties` field (is used to fill the extra field of the connection, can be used to overwrite the properties received from MaaS) and the connection type in the `maas_type` field. All these three fields should be added to the field with "${connection_name}_maas" name. 
 
 Following is an example for connection with name `kafka_test_conn`:
@@ -938,6 +950,8 @@ Since Airflow Kafka connection does not include topic, the topic name is not pas
 **Note**: By default, the `X-Origin-Namespace` header of the MaaS request is the same as the namespace in MaaS classifier. To use the Airflow namespace, it is possible to set the `MAAS_CONN_NAMESPACE_FROM_CONFIG` parameter to `false`.
 
 **Note**: As with DBaaS, additional logging can be enabled by setting the `DBAAS_INTEGRATION_LOG_LEVEL` environment variable to `DEBUG`. The `config.logging.logging_level` parameter must also be set to debug in this case.
+
+**Note**: When using m2m authentication for MaaS on a pre-created kafka instance, you must ensure that airflow worker service accounts have all required permissions on MaaS side.
 
 ## Reading Sensitive Data from Files Instead of Environment Variables
 
@@ -2836,6 +2850,7 @@ statusProvisioner:
 |integrationTests.serviceAccount.create|Specifies whether the service account for Airflow integration tests is to be deployed or not.|
 |integrationTests.serviceAccount.name|Specifies the name of the service account that is used to deploy Airflow integration tests.|
 |integrationTests.dbaasM2mEnabled|Enables M2M authentication for DBaaS requests using a Kubernetes projected service account token. When enabled, `secret.dbaas.user` and `secret.dbaas.password` are ignored.|
+|integrationTests.maasM2mEnabled|Enables M2M authentication for MaaS requests using a Kubernetes projected service account token.|
 |integrationTests.image|Specifies the Docker image of Airflow integration tests.|
 |integrationTests.tags|Specifies the tags combined together with `AND`, `OR`, and `NOT` operators that select test cases to run.|
 |integrationTests.airflowHost|Specifies the host name of the Airflow API server.|
@@ -2870,6 +2885,7 @@ integrationTests:
     create: true
     name: "airflow-integration-tests"
   dbaasM2mEnabled: true
+  maasM2mEnabled: true
   image: "ghcr.io/netcracker/qubership-airflow-integration-tests:main"
   tags: "smoke"
   airflowHost: "airflow-api-server"
