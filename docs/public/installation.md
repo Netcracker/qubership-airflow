@@ -951,6 +951,8 @@ Since Airflow Kafka connection does not include topic, the topic name is not pas
 
 **Note**: As with DBaaS, additional logging can be enabled by setting the `DBAAS_INTEGRATION_LOG_LEVEL` environment variable to `DEBUG`. The `config.logging.logging_level` parameter must also be set to debug in this case.
 
+**Note**: When using m2m authentication for MaaS on a pre-created kafka instance, you must ensure that airflow worker service accounts have all required permissions on MaaS side.
+
 ## Reading Sensitive Data from Files Instead of Environment Variables
 
 Sometimes for better compliance with CIS/OWASP recommendations, it might be required to avoid storing sensitive data in environment variables. The below two sections provide the information on how this can be achieved.
