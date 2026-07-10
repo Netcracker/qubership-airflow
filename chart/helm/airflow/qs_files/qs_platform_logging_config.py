@@ -33,7 +33,7 @@ from airflow.exceptions import AirflowException
 from airflow.utils.helpers import render_template, parse_template_string
 
 if TYPE_CHECKING:
-    from airflow.logging_config import RemoteLogIO
+    from airflow.logging.remote import RemoteLogIO
     from jinja2 import Template
 
     from airflow.models.taskinstance import TaskInstance
@@ -52,17 +52,21 @@ LOG_FORMATTER_CLASS: str = conf.get_mandatory_value(
     "logging", "LOG_FORMATTER_CLASS", fallback="airflow.utils.log.timezone_aware.TimezoneAware"
 )
 
-# Separate log level for the audit logs to not affect other loggers
-AUDIT_LOG_LEVEL = conf.get("logging", "AUDIT_LOG_LEVEL").upper()
+# Separate log level for the audit logs to not affect other loggers.
+# audit_log_level is a QS-specific config key not present in Airflow 3's config.yml,
+# so a fallback is required.
+AUDIT_LOG_LEVEL = conf.get("logging", "AUDIT_LOG_LEVEL", fallback="INFO").upper()
 
 DAG_PROCESSOR_LOG_TARGET: str = conf.get_mandatory_value("logging", "DAG_PROCESSOR_LOG_TARGET")
-QS_LOGGING_TYPE: str = conf.get("logging", "QS_LOGGING_TYPE")
+# QS_LOGGING_TYPE is a QS-specific config key; fallback to empty string when not set.
+QS_LOGGING_TYPE: str = conf.get("logging", "QS_LOGGING_TYPE", fallback="")
 QS_PROCESSOR_LOGGING_LEVEL: str = conf.get("logging", "QS_PROCESSOR_LOGGING_LEVEL", fallback=LOG_LEVEL).upper()
 QS_DAG_PARSING_LOGGING_LEVEL: str = conf.get("logging", "QS_DAG_PARSING_LOGGING_LEVEL", fallback=LOG_LEVEL).upper()
 
 BASE_LOG_FOLDER: str = os.path.expanduser(conf.get_mandatory_value("logging", "BASE_LOG_FOLDER"))
 
-LOG_FORMAT_AUDIT = conf.get("logging", "LOG_FORMAT_AUDIT")
+# log_format_audit is a QS-specific config key; fallback to standard format when not set.
+LOG_FORMAT_AUDIT = conf.get("logging", "LOG_FORMAT_AUDIT", fallback=LOG_FORMAT)
 
 logger = logging.getLogger(__name__)
 
@@ -138,18 +142,17 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
         },
     },
     "handlers": {
+        # In Airflow 3, structlog takes over all formatting: it strips `formatter` and `stream`
+        # from every handler entry before calling dictConfig, so custom formatters have no effect
+        # on component logs. Audit log lines are identified via the logger name in structlog output
+        # (e.g. the bracketed field in the default format, or the `logger` key in json_logs mode).
+        # The `class` and `filters` keys are still respected.
         "audit": {
             "class": "logging.StreamHandler",
-            # "class": "airflow.utils.log.logging_mixin.RedirectStdHandler",
-            "formatter": "airflow-audit",
-            "stream": "sys.stdout",
-            "filters": ["mask_secrets_core"]
+            "filters": ["mask_secrets_core"],
         },
         "console": {
             "class": "logging.StreamHandler",
-            # "class": "airflow.utils.log.logging_mixin.RedirectStdHandler",
-            "formatter": "airflow",
-            "stream": "sys.stdout",
             "filters": ["mask_secrets_core"],
         },
         #STOPPED
@@ -179,21 +182,12 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
             "level": FAB_LOG_LEVEL,
             "propagate": True,
         },
-        "airflow.www.fab_security.sqla.manager": {
-            "handlers": ["audit"],
-            "level": AUDIT_LOG_LEVEL,
-            "propagate": False,
-        },
-        "airflow.www.fab_security.manager": {
-            "handlers": ["audit"],
-            "level": AUDIT_LOG_LEVEL,
-            "propagate": False,
-        },
-        "airflow.security.kerberos": {
-            "handlers": ["audit"],
-            "level": AUDIT_LOG_LEVEL,
-            "propagate": False,
-        },
+        # --- Airflow 3 audit / security loggers ---
+        # airflow.www.fab_security.* and airflow.security.kerberos no longer exist in Airflow 3.
+        # The FAB provider now lives under airflow.providers.fab, and security events are logged
+        # by the auth manager implementations listed below.
+        # Note: in Airflow 3, structlog overrides the formatter on all handlers, so these loggers
+        # are identified by their name in structured output rather than by a custom format string.
         "airflow.providers.fab.auth_manager": {
             "handlers": ["audit"],
             "level": AUDIT_LOG_LEVEL,
@@ -218,7 +212,7 @@ QS_DEFAULT_LOGGING_CONFIG: dict[str, Any] = {
             "handlers": ["audit"],
             "level": AUDIT_LOG_LEVEL,
             "propagate": False,
-        }
+        },
     },
     "root": {
         "handlers": ["console"],
