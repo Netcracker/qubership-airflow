@@ -33,6 +33,6 @@ Run Dag To Check PG Connection
     [Teardown]  Delete PG Connection
 
 Test Container Hardening
-    [Tags]    airflow_container_hardening    airflow_container_hardening_test
+    [Tags]    smoke    airflow_container_hardening_test   airflow_container_hardening_test
     ${part_of}=    Create List
     Check Container Hardening    ${part_of}    ${AIRFLOW_NAMESPACE}
