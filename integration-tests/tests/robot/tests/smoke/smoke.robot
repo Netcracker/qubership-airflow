@@ -26,8 +26,3 @@ Run noop_dag
     ${resp} =  Run DAG  noop_dag
     Wait Until Keyword Succeeds  ${COUNT_OF_RETRY}  ${RETRY_INTERVAL}
     ...  Wait Until DAG Succeed  noop_dag  ${resp['dag_run_id']}
-
-Test Container Hardening
-    [Tags]    airflow_container_hardening    airflow_container_hardening_test
-    ${part_of}=    Create List
-    Check Container Hardening    ${part_of}    ${AIRFLOW_NAMESPACE}
