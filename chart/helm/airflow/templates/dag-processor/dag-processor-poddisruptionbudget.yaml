@@ -17,11 +17,10 @@
  under the License.
 */}}
 
-################################
+############################################
 ## Airflow Dag Processor PodDisruptionBudget
-#################################
-{{- $enabled := .Values.dagProcessor.enabled }}
-{{- if and $enabled .Values.dagProcessor.podDisruptionBudget.enabled }}
+############################################
+{{- if and .Values.dagProcessor.enabled .Values.dagProcessor.podDisruptionBudget.enabled }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:

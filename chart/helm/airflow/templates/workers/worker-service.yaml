@@ -19,9 +19,9 @@
  Modified in 2025 by NetCracker Technology Corp.
 */}}
 
-################################
+#########################
 ## Airflow Worker Service
-#################################
+#########################
 {{- $globals := deepCopy . -}}
 {{- $filteredCelery := include "removeNilFields" .Values.workers.celery | fromYaml -}}
 {{- $mergedWorkers := (include "workersMergeValues" (list .Values.workers $filteredCelery "" (list "kerberosInitContainer" "kerberosSidecar")) | fromYaml) -}}

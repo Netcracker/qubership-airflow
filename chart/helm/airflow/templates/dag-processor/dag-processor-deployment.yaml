@@ -19,11 +19,10 @@
  Modified in 2025 by NetCracker Technology Corp.
 */}}
 
-################################
+###################################
 ## Airflow Dag Processor Deployment
 #################################
-{{- $enabled := .Values.dagProcessor.enabled }}
-{{- if $enabled }}
+{{- if .Values.dagProcessor.enabled }}
 {{- $nodeSelector := or .Values.dagProcessor.nodeSelector .Values.nodeSelector }}
 {{- $affinity := or .Values.dagProcessor.affinity .Values.affinity }}
 {{- $tolerations := or .Values.dagProcessor.tolerations .Values.tolerations }}

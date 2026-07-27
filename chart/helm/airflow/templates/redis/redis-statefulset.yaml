@@ -17,9 +17,9 @@
  under the License.
 */}}
 
-################################
+############################
 ## Airflow Redis StatefulSet
-#################################
+############################
 {{- if and .Values.redis.enabled (contains "CeleryExecutor" .Values.executor) }}
 {{- $nodeSelector := or .Values.redis.nodeSelector .Values.nodeSelector }}
 {{- $affinity := or .Values.redis.affinity .Values.affinity }}

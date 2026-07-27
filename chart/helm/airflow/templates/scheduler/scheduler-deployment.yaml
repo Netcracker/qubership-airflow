@@ -19,9 +19,9 @@
  Modified in 2025 by NetCracker Technology Corp.
 */}}
 
-################################
+###########################################
 ## Airflow Scheduler Deployment/StatefulSet
-#################################
+###########################################
 {{- if .Values.scheduler.enabled }}
 {{- $local := contains "Local" .Values.executor }}
 # Is persistence enabled on the _workers_?
@@ -29,8 +29,7 @@
 {{- $persistence := or .Values.workers.celery.persistence.enabled (and (not (has .Values.workers.celery.persistence.enabled (list true false))) .Values.workers.persistence.enabled) }}
 {{- $stateful := and $local $persistence }}
 # We can skip DAGs mounts on scheduler if dagProcessor is enabled, except with $local mode
-{{- $dagProcessorEnabled := .Values.dagProcessor.enabled }}
-{{- $localOrDagProcessorDisabled := or (not $dagProcessorEnabled) $local }}
+{{- $localOrDagProcessorDisabled := or (not .Values.dagProcessor.enabled) $local }}
 {{- $remoteLogging := or .Values.elasticsearch.enabled .Values.opensearch.enabled }}
 {{- $nodeSelector := or .Values.scheduler.nodeSelector .Values.nodeSelector }}
 {{- $affinity := or .Values.scheduler.affinity .Values.affinity }}

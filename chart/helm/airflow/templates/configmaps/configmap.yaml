@@ -17,9 +17,9 @@
  under the License.
 */}}
 
-################################
+####################
 ## Airflow ConfigMap
-#################################
+####################
 apiVersion: v1
 kind: ConfigMap
 metadata:

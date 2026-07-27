@@ -17,9 +17,9 @@
  under the License.
 */}}
 
-################################
+#########################
 ## Airflow Flower Ingress
-#################################
+#########################
 {{- if .Values.flower.enabled }}
 {{- if and (or .Values.ingress.flower.enabled .Values.ingress.enabled) (contains "CeleryExecutor" .Values.executor) }}
 {{- $fullname := include "airflow.fullname" . }}

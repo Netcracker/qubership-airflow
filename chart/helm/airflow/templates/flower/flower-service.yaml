@@ -19,9 +19,9 @@
  Modified in 2025 by NetCracker Technology Corp.
 */}}
 
-################################
+###################################
 ## Airflow Flower Service Component
-#################################
+###################################
 {{- if and .Values.flower.enabled (contains "CeleryExecutor" .Values.executor) }}
 apiVersion: v1
 kind: Service

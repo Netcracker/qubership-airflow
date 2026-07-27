@@ -17,9 +17,9 @@
  under the License.
 */}}
 
-################################
+##########################
 ## Pgbouncer NetworkPolicy
-#################################
+##########################
 {{- $kedaEnabled := .Values.workers.keda.enabled }}
 {{- if hasKey .Values.workers "celery" }}
   {{- $kedaEnabled = or .Values.workers.celery.keda.enabled (and (not (has .Values.workers.celery.keda.enabled (list true false))) .Values.workers.keda.enabled) }}

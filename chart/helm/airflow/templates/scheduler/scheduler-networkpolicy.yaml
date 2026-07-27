@@ -17,9 +17,9 @@
  under the License.
 */}}
 
-################################
+##################################
 ## Airflow Scheduler NetworkPolicy
-#################################
+##################################
 {{- if and .Values.scheduler.enabled .Values.networkPolicies.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

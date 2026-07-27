@@ -19,9 +19,9 @@
  Modified in 2025 by NetCracker Technology Corp.
 */}}
 
-################################
+############################
 ## Airflow Scheduler Service
-#################################
+############################
 {{- if and .Values.scheduler.enabled (contains "LocalExecutor" .Values.executor) }}
 apiVersion: v1
 kind: Service

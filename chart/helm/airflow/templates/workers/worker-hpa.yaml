@@ -17,9 +17,9 @@
  under the License.
 */}}
 
-################################
+#####################
 ## Airflow Worker HPA
-#################################
+#####################
 {{- $globals := deepCopy . -}}
 {{- $filteredCelery := include "removeNilFields" .Values.workers.celery | fromYaml -}}
 {{- $mergedWorkers := (include "workersMergeValues" (list .Values.workers $filteredCelery "" (list "kerberosInitContainer" "kerberosSidecar")) | fromYaml) -}}

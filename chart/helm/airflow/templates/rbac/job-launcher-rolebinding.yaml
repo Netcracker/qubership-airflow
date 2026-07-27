@@ -17,9 +17,9 @@
  under the License.
 */}}
 
-################################
+####################################
 ## Airflow Job Launcher Role Binding
-#################################
+####################################
 {{- if and .Values.rbac.create .Values.allowJobLaunching }}
 {{- $schedulerLaunchExecutors := list "LocalExecutor" "KubernetesExecutor" }}
 {{- $workerLaunchExecutors := list "CeleryExecutor" "KubernetesExecutor" }}

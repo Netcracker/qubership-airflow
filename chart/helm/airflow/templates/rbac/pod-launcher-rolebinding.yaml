@@ -17,9 +17,9 @@
  under the License.
 */}}
 
-################################
+####################################
 ## Airflow Pod Launcher Role Binding
-#################################
+####################################
 {{- if and .Values.rbac.create .Values.allowPodLaunching }}
 {{- $schedulerLaunchExecutors := list "LocalExecutor" "KubernetesExecutor" }}
 {{- $workerLaunchExecutors := list "CeleryExecutor" "KubernetesExecutor" }}

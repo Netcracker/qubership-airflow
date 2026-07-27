@@ -19,9 +19,9 @@
  Modified in 2025 by NetCracker Technology Corp.
 */}}
 
-################################
+############################
 ## Airflow Flower Deployment
-#################################
+############################
 {{- if and .Values.flower.enabled (contains "CeleryExecutor" .Values.executor) }}
 {{- $nodeSelector := or .Values.flower.nodeSelector .Values.nodeSelector }}
 {{- $affinity := or .Values.flower.affinity .Values.affinity }}

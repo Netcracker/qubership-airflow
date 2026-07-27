@@ -17,9 +17,9 @@
  under the License.
 */}}
 
-################################
+########################
 ## Airflow Redis Service
-#################################
+########################
 {{- if and .Values.redis.enabled (contains "CeleryExecutor" .Values.executor) }}
 apiVersion: v1
 kind: Service
