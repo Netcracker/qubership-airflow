@@ -143,6 +143,24 @@ If release name contains chart name it will be used as a full name.
         name: {{ template "opensearch_secret" . }}
         key: connection
   {{- end }}
+  {{- if or .Values.otelCollector.tracesEnabled .Values.otelCollector.metricsEnabled }}
+  - name: OTEL_SERVICE_NAME
+    value: "airflow"
+  - name: OTEL_EXPORTER_OTLP_PROTOCOL
+    value: "http/protobuf"
+  {{- end }}
+  {{- if .Values.otelCollector.tracesEnabled }}
+  - name: OTEL_TRACES_EXPORTER
+    value: "otlp"
+  - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+    value: "http://{{ include "airflow.fullname" . }}-otel-collector:{{ .Values.ports.otelCollectorOtlpHttp }}/v1/traces"
+  {{- end }}
+  {{- if .Values.otelCollector.metricsEnabled }}
+  - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+    value: "http://{{ include "airflow.fullname" . }}-otel-collector:{{ .Values.ports.otelCollectorOtlpHttp }}/v1/metrics"
+  - name: OTEL_METRIC_EXPORT_INTERVAL
+    value: {{ .Values.otelCollector.metricExportIntervalMs | quote }}
+  {{- end }}
 {{- end }}
 
 {{/* User defined Airflow environment variables */}}
@@ -431,6 +449,11 @@ extraEnv: |-
   {{- end -}}
 {{- end }}
 #---Qubership custom change: use rclone instead of gitsync
+
+{{- define "otel_collector_image" -}}
+  {{- printf "%s:%s" .Values.images.otelCollector.repository .Values.images.otelCollector.tag }}
+{{- end }}
+
 {{- define "fernet_key_secret" -}}
   {{- default (printf "%s-fernet-key" (include "airflow.fullname" .)) .Values.fernetKeySecretName }}
 {{- end }}
@@ -705,6 +728,11 @@ server_tls_key_file = /etc/pgbouncer/server.key
 {{/* Create the name of the StatsD service account to use */}}
 {{- define "statsd.serviceAccountName" -}}
   {{- include "_serviceAccountName" (merge (dict "key" "statsd") .) -}}
+{{- end }}
+
+{{/* Create the name of the OTel Collector service account to use */}}
+{{- define "otelCollector.serviceAccountName" -}}
+  {{- include "_serviceAccountName" (merge (dict "key" "otelCollector" "nameSuffix" "otel-collector") .) -}}
 {{- end }}
 
 {{/* Create the name of the create user job service account to use */}}
