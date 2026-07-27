@@ -158,9 +158,6 @@ spec:
             {{- if .Values.triggerer.extraVolumeMounts }}
               {{- tpl (toYaml .Values.triggerer.extraVolumeMounts) . | nindent 12 }}
             {{- end }}
-            {{- if or .Values.webserver.webserverConfig .Values.webserver.webserverConfigConfigMapName }}
-              {{- include "airflow_webserver_config_mount" . | nindent 12 }}
-            {{- end }}
           args: {{- include "wait-for-migrations-command" . | indent 10 }}
           envFrom: {{- include "custom_airflow_environment_from" . | default "\n  []" | indent 10 }}
           env:
@@ -204,9 +201,6 @@ spec:
               subPath: {{ .Values.logs.persistence.subPath }}
               {{- end }}
             {{- include "airflow_config_mount" . | nindent 12 }}
-            {{- if or .Values.webserver.webserverConfig .Values.webserver.webserverConfigConfigMapName }}
-              {{- include "airflow_webserver_config_mount" . | nindent 12 }}
-            {{- end }}
             {{- if or .Values.dags.persistence.enabled .Values.dags.gitSync.enabled }}
               {{- include "airflow_dags_mount" . | nindent 12 }}
             {{- end }}
@@ -286,9 +280,6 @@ spec:
             {{- if .Values.triggerer.extraVolumeMounts }}
               {{- tpl (toYaml .Values.triggerer.extraVolumeMounts) . | nindent 12 }}
             {{- end }}
-            {{- if or .Values.webserver.webserverConfig .Values.webserver.webserverConfigConfigMapName }}
-              {{- include "airflow_webserver_config_mount" . | nindent 12 }}
-            {{- end }}
           {{- end }}
         {{- if .Values.triggerer.extraContainers }}
           {{- tpl (toYaml .Values.triggerer.extraContainers) . | nindent 8 }}
@@ -297,11 +288,6 @@ spec:
         - name: config
           configMap:
             name: {{ template "airflow_config" . }}
-        {{- if or .Values.webserver.webserverConfig .Values.webserver.webserverConfigConfigMapName }}
-        - name: webserver-config
-          configMap:
-            name: {{ template "airflow_webserver_config_configmap_name" . }}
-        {{- end }}
         {{- if .Values.dags.persistence.enabled }}
         - name: dags
           persistentVolumeClaim:

@@ -84,7 +84,7 @@ defaultAirflowTag: "3.2.1"
 defaultAirflowDigest: ~
 
 # Airflow version (Used to make some decisions based on Airflow Version being deployed)
-# Version 2.11.0 and above is supported.
+# Version 3.1.0 and above is supported.
 airflowVersion: "3.2.1"
 
 images:
@@ -364,14 +364,13 @@ rbac:
 
 # Airflow executor
 # One or multiple of: LocalExecutor, CeleryExecutor, KubernetesExecutor
-# For Airflow <3.0, LocalKubernetesExecutor and CeleryKubernetesExecutor are supported.
 # Specify executors in a prioritized list to leverage multiple execution environments as needed:
 # https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/executor/index.html#using-multiple-executors-concurrently
 executor: "CeleryExecutor"
 
-# If this is true and using LocalExecutor/KubernetesExecutor/CeleryKubernetesExecutor, the scheduler's
+# If this is true and using LocalExecutor/KubernetesExecutor, the scheduler's
 # Service Account will have access to communicate with the api-server and launch pods/jobs.
-# If this is true and using CeleryExecutor/KubernetesExecutor/CeleryKubernetesExecutor, the workers
+# If this is true and using CeleryExecutor/KubernetesExecutor, the workers
 # will be able to launch pods/jobs.
 allowPodLaunching: true
 allowJobLaunching: false
@@ -470,7 +469,6 @@ enableBuiltInSecretEnvVars:
   AIRFLOW_CONN_AIRFLOW_DB: false
   AIRFLOW__API__SECRET_KEY: false
   AIRFLOW__API_AUTH__JWT_SECRET: false
-  AIRFLOW__WEBSERVER__SECRET_KEY: true
   AIRFLOW__CELERY__RESULT_BACKEND: true
   AIRFLOW__CELERY__BROKER_URL: false
   AIRFLOW__ELASTICSEARCH__HOST: true
@@ -478,7 +476,7 @@ enableBuiltInSecretEnvVars:
 
 # Priority Classes that will be installed by charts.
 # Ideally, there should be an entry for dagProcessor, flower,
-#   pgbouncer, scheduler, statsd, triggerer, webserver/api-server, worker.
+#   pgbouncer, scheduler, statsd, triggerer, api-server, worker.
 # The format for priorityClasses is an array with each element having:
 #   * name is the name of the priorityClass. Ensure the same name is given to the respective section as well
 #   * preemptionPolicy for the priorityClass
@@ -676,26 +674,6 @@ jwtSecretName: ~
 #  type: Opaque
 #  data:
 #    jwt-secret: <base64_encoded_jwt_secret>
-
-# Flask secret key for Airflow <3 Webserver: '[webserver] secret_key' in airflow.cfg
-# (deprecated, use `apiSecretKey` instead (Airflow 3+))
-webserverSecretKey: ~
-
-# Add custom annotations to the webserver secret
-# (deprecated, use `apiSecretAnnotations` instead (Airflow 3+))
-webserverSecretAnnotations: {}
-
-# If set, the secret must contain a key 'webserver-secret-key' with a base64-encoded key value
-# (deprecated, use `apiSecretKeySecretName` instead (Airflow 3+))
-webserverSecretKeySecretName: ~
-# Webserver secret key secret example:
-#  kind: Secret
-#  apiVersion: v1
-#  metadata:
-#    name: custom-webserver-secret
-#  type: Opaque
-#  data:
-#    webserver-secret-key: <base64_encoded_secret_key>
 
 # In order to use kerberos you need to create secret containing the keytab file.
 # The secret name should follow naming convention of the application where resources are
@@ -932,9 +910,7 @@ workers:
       {{- if $i }},{{ end }}'{{ $q | trim }}'
       {{- end -}}
       )
-      {{- if contains "CeleryKubernetesExecutor" .Values.executor }}
-      AND queue != '{{ .Values.config.celery_kubernetes_executor.kubernetes_queue }}'
-      {{- else if contains "KubernetesExecutor" .Values.executor }}
+      {{- if contains "KubernetesExecutor" .Values.executor }}
       AND executor IS DISTINCT FROM 'KubernetesExecutor'
       {{- else if contains "airflow.providers.edge3.executors.EdgeExecutor" .Values.executor }}
       AND executor IS DISTINCT FROM 'EdgeExecutor'
@@ -2131,17 +2107,17 @@ createUserJob:
     - --
     # yamllint disable rule:line-length
     - "-r"
-    - "{{ if .Values.webserver.defaultUser }}{{ .Values.webserver.defaultUser.role }}{{ else }}{{ .Values.createUserJob.defaultUser.role }}{{ end }}"
+    - "{{ .Values.createUserJob.defaultUser.role }}"
     - "-u"
-    - "{{ if .Values.webserver.defaultUser }}{{ .Values.webserver.defaultUser.username }}{{ else }}{{ .Values.createUserJob.defaultUser.username }}{{ end }}"
+    - "{{ .Values.createUserJob.defaultUser.username }}"
     - "-e"
-    - "{{ if .Values.webserver.defaultUser }}{{ .Values.webserver.defaultUser.email }}{{ else }}{{ .Values.createUserJob.defaultUser.email }}{{ end }}"
+    - "{{ .Values.createUserJob.defaultUser.email }}"
     - "-f"
-    - "{{ if .Values.webserver.defaultUser }}{{ .Values.webserver.defaultUser.firstName }}{{ else }}{{ .Values.createUserJob.defaultUser.firstName }}{{ end }}"
+    - "{{ .Values.createUserJob.defaultUser.firstName }}"
     - "-l"
-    - "{{ if .Values.webserver.defaultUser }}{{ .Values.webserver.defaultUser.lastName }}{{ else }}{{ .Values.createUserJob.defaultUser.lastName }}{{ end }}"
+    - "{{ .Values.createUserJob.defaultUser.lastName }}"
     - "-p"
-    - "{{ if .Values.webserver.defaultUser }}{{ .Values.webserver.defaultUser.password }}{{ else }}{{ .Values.createUserJob.defaultUser.password }}{{ end }}"
+    - "{{ .Values.createUserJob.defaultUser.password }}"
 
   # Annotations on the create user job pod (templated)
   annotations: {}
@@ -3279,7 +3255,7 @@ dagProcessor:
 # Flower settings
 flower:
   # Enable flower.
-  # If True, and using CeleryExecutor/CeleryKubernetesExecutor, will deploy flower app.
+  # If True, and using CeleryExecutor, will deploy flower app.
   enabled: false
 
   livenessProbe:
@@ -4213,8 +4189,6 @@ config:
     flower_url_prefix: '{{ ternary "" .Values.ingress.flower.path (eq .Values.ingress.flower.path "/") }}'
     worker_concurrency: 16
     sync_parallelism: '{{ include "cpu_count" (((.Values.scheduler).resources).limits).cpu }}'
-  scheduler:
-    standalone_dag_processor: '{{ ternary "True" "False" (or (semverCompare ">=3.0.0" .Values.airflowVersion) (.Values.dagProcessor.enabled | default false)) }}'
   dag_processor:
     # This value is generated by default from `.Values.dagProcessor.dagBundleConfigList` using the `dag_bundle_config_list` helper function.
     # It is recommended to configure this via `dagProcessor.dagBundleConfigList` rather than overriding `config.dag_processor.dag_bundle_config_list` directly.

@@ -23,9 +23,6 @@
 ## Airflow Dag Processor Deployment
 #################################
 {{- $enabled := .Values.dagProcessor.enabled }}
-{{- if eq $enabled nil}}
-  {{ $enabled = ternary true false (semverCompare ">=3.0.0" .Values.airflowVersion) }}
-{{- end }}
 {{- if $enabled }}
 {{- $nodeSelector := or .Values.dagProcessor.nodeSelector .Values.nodeSelector }}
 {{- $affinity := or .Values.dagProcessor.affinity .Values.affinity }}
@@ -255,9 +252,6 @@ spec:
             {{- if .Values.dagProcessor.extraVolumeMounts }}
               {{- tpl (toYaml .Values.dagProcessor.extraVolumeMounts) . | nindent 12 }}
             {{- end }}
-            {{- if or .Values.webserver.webserverConfig .Values.webserver.webserverConfigConfigMapName }}
-              {{- include "airflow_webserver_config_mount" . | nindent 12 }}
-            {{- end }}
           {{- end }}
         {{- if .Values.dagProcessor.extraContainers }}
           {{- tpl (toYaml .Values.dagProcessor.extraContainers) . | nindent 8 }}
@@ -266,11 +260,6 @@ spec:
         - name: config
           configMap:
             name: {{ template "airflow_config" . }}
-        {{- if or .Values.webserver.webserverConfig .Values.webserver.webserverConfigConfigMapName }}
-        - name: webserver-config
-          configMap:
-            name: {{ template "airflow_webserver_config_configmap_name" . }}
-        {{- end }}
         {{- if .Values.dags.persistence.enabled }}
         - name: dags
           persistentVolumeClaim:
