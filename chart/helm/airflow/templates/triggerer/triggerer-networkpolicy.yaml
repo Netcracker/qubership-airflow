@@ -38,7 +38,7 @@ spec:
   podSelector:
     matchLabels:
       tier: airflow
-      component: triggerer
+      component: api-server
       release: {{ .Release.Name }}
   policyTypes:
   - Ingress
