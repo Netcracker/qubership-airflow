@@ -1,135 +1,71 @@
-{{- if  .Values.httpRoute.apiServer.enabled -}}
-{{- $fullname := (include "airflow.fullname" .) }}
-{{- $Global := . }}
+{{/*
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+*/}}
+
+##################################
+## Airflow API Server HTTPRoute
+##################################
+{{- if and .Values.apiServer.enabled .Values.apiServer.httpRoute.enabled }}
+{{- if .Values.ingress.apiServer.enabled }}
+{{- fail "`apiServer.httpRoute.enabled` and `ingress.apiServer.enabled` are both set to `true`. HTTPRoute (Gateway API) is an alternative to the API server Ingress; enable only one of them." }}
+{{- end }}
+{{- if not (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1") }}
+{{- fail "`apiServer.httpRoute.enabled` is `true` but the Gateway API HTTPRoute CRD (`gateway.networking.k8s.io/v1`) is not installed in the cluster. Install the Gateway API CRDs (https://gateway-api.sigs.k8s.io/guides/#installing-gateway-api) before enabling `apiServer.httpRoute`." }}
+{{- end }}
+{{- if not .Values.apiServer.httpRoute.parentRefs }}
+{{- fail "`apiServer.httpRoute.enabled` is `true` but `apiServer.httpRoute.parentRefs` is empty. An HTTPRoute must reference at least one parent Gateway; set `apiServer.httpRoute.parentRefs`." }}
+{{- end }}
+{{- $fullname := include "airflow.fullname" . }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ $fullname }}-api-server
+  name: {{ $fullname }}-api-server-httproute
   namespace: {{ .Release.Namespace }}
   labels:
     tier: airflow
-    component: airflow-httproute
+    component: airflow-api-server-httproute
     release: {{ .Release.Name }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: {{ .Release.Service }}
-    {{- if or .Values.labels .Values.apiServer.labels }}
-      {{- mustMerge .Values.apiServer.labels .Values.labels | toYaml | nindent 4 }}
+    {{- if or .Values.labels .Values.apiServer.labels .Values.apiServer.httpRoute.labels }}
+      {{- mustMerge .Values.apiServer.httpRoute.labels .Values.apiServer.labels .Values.labels | toYaml | nindent 4 }}
     {{- end }}
-  {{- with .Values.httpRoute.apiServer.annotations }}
+  {{- with .Values.apiServer.httpRoute.annotations }}
   annotations: {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- with .Values.httpRoute.apiServer.parentRefs }}
-  parentRefs:
-    {{- tpl (toYaml .) $Global | nindent 4 }}
-  {{- end }}
-  {{- with .Values.httpRoute.apiServer.hostnames }}
+  parentRefs: {{- toYaml .Values.apiServer.httpRoute.parentRefs | nindent 4 }}
+  {{- with .Values.apiServer.httpRoute.hostnames }}
   hostnames:
-    {{- tpl (toYaml .) $Global | nindent 4 }}
+    {{- range . }}
+    - {{ tpl . $ | quote }}
+    {{- end }}
   {{- end }}
   rules:
-    {{- range .Values.httpRoute.apiServer.rules }}
+    {{- if .Values.apiServer.httpRoute.rules }}
+    {{- toYaml .Values.apiServer.httpRoute.rules | nindent 4 }}
+    {{- else }}
     - matches:
-        {{- if .matches }}
-        {{- toYaml .matches | nindent 8 }}
-        {{- else }}
         - path:
-            type: {{ .path.type | default "PathPrefix" }}
-            value: {{ .path.value | default "/" }}
-        {{- end }}
-      {{- if .filters }}
-      filters:
-        {{- toYaml .filters | nindent 8 }}
-      {{- end }}
+            type: {{ .Values.apiServer.httpRoute.pathType }}
+            value: {{ .Values.apiServer.httpRoute.path | quote }}
       backendRefs:
-        - group: ''
-          kind: Service
-          name: {{ $fullname }}-api-server
-          port: {{ $.Values.ports.apiServer }}
-          {{- if .weight }}
-          weight: {{ .weight }}
-          {{- else }}
-          weight: 1
-          {{- end }}
+        - name: {{ $fullname }}-api-server
+          port: {{ .Values.ports.apiServer }}
     {{- end }}
-
----
-
-{{- if  .Values.httpRoute.apiServer.redirectRoute.enabled -}}
-{{- $fullname := (include "airflow.fullname" .) }}
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: {{ $fullname }}-api-server-redirect
-  namespace: {{ .Release.Namespace }}
-  labels:
-    tier: airflow
-    component: airflow-httproute
-    release: {{ .Release.Name }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    heritage: {{ .Release.Service }}
-    {{- if or .Values.labels .Values.apiServer.labels }}
-      {{- mustMerge .Values.apiServer.labels .Values.labels | toYaml | nindent 4 }}
-    {{- end }}
-  {{- with .Values.httpRoute.apiServer.annotations }}
-  annotations: {{- toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  {{- with .Values.httpRoute.apiServer.redirectRoute.parentRefs }}
-  parentRefs:
-    {{- tpl (toYaml .) $Global | nindent 4 }}
-  {{- end }}
-  {{- with .Values.httpRoute.apiServer.hostnames }}
-  hostnames:
-    {{- tpl (toYaml .) $Global | nindent 4 }}
-  {{- end }}
-  rules:
-  - filters:
-    - type: RequestRedirect
-      requestRedirect:
-        scheme: https
-        statusCode: 301
-{{- end }}
-
----
-
-{{- if  .Values.httpRoute.apiServer.backendTLSPolicy.enabled -}}
-apiVersion: gateway.networking.k8s.io/v1
-kind: BackendTLSPolicy
-metadata:
-  name: {{ $fullname }}-api-server
-  namespace: {{ .Release.Namespace }}
-  labels:
-    tier: airflow
-    component: airflow-httproute
-    release: {{ .Release.Name }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    heritage: {{ .Release.Service }}
-    {{- if or .Values.labels .Values.apiServer.labels }}
-      {{- mustMerge .Values.apiServer.labels .Values.labels | toYaml | nindent 4 }}
-    {{- end }}
-  {{- with .Values.httpRoute.apiServer.annotations }}
-  annotations: {{- toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  targetRefs:
-  - group: ""
-    kind: Service
-    name: {{ $fullname }}-api-server
-  validation:
-    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.hostname }}
-    hostname: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.hostname $Global | quote }}
-    {{- end }}
-    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.subjectAltNames }}
-    subjectAltNames:
-    {{- toYaml .Values.httpRoute.apiServer.backendTLSPolicy.subjectAltNames | nindent 6 }}
-    {{- end }}
-    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.caCertificateRefs }}
-    caCertificateRefs:
-    {{- toYaml .Values.httpRoute.apiServer.backendTLSPolicy.caCertificateRefs | nindent 6 }}
-    {{- end }}
-    {{- if  .Values.httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates }}
-    wellKnownCACertificates: {{ tpl .Values.httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates $Global | quote }}
-    {{- end }}
-{{- end }}
 {{- end }}

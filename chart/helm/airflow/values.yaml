@@ -2245,6 +2245,62 @@ migrateDatabaseJob:
 apiServer:
   enabled: true
 
+  # Kubernetes Gateway API (HTTPRoute) configuration for the API server.
+  # Requires the Gateway API CRDs to be installed in the cluster
+  # (https://gateway-api.sigs.k8s.io/guides/#installing-gateway-api).
+  # The HTTPRoute references an externally managed Gateway via `parentRefs`.
+  httpRoute:
+    # Enable API Server HTTPRoute resource.
+    # Mutually exclusive with `ingress.apiServer.enabled`; enable only one of them.
+    enabled: false
+
+    # Extra labels for the API Server HTTPRoute
+    labels: {}
+
+    # Annotations for the API Server HTTPRoute
+    annotations: {}
+
+    # List of parent Gateway references this HTTPRoute attaches to. Required when enabled.
+    # See https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io/v1.ParentReference
+    parentRefs: ~
+    # - name: my-gateway
+    #   namespace: gateway-system
+    #   sectionName: https
+
+    # Hostnames this HTTPRoute should match (templated). Empty matches all.
+    hostnames: []
+    # - "airflow.example.com"
+
+    # Default routing rule path (used only when `apiServer.httpRoute.rules` is empty)
+    path: "/"
+
+    # The pathType for the default path. PathPrefix | Exact | RegularExpression
+    pathType: PathPrefix
+
+    # Custom routing rules. When set, overrides the default rule generated from `path` + `pathType`.
+    # See https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io/v1.HTTPRouteRule
+    rules: []
+
+    #---Qubership custom change: Redirect HTTPRoute for HTTP→HTTPS and BackendTLSPolicy for mTLS---
+    redirectRoute:
+      # Enable a separate HTTPRoute that issues a 301 HTTP→HTTPS redirect
+      enabled: false
+      # parentRefs for the redirect HTTPRoute (typically the HTTP listener of the gateway)
+      parentRefs: []
+      # - name: default-external-gateway
+      #   namespace: envoy-gateway
+      #   port: 80
+
+    backendTLSPolicy:
+      # Enable a BackendTLSPolicy to configure TLS between the gateway and the API server pod
+      enabled: false
+      hostname: ''
+      caCertificateRefs: []
+      # - kind: ConfigMap
+      #   name: httpbin-ca
+      wellKnownCACertificates: ""
+      subjectAltNames: []
+
   # Number of Airflow API servers in the Deployment.
   # Omitted from the Deployment, when HPA is enabled.
   replicas: 1
@@ -4367,21 +4423,4 @@ statusProvisioner:
   #   memory: 50Mi
 
 useQubershipDeployerUpdateStrategies: true
-
-httpRoute:
-  apiServer:
-    enabled: false
-    annotations: {}
-    parentRefs: []
-    hostnames: []
-    rules: []
-    redirectRoute:
-      enabled: false
-      parentRefs: []
-    backendTLSPolicy:
-      enabled: false
-      hostname: ''
-      caCertificateRefs: []
-      wellKnownCACertificates: ""
-      subjectAltNames: []
 

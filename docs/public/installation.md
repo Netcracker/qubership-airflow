@@ -441,7 +441,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * Status provisioner job and parameters for it are added.
 * For scheduler, webserver and api-server deployments support of custom Qubership rolling update deployment strategies were added. The `useQubershipDeployerUpdateStrategies` parameter is added that can be used to disable Qubership update strategies (must be set to `false`).
 * HTTP Route and related objects for api server and parameters for their configuration are added.
-* Since HTTP Route for api server is present, `gateway-api-converter.netcracker.com/ignore: "true"` annotation is added by default to airflow API server ingress to indicate that it does not need to be converted to HTTPRoute. 
+* Since HTTP Route for api server is present, `gateway-api-converter.netcracker.com/ignore: "true"` annotation is added by default to airflow API server ingress to indicate that it does not need to be converted to HTTPRoute.
 * `values.schema.json` is changed. `values.schema.json` is not stored in this repository, but during the transfer-image build airflow schema is downloaded from airflow repository and modified in a way so only parameters that are used in Qubership platform are left in the schema. The default values for these parameters are changed to default values from Qubership platform. Also new Quberhip platform related parameters are added.
 * `airflowPodSecurityContext` template logic is modified in order to remove `runAsUser` and `fsGroup` from default security if .Values.PAAS_PLATFORM parameter is set to "OPENSHIFT".
 
@@ -2608,23 +2608,26 @@ Following configuration parameters are available:
 
 |Name|Type|Default|Description|
 |---|---|---|---|
-|httpRoute.apiServer.enabled|`boolean`|`false`|Specifies if HTTPRoute for API server is deployed.|
-|httpRoute.apiServer.annotations|`object`|`{}`|Annotations for HTTPRoute and related objects|
-|httpRoute.apiServer.parentRefs|`array`|`[]`|parentRefs for HTTPRoute|
-|httpRoute.apiServer.hostnames|`array`|`[]`|hostnames for HTTPRoute|
-|httpRoute.apiServer.rules|`array`|`[]`|rules for HTTPRoute. When `rules[].matches` is not set, it defaults to `path.type=PathPrefix` and `path.value=/`. `backendRefs` in the rule will point to api-server service, but the weight can be configured if needed.|
-|httpRoute.apiServer.redirectRoute.enabled|`boolean`|`false`|Specifies if redirect HTTPRoute for API server is deployed|
-|httpRoute.apiServer.redirectRoute.parentRefs|`array`|`[]`|parentRefs for redirect HTTPRoute|
-|httpRoute.apiServer.backendTLSPolicy.enabled|`boolean`|`false`|Specifies if backendTLSPolicy should be deployed|
-|httpRoute.apiServer.backendTLSPolicy.hostname|`string`|`''`|Hostname for backendTLSPolicy|
-|httpRoute.apiServer.backendTLSPolicy.caCertificateRefs|`array`|`[]`|caCertificateRefs for backendTLSPolicy|
-|httpRoute.apiServer.backendTLSPolicy.wellKnownCACertificates|`string`|`""`|wellKnownCACertificates for backendTLSPolicy|
-|httpRoute.apiServer.backendTLSPolicy.subjectAltNames|`array`|`[]`|subjectAltNames for backendTLSPolicy|
+|apiServer.httpRoute.enabled|`boolean`|`false`|Specifies if HTTPRoute for API server is deployed.|
+|apiServer.httpRoute.labels|`object`|`{}`|Extra labels for the HTTPRoute resource|
+|apiServer.httpRoute.annotations|`object`|`{}`|Annotations for HTTPRoute and related objects|
+|apiServer.httpRoute.parentRefs|`array`|`~`|parentRefs for HTTPRoute (required when enabled)|
+|apiServer.httpRoute.hostnames|`array`|`[]`|hostnames for HTTPRoute|
+|apiServer.httpRoute.path|`string`|`"/"`|Default routing rule path (used when `rules` is empty)|
+|apiServer.httpRoute.pathType|`string`|`PathPrefix`|Path type for the default rule: `PathPrefix`, `Exact`, or `RegularExpression`|
+|apiServer.httpRoute.rules|`array`|`[]`|Custom routing rules. When set, overrides the default rule from `path`+`pathType`.|
+|apiServer.httpRoute.redirectRoute.enabled|`boolean`|`false`|Specifies if redirect HTTPRoute for API server is deployed|
+|apiServer.httpRoute.redirectRoute.parentRefs|`array`|`[]`|parentRefs for redirect HTTPRoute|
+|apiServer.httpRoute.backendTLSPolicy.enabled|`boolean`|`false`|Specifies if backendTLSPolicy should be deployed|
+|apiServer.httpRoute.backendTLSPolicy.hostname|`string`|`''`|Hostname for backendTLSPolicy|
+|apiServer.httpRoute.backendTLSPolicy.caCertificateRefs|`array`|`[]`|caCertificateRefs for backendTLSPolicy|
+|apiServer.httpRoute.backendTLSPolicy.wellKnownCACertificates|`string`|`""`|wellKnownCACertificates for backendTLSPolicy|
+|apiServer.httpRoute.backendTLSPolicy.subjectAltNames|`array`|`[]`|subjectAltNames for backendTLSPolicy|
 
 Configuration example can be found below:
 ```yaml
-httpRoute:
-  apiServer:
+apiServer:
+  httpRoute:
     enabled: true
     parentRefs:
       - group: gateway.networking.k8s.io
@@ -2634,7 +2637,13 @@ httpRoute:
     hostnames:
       - airflow-gateway.your.k8s.hostname
     rules:
-      - path: {}
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /
+        backendRefs:
+          - name: my-release-api-server
+            port: 8080
 ```
 
 ## Enabling HPAs for workers and API server
