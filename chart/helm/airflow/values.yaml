@@ -151,6 +151,9 @@ schedulerName: ~
 labels:
   app.kubernetes.io/part-of: 'airflow'
 
+# Whenever service links should be added to each pod.
+enableServiceLinks: false
+
 # List of existing Kubernetes secrets containing Base64 encoded credentials to connect to private
 # registries. Items can be either strings or {name: secret} objects.
 imagePullSecrets: []

@@ -92,6 +92,7 @@ spec:
       topologySpreadConstraints: {{- toYaml $topologySpreadConstraints | nindent 8 }}
       terminationGracePeriodSeconds: {{ .Values.statsd.terminationGracePeriodSeconds }}
       serviceAccountName: {{ include "statsd.serviceAccountName" . }}
+      enableServiceLinks: {{ .Values.enableServiceLinks }}
       {{- /* Qubership custom change: add default Openshift/PAAS_PLATFORM support--- */ -}}
       {{- if eq (default "KUBERNETES" .Values.PAAS_PLATFORM) "OPENSHIFT" }}
       securityContext:

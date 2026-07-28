@@ -61,13 +61,14 @@ spec:
 #---Qubership custom change: Labels for Qubership release---
     spec:
       securityContext: {{ $securityContext | nindent 8 }}
+      enableServiceLinks: {{ .Values.enableServiceLinks }}
       activeDeadlineSeconds: 600
 {{- if and .Values.customPreinstallJob.enabled .Values.customPreinstallJob.serviceAccount.create }}
       serviceAccountName: {{ tpl .Values.customPreinstallJob.serviceAccount.name . | quote }}
 {{- end }}
 {{- if .Values.customPreinstallJob.extraVolumes }}
       volumes:
-{{ toYaml .Values.customPreinstallJob.extraVolumes | indent 8 }}
+{{ tpl (toYaml .Values.customPreinstallJob.extraVolumes) . | indent 8 }}
 {{- end }}
       containers:
         - envFrom:
@@ -84,7 +85,7 @@ spec:
           name: {{ include "airflow.fullname" . }}-custom-preinstall-job
             {{- if .Values.customPreinstallJob.extraVolumeMounts }}
           volumeMounts:
-            {{ toYaml .Values.customPreinstallJob.extraVolumeMounts | nindent 12 }}
+            {{ tpl (toYaml .Values.customPreinstallJob.extraVolumeMounts) . | nindent 12 }}
             {{- end }}
           resources:
 {{ toYaml .Values.customPreinstallJob.resources | indent 12 }}

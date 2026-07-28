@@ -234,6 +234,7 @@ spec:
   {{- else }}
   serviceAccountName: {{ include "worker.serviceAccountName" . }}
   {{- end }}
+  enableServiceLinks: {{ .Values.enableServiceLinks }}
   volumes:
   {{- if .Values.dags.persistence.enabled }}
   - name: dags
