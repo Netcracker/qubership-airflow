@@ -214,7 +214,7 @@ spec:
               mountPath: {{ .Values.kerberos.ccacheMountPath | quote }}
               readOnly: false
             {{- if .Values.volumeMounts }}
-              {{- toYaml .Values.volumeMounts | nindent 12 }}
+              {{- tpl (toYaml .Values.volumeMounts) . | nindent 12 }}
             {{- end }}
             {{- if .Values.workers.extraVolumeMounts }}
               {{- tpl (toYaml .Values.workers.extraVolumeMounts) . | nindent 12 }}
@@ -242,7 +242,7 @@ spec:
               {{- end }}
             {{- include "airflow_config_mount" . | nindent 12 }}
             {{- if .Values.volumeMounts }}
-              {{- toYaml .Values.volumeMounts | nindent 12 }}
+              {{- tpl (toYaml .Values.volumeMounts) . | nindent 12 }}
             {{- end }}
             {{- if .Values.workers.extraVolumeMounts }}
               {{- tpl (toYaml .Values.workers.extraVolumeMounts) . | nindent 12 }}
@@ -301,7 +301,7 @@ spec:
               containerPort: {{ .Values.ports.workerLogs }}
           volumeMounts:
             {{- if .Values.volumeMounts }}
-              {{- toYaml .Values.volumeMounts | nindent 12 }}
+              {{- tpl (toYaml .Values.volumeMounts) . | nindent 12 }}
             {{- end }}
             {{- if .Values.workers.extraVolumeMounts }}
               {{- tpl (toYaml .Values.workers.extraVolumeMounts) . | nindent 12 }}
@@ -393,7 +393,7 @@ spec:
               subPath: {{ .Values.logs.persistence.subPath }}
               {{- end }}
             {{- if .Values.volumeMounts }}
-              {{- toYaml .Values.volumeMounts | nindent 12 }}
+              {{- tpl (toYaml .Values.volumeMounts) . | nindent 12 }}
             {{- end }}
             {{- if .Values.workers.extraVolumeMounts }}
               {{- tpl (toYaml .Values.workers.extraVolumeMounts) . | nindent 12 }}
@@ -428,7 +428,7 @@ spec:
               mountPath: {{ .Values.kerberos.ccacheMountPath | quote }}
               readOnly: false
             {{- if .Values.volumeMounts }}
-              {{- toYaml .Values.volumeMounts | nindent 12 }}
+              {{- tpl (toYaml .Values.volumeMounts) . | nindent 12 }}
             {{- end }}
             {{- if .Values.workers.extraVolumeMounts }}
               {{- tpl (toYaml .Values.workers.extraVolumeMounts) . | nindent 12 }}
@@ -447,7 +447,7 @@ spec:
         {{- end }}
       volumes:
         {{- if .Values.volumes }}
-          {{- toYaml .Values.volumes | nindent 8 }}
+          {{- tpl (toYaml .Values.volumes) . | nindent 8 }}
         {{- end }}
         {{- if .Values.workers.extraVolumes }}
           {{- tpl (toYaml .Values.workers.extraVolumes) . | nindent 8 }}

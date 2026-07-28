@@ -154,6 +154,13 @@ labels:
 # Whenever service links should be added to each pod.
 enableServiceLinks: false
 
+# Specify the ip family policy to configure dual-stack networking for all Services.
+# See https://kubernetes.io/docs/concepts/services-networking/dual-stack/
+ipFamilyPolicy: ~
+
+# List of IP families for all Services (e.g., ["IPv4"] or ["IPv6"] or ["IPv4","IPv6"]).
+ipFamilies: []
+
 # List of existing Kubernetes secrets containing Base64 encoded credentials to connect to private
 # registries. Items can be either strings or {name: secret} objects.
 imagePullSecrets: []
@@ -397,7 +404,7 @@ env:
 # - name: ""
 #   value: ""
 
-# Volumes for all Airflow containers
+# Volumes for all Airflow containers (templated)
 volumes:
   - name: emtpyvolume1
     emptyDir: {}
@@ -434,7 +441,7 @@ volumes:
             path: token
       defaultMode: 420
 
-# VolumeMounts for all Airflow containers
+# VolumeMounts for all Airflow containers (templated)
 volumeMounts:
   - name: emtpyvolume1
     mountPath: /tmp
@@ -3463,7 +3470,7 @@ pgbouncer:
   # Maximum clients that can connect to PgBouncer (higher = more file descriptors)
   maxClientConn: 100
 
-  # Supply the name of existing secret with 'pgbouncer.ini' and 'users.txt' defined
+  # Supply the name of existing secret with 'pgbouncer.ini' and 'users.txt' defined (templated)
   configSecretName: ~
   # Secret example:
   #  apiVersion: v1
