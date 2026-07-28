@@ -8,7 +8,7 @@ from jsonschema import validate
 
 url = (
     "https://raw.githubusercontent.com/apache/airflow/"
-    "9a9f51bfcd270978cf60eadb41a818640c27fa6c/chart/values.schema.json"
+    "45a93a1e1fbadcdf46648fe7658b61ea55fff9d3/chart/values.schema.json"
 )
 global_params_to_keep = ["$schema", "description", "type", "definitions"]
 values_params_to_keep = [
@@ -84,6 +84,7 @@ values_params_to_keep = [
     "apiServer.strategy",
     "apiServer.resources",
     "apiServer.apiServerConfig",
+    "apiServer.httpRoute",
     "statsd.enabled",
     "statsd.resources",
     "statsd.securityContexts",
@@ -259,11 +260,31 @@ def replace_common_key(current_element, old_key, new_key):
                 replace_common_key(current_element[key], old_key, new_key)
 
 
+def deep_merge_schema_properties(base, override):
+    result = copy.deepcopy(base)
+    for key, value in override.items():
+        if (
+            key in result
+            and isinstance(result[key], dict)
+            and isinstance(value, dict)
+            and "properties" in result[key]
+            and "properties" in value
+        ):
+            merged = copy.deepcopy(result[key])
+            merged["properties"] = deep_merge_schema_properties(
+                result[key]["properties"], value["properties"]
+            )
+            result[key] = merged
+        else:
+            result[key] = copy.deepcopy(value)
+    return result
+
+
 def add_qubership_custom_schema(qubership_schema_internal, customized_schema_internal):
     replace_common_key(qubership_schema_internal, "airflow_base_ref", "$ref")
-    customized_schema_internal["properties"] = (
-        customized_schema_internal["properties"]
-        | qubership_schema_internal["properties"]
+    customized_schema_internal["properties"] = deep_merge_schema_properties(
+        customized_schema_internal["properties"],
+        qubership_schema_internal["properties"],
     )
 
 
