@@ -8,10 +8,10 @@ Find a Deployment Status Provisioner image in various places.
 Calculates resources that should be monitored during deployment by Deployment Status Provisioner.
 */}}
 {{- define "airflow.monitoredResources" -}}
-  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") (not .Values.workers.persistence.enabled) .Values.workers.replicas -}}
+  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") (not .Values.workers.celery.persistence.enabled) .Values.workers.celery.replicas -}}
   {{- printf "Deployment %s-worker, " (include "airflow.fullname" .) -}}
   {{- end -}}
-  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") .Values.workers.persistence.enabled .Values.workers.replicas -}}
+  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") .Values.workers.celery.persistence.enabled .Values.workers.celery.replicas -}}
   {{- printf "StatefulSet %s-worker, " (include "airflow.fullname" .) -}}
   {{- end -}}
   {{- if .Values.scheduler.replicas }}
