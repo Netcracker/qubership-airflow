@@ -129,7 +129,7 @@ images:
     pullPolicy: IfNotPresent
   gitSync:
     repository: registry.k8s.io/git-sync/git-sync
-    tag: v4.6.0
+    tag: v4.7.1
     pullPolicy: IfNotPresent
   otelCollector:
     repository: otel/opentelemetry-collector-contrib
