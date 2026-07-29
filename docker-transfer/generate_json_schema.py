@@ -176,7 +176,9 @@ def compare_complex_element(
                     customized_schema_internal,
                 )
         elif key not in current_schema_element["properties"]:
-            print(f"Skipping {values_param}.{key} - Qubership-only key, not present in upstream schema")
+            print(
+                f"Skipping {values_param}.{key} - Qubership-only key, not present in upstream schema"
+            )
             continue
         elif "default" in current_schema_element["properties"][key]:
             if value == current_schema_element["properties"][key]["default"]:
