@@ -31,3 +31,8 @@ Run Dag To Check PG Connection
     Wait Until Keyword Succeeds  ${COUNT_OF_RETRY}  ${RETRY_INTERVAL}
     ...  Wait Until DAG Succeed  postgres_operator_test_dag  ${resp['dag_run_id']}
     [Teardown]  Delete PG Connection
+
+Test Container Hardening
+    [Tags]    smoke    airflow_container_hardening_test   airflow_container_hardening_test
+    ${part_of}=    Create List
+    Check Container Hardening    ${part_of}    ${AIRFLOW_NAMESPACE}
