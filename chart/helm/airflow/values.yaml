@@ -732,7 +732,7 @@ workers:
     # Queue name for the default workers
     queue: "default"
 
-    # List of worker sets. Each item can overwrite values from the parent `workers.celery`
+    # List of worker sets. Each item can overwrite values from the parent `workers` and `workers.celery`
     # section.
     sets: []
     # sets:
@@ -770,6 +770,7 @@ workers:
     # podManagementPolicy: Parallel
 
     # Detailed default security context for Airflow Celery workers for container and pod level
+    # If not set, the values from `workers.securityContexts` section will be used.
     securityContexts:
       pod: {}
       container: {}
@@ -1118,6 +1119,7 @@ workers:
     command: ~
 
     # Detailed default security context for pod-template-file for container and pod level
+    # If not set, the values from `workers.securityContexts` section will be used.
     securityContexts:
       pod: {}
       container: {}
@@ -1130,9 +1132,13 @@ workers:
     # 'templates/workers/worker-kubernetes-serviceaccount.yaml' file
     serviceAccount:
       # ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+      # If not specified, the `workers.serviceAccount.automountServiceAccountToken` value will be taken
       automountServiceAccountToken: true
 
       # Specifies whether a Service Account should be created.
+      # If not specified, the Service Account will be generated and used from
+      # 'templates/workers/worker-serviceaccount.yaml' file if `workers.serviceAccount.create`
+      # will be 'true'
       create: true
 
       # The name of the Service Account to use.
@@ -1141,6 +1147,7 @@ workers:
       name: ~
 
       # Annotations to add to worker Kubernetes Service Account.
+      # If not specified, the `workers.serviceAccount.annotations` value will be taken
       annotations: {}
 
     # Kerberos sidecar configuration for pods created with pod-template-file
@@ -1164,8 +1171,10 @@ workers:
       containerLifecycleHooks: {}
 
     # Kerberos init container configuration for pods created with pod-template-file
+    # If not set, the values from `workers.kerberosInitContainer` section will be used.
     kerberosInitContainer:
       # Enable kerberos init container
+      # If `workers.kerberosInitContainer.enabled` is set to True, this flag has no effect
       enabled: false
 
       resources: {}

@@ -31,7 +31,7 @@
   {{- with $globals -}}
 {{- if (contains "CeleryExecutor" .Values.executor) }}
 ---
-{{- $persistence := or .Values.workers.celery.persistence.enabled }}
+{{- $persistence := .Values.workers.celery.persistence.enabled }}
 {{- $keda := .Values.workers.celery.keda.enabled }}
 {{- $hpa := and .Values.workers.celery.hpa.enabled (not .Values.workers.celery.keda.enabled) }}
 {{- $nodeSelector := or .Values.workers.celery.nodeSelector .Values.nodeSelector }}
@@ -108,11 +108,11 @@ spec:
         tier: airflow
         component: worker
         release: {{ .Release.Name }}
-        {{- if or .Values.labels .Values.workers.celery.labels }}
-          {{- mustMerge .Values.workers.celery.labels .Values.labels | toYaml | nindent 8 }}
-        {{- end }}
         {{- if ne .Values.workers.celery.name "default" }}
         worker-set: {{ .Values.workers.celery.name }}
+        {{- end }}
+        {{- if or .Values.labels .Values.workers.celery.labels }}
+          {{- mustMerge .Values.workers.celery.labels .Values.labels | toYaml | nindent 8 }}
         {{- end }}
 #---Qubership custom change: Labels for Qubership release---
         {{- include "deployment_only_labels_worker" . | nindent 8 }}
@@ -223,7 +223,7 @@ spec:
             - name: KRB5CCNAME
               value:  {{ include "kerberos_ccache_path" . | quote }}
             {{- include "custom_airflow_environment" . | indent 10 }}
-            {{- include "standard_airflow_environment" . | indent 10 }}
+            {{- include "standard_airflow_environment" (merge (dict "IncludeJwtSecret" false) .) | indent 10 }}
         {{- end }}
         {{- if .Values.workers.celery.waitForMigrations.enabled }}
         - name: wait-for-airflow-migrations
@@ -437,7 +437,7 @@ spec:
             - name: KRB5CCNAME
               value:  {{ include "kerberos_ccache_path" . | quote }}
             {{- include "custom_airflow_environment" . | indent 10 }}
-            {{- include "standard_airflow_environment" . | indent 10 }}
+            {{- include "standard_airflow_environment" (merge (dict "IncludeJwtSecret" false) .) | indent 10 }}
         {{- end }}
         {{- if .Values.workers.celery.extraContainers }}
           {{- tpl (toYaml .Values.workers.celery.extraContainers) . | nindent 8 }}
