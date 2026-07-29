@@ -175,6 +175,9 @@ def compare_complex_element(
                     value,
                     customized_schema_internal,
                 )
+        elif key not in current_schema_element["properties"]:
+            print(f"Skipping {values_param}.{key} - Qubership-only key, not present in upstream schema")
+            continue
         elif "default" in current_schema_element["properties"][key]:
             if value == current_schema_element["properties"][key]["default"]:
                 print(f"values for {values_param}.{key} are the same!")
@@ -294,7 +297,7 @@ parser.add_argument("--additional_schema", default="qubership_values.schema.json
 parser.add_argument("--target_schema", default="target/values.schema.json")
 args = parser.parse_args()
 customized_schema = reuse_existing_params()
-with open(args.complete_values, "r") as default_qubership_values:
+with open(args.complete_values, "r", encoding="utf-8") as default_qubership_values:
     qubership_values = yaml.safe_load(default_qubership_values)
 update_defaults_for_existing_schema(qubership_values, customized_schema)
 remove_common_key(customized_schema, "x-docsSection")
