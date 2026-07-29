@@ -308,11 +308,11 @@ Aside from container resources and pod replicas, main parameters that also affec
 |`config.database.sql_alchemy_pool_recycle`|The SqlAlchemy pool recycle is the number of seconds a connection can be idle in the pool before it is invalidated. This config does not apply to sqlite. If the number of DB connections is ever exceeded, a lower config value will allow the system to recover faster.|1800|
 |`config.database.sql_alchemy_max_overflow`|The maximum overflow size of the pool. When the number of checked-out connections reaches the size set in pool_size, additional connections are returned up to this limit. When those additional connections are returned to the pool, they are disconnected and discarded. It follows, then the total number of simultaneous connections the pool allows is pool_size + max_overflow, and the total number of “sleeping” connections the pool allows is `pool_size`. `max_overflow` can be set to -1 to indicate no overflow limit; no limit is placed on the total number of concurrent connections.|10|
 
-Another thing that can affect resources is logging configuration. Too many log messages can affect the scheduler and worker container resources. What's more, when deploying Airflow with logging configuration, that also writes to filesystem, scheduler, and container pods include log groomer sidecars that are responsible for cleaning logs. The resource usage of these sidecars is also affected by logging configuration. Resource usage for the containers can be configured using `workers.logGroomerSidecar.resources` and `scheduler.logGroomerSidecar.resources parameters.`
+Another thing that can affect resources is logging configuration. Too many log messages can affect the scheduler and worker container resources. What's more, when deploying Airflow with logging configuration, that also writes to filesystem, scheduler, and container pods include log groomer sidecars that are responsible for cleaning logs. The resource usage of these sidecars is also affected by logging configuration. Resource usage for the containers can be configured using `workers.celery.logGroomerSidecar.resources` and `scheduler.logGroomerSidecar.resources parameters.`
 
 Qubership platform provides 3 different reference resource profiles, but these profiles should be adjusted per project based on the number of DAGs, structure of DAGs, DAG schedule, and configuration options. 
 
-**Note**: The profiles do not include storage size for logs (`workers.persistence.size` parameter), it should be configured based on your logging configuration, DAG number, DAG structure, and DAG schedule.
+**Note**: The profiles do not include storage size for logs (`workers.celery.persistence.size` parameter), it should be configured based on your logging configuration, DAG number, DAG structure, and DAG schedule.
 
 ### Small
 
@@ -1418,7 +1418,7 @@ apiServer:
 ### Default Logging Config Class
 
 With the default Airflow logging config class and with default Airflow configuration, the root logs are written to stdout. The task logs, DAG parsing, and processing logs are written to the filesystem. 
-By default, with **celery executor**, `workers.persistence.enabled` is set to `true` and Airflow workers are deployed as a statefulset and require storage class for logs. Otherwise, the task logs are not available in the Airflow Web UI.
+By default, with **celery executor**, `workers.celery.persistence.enabled` is set to `true` and Airflow workers are deployed as a statefulset and require storage class for logs. Otherwise, the task logs are not available in the Airflow Web UI.
 By default, with **Kubernetes executor**, task logs are stored in task worker pods and are available in the Web UI only during the task execution. Hence, to persist the logs, an additional configuration is required. The following two options are available and tested. 
 
 To enable the default logging configuration, it is necessary to specify the following:
@@ -1552,7 +1552,7 @@ For **celery executor**, custom logging config class allows:
 
 * To write logs both to stdout and to filesystem. To do so, it is necessary to specify:
 
-`workers.persistence.enabled=true`
+`workers.celery.persistence.enabled=true`
 
 ```yaml
 ...
@@ -1668,7 +1668,7 @@ It is possible to enable cronJob to clean airflow metadata database using `.Valu
 
 ## Cleaning Airflow Logs
 
-In the default and `QS_DEFAULT_LOGGING_CONFIG` logging config classes with a Celery executor, task logs are stored in the persistence storage provided by Kubernetes. For cleaning the logs in the storage, the log Groomer Sidecar container can be deployed as a part of the Airflow installation. The parameters for the sidecar can be specified under `workers.logGroomerSidecar` and `scheduler.logGroomerSidecar` in [Airflow values.yaml](/chart/helm/airflow/values.yaml). The `AIRFLOW__LOG_RETENTION_DAYS` environment variable can be used to specify the maximum age of the log files in the storage. By default, it is set to `15`.
+In the default and `QS_DEFAULT_LOGGING_CONFIG` logging config classes with a Celery executor, task logs are stored in the persistence storage provided by Kubernetes. For cleaning the logs in the storage, the log Groomer Sidecar container can be deployed as a part of the Airflow installation. The parameters for the sidecar can be specified under `workers.celery.logGroomerSidecar` and `scheduler.logGroomerSidecar` in [Airflow values.yaml](/chart/helm/airflow/values.yaml). The `AIRFLOW__LOG_RETENTION_DAYS` environment variable can be used to specify the maximum age of the log files in the storage. By default, it is set to `15`.
 
 With a Kubernetes executor, it is possible to set the policy for S3 storage to delete files in the logging bucket after the expiration time. If needed, it can be done with a python script using a custom pre-start job. The python3 script must look like the following:
 
@@ -2163,7 +2163,7 @@ config:
 
 To enable Kerberos support the following parameters are required:
 * `config.core.security`—This parameter must be set to `kerberos` to enable the Kerberos support in Airflow.
-* `workers.kerberosSidecar.enabled`—This parameter must be set to `true` to enable Kerberos sidecar in worker pods that updates Kerberos tickets.
+* `workers.celery.kerberosSidecar.enabled`—This parameter must be set to `true` to enable Kerberos sidecar in worker pods that updates Kerberos tickets.
 * `kerberos.enabled`—This parameter must be set to `true` to enable Kerberos configurations.
 * `kerberos.ccacheMountPath`—This parameter specifies the location of the ccache volume. By default it is set to `/var/kerberos-ccache`.
 * `kerberos.ccacheFileName`—This parameter specifies the name of the ccache file. By default it is set to `ccache`.
@@ -2648,32 +2648,33 @@ apiServer:
 
 ## Enabling HPAs for workers and API server
 
-It is possible to configure HPAs for workers and API servers using `apiServer.hpa.*` and `workers.hpa.*` parameters, for example:
+It is possible to configure HPAs for workers and API servers using `apiServer.hpa.*` and `workers.celery.hpa.*` parameters, for example:
 
 ```yaml
 workers:
-  hpa:
-    behavior:
-      scaleUp:
-        stabilizationWindowSeconds: 600
-        policies:
-          - type: Percent
-            value: 100
-            periodSeconds: 15
-          - type: Pods
-            value: 1
-            periodSeconds: 15
-        selectPolicy: Max
-    enabled: true
-    minReplicaCount: 1
-    maxReplicaCount: 3
-    metrics:
-      - type: Resource
-        resource:
-          name: cpu
-          target:
-            type: Utilization
-            averageUtilization: 50
+  celery:
+    hpa:
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 600
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 15
+            - type: Pods
+              value: 1
+              periodSeconds: 15
+          selectPolicy: Max
+      enabled: true
+      minReplicaCount: 1
+      maxReplicaCount: 3
+      metrics:
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 50
 ```
 
 For more information, please refer to the _Kubernetes Official Documentation_ at [https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) .
@@ -2988,7 +2989,7 @@ The information for On-Prem is specified below.
 
 For HA scheme, it is necessary to have more than one scheduler and worker (for Celery executor). If Web UI is important in your case, it is possible to have more than one Web UI too. 
 The parameters responsible for it are:
-`scheduler.replicas`,`workers.replicas`, `dagProcessor.replicas` and `apiServer.replicas`.
+`scheduler.replicas`, `workers.celery.replicas`, `dagProcessor.replicas` and `apiServer.replicas`.
 
 For providing high availability in case of accessing task logs, refer to the [Airflow Logging Config Classes](#airflow-logging-config-classes) section.
 
