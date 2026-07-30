@@ -67,5 +67,9 @@ spec:
       backendRefs:
         - name: {{ $fullname }}-api-server
           port: {{ .Values.ports.apiServer }}
+          {{- /* Qubership custom change: argocd outofsync fix */ -}}
+          weight: 1
+          kind: Service
+          group: ''
     {{- end }}
 {{- end }}

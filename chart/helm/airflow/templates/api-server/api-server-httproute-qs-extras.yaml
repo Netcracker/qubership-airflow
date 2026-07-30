@@ -29,7 +29,9 @@ spec:
   {{- end }}
   {{- with .Values.apiServer.httpRoute.hostnames }}
   hostnames:
-    {{- tpl (toYaml .) $Global | nindent 4 }}
+    {{- range . }}
+    - {{ tpl . $Global | quote }}
+    {{- end }}
   {{- end }}
   rules:
   - filters:
