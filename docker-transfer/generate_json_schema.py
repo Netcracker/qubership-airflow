@@ -125,11 +125,22 @@ def reuse_existing_params():
                 ]
                 continue
             if path_counter == len(values_param_path_array):
-                current_customized_element["properties"][values_param_single] = (
-                    copy.deepcopy(
-                        current_community_element["properties"][values_param_single]
-                    )
+                copied = copy.deepcopy(
+                    current_community_element["properties"][values_param_single]
                 )
+                # If upstream refactored this entry to a bare $ref (no inline properties),
+                # inline the referenced definition so downstream code always sees a plain
+                # properties object.
+                if "$ref" in copied and "properties" not in copied:
+                    ref_path = copied["$ref"].replace("#/", "", 1).split("/")
+                    ref_def = community_schema
+                    for ref_part in ref_path:
+                        ref_def = ref_def[ref_part]
+                    del copied["$ref"]
+                    for k, v in ref_def.items():
+                        if k not in copied:
+                            copied[k] = copy.deepcopy(v)
+                current_customized_element["properties"][values_param_single] = copied
                 continue
             else:
                 current_customized_element["properties"][values_param_single] = (
@@ -159,6 +170,11 @@ def compare_complex_element(
             ref_value = customized_schema_internal
             for ref_param in element_path:
                 ref_value = ref_value[ref_param]
+            if key not in ref_value["properties"]:
+                print(
+                    f"Skipping {values_param}.{key} - Qubership-only key, not present in upstream schema"
+                )
+                continue
             if "default" in ref_value["properties"][key]:
                 if value == ref_value["properties"][key]["default"]:
                     print(f"values for {values_param}.{key} are the same!")
