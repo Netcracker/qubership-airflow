@@ -871,7 +871,7 @@ config:
 
 In the above example, MAAS parameters are not needed, if MAAS integration is not used.
 
-For DBaaS, by default, password authentication is used (`DBAAS_M2M_ENABLED: 'false'`), and `DBAAS_PASSWORD`/`DBAAS_PG_DB_OWNER` must be specified in the stringData of `dbaas-connection-params-main` secret. To switch to m2m authentication using k8s service accounts, set `DBAAS_M2M_ENABLED` to `true` and remove `DBAAS_PASSWORD` from the secret. The `dbaas-m2m-token` volume/volumeMount is included by default and is used automatically when m2m is enabled.
+For DBaaS, by default, password authentication is used (`DBAAS_M2M_ENABLED: 'false'`), and `DBAAS_USER`/`DBAAS_PASSWORD` must be specified in the stringData of `dbaas-connection-params-main` secret. To switch to m2m authentication using k8s service accounts, set `DBAAS_M2M_ENABLED` to `true` and remove `DBAAS_USER`/`DBAAS_PASSWORD` from the secret. The `dbaas-m2m-token` volume/volumeMount is included by default and is used automatically when m2m is enabled.
 
 For MaaS, by default, m2m authentication using k8s service accounts is used. However, if needed, it is possible to use password authentication. For this, `MAAS_M2M_ENABLED` parameter must be set to `false`, and `MAAS_USER`/`MAAS_PASSWORD` parameters must be specified in stringData of `dbaas-connection-params-main` secret. Also, no need to pass `maas-m2m-token` volume/volumeMount in this case.
 
