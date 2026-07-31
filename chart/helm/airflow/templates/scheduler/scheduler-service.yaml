@@ -19,10 +19,10 @@
  Modified in 2025 by NetCracker Technology Corp.
 */}}
 
-################################
+############################
 ## Airflow Scheduler Service
-#################################
-{{- if and .Values.scheduler.enabled (or (contains "LocalExecutor" .Values.executor) (contains "LocalKubernetesExecutor" .Values.executor)) }}
+############################
+{{- if and .Values.scheduler.enabled (contains "LocalExecutor" .Values.executor) }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -50,5 +50,11 @@ spec:
       protocol: TCP
       port: {{ .Values.ports.workerLogs }}
       targetPort: {{ .Values.ports.workerLogs }}
+  {{- if .Values.ipFamilyPolicy }}
+  ipFamilyPolicy: {{ .Values.ipFamilyPolicy }}
+  {{- end }}
+  {{- if .Values.ipFamilies }}
+  ipFamilies: {{- toYaml .Values.ipFamilies | nindent 4 }}
+  {{- end }}
 {{- end }}
 

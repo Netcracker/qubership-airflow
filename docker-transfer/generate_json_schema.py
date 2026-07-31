@@ -8,7 +8,7 @@ from jsonschema import validate
 
 url = (
     "https://raw.githubusercontent.com/apache/airflow/"
-    "9a9f51bfcd270978cf60eadb41a818640c27fa6c/chart/values.schema.json"
+    "b74616b500e64cb0e665d23bbd81f32246e125d0/chart/values.schema.json"
 )
 global_params_to_keep = ["$schema", "description", "type", "definitions"]
 values_params_to_keep = [
@@ -42,22 +42,22 @@ values_params_to_keep = [
     "jwtSecretName",
     "jwtSecretAnnotations",
     # "kerberos",
-    "workers.replicas",
-    "workers.command",
-    "workers.args",
-    "workers.hpa",
-    "workers.persistence.enabled",
-    "workers.persistence.size",
-    "workers.persistence.storageClassName",
-    # "workers.kerberosSidecar.enabled",
-    # "workers.kerberosSidecar.resources",
-    # "workers.kerberosInitContainer.enabled",
-    # "workers.kerberosInitContainer.resources",
-    "workers.resources",
-    "workers.extraVolumes",
-    "workers.hostAliases",
-    "workers.extraVolumeMounts",
-    "workers.logGroomerSidecar",
+    "workers.celery.replicas",
+    "workers.celery.command",
+    "workers.celery.args",
+    "workers.celery.hpa",
+    "workers.celery.persistence.enabled",
+    "workers.celery.persistence.size",
+    "workers.celery.persistence.storageClassName",
+    # "workers.celery.kerberosSidecar.enabled",
+    # "workers.celery.kerberosSidecar.resources",
+    # "workers.celery.kerberosInitContainer.enabled",
+    # "workers.celery.kerberosInitContainer.resources",
+    "workers.celery.resources",
+    "workers.celery.extraVolumes",
+    "workers.celery.hostAliases",
+    "workers.celery.extraVolumeMounts",
+    "workers.celery.logGroomerSidecar",
     "scheduler.replicas",
     "scheduler.command",
     "scheduler.args",
@@ -84,6 +84,7 @@ values_params_to_keep = [
     "apiServer.strategy",
     "apiServer.resources",
     "apiServer.apiServerConfig",
+    "apiServer.httpRoute",
     "statsd.enabled",
     "statsd.resources",
     "statsd.securityContexts",
@@ -124,11 +125,22 @@ def reuse_existing_params():
                 ]
                 continue
             if path_counter == len(values_param_path_array):
-                current_customized_element["properties"][values_param_single] = (
-                    copy.deepcopy(
-                        current_community_element["properties"][values_param_single]
-                    )
+                copied = copy.deepcopy(
+                    current_community_element["properties"][values_param_single]
                 )
+                # If upstream refactored this entry to a bare $ref (no inline properties),
+                # inline the referenced definition so downstream code always sees a plain
+                # properties object.
+                if "$ref" in copied and "properties" not in copied:
+                    ref_path = copied["$ref"].replace("#/", "", 1).split("/")
+                    ref_def = community_schema
+                    for ref_part in ref_path:
+                        ref_def = ref_def[ref_part]
+                    del copied["$ref"]
+                    for k, v in ref_def.items():
+                        if k not in copied:
+                            copied[k] = copy.deepcopy(v)
+                current_customized_element["properties"][values_param_single] = copied
                 continue
             else:
                 current_customized_element["properties"][values_param_single] = (
@@ -158,6 +170,11 @@ def compare_complex_element(
             ref_value = customized_schema_internal
             for ref_param in element_path:
                 ref_value = ref_value[ref_param]
+            if key not in ref_value["properties"]:
+                print(
+                    f"Skipping {values_param}.{key} - Qubership-only key, not present in upstream schema"
+                )
+                continue
             if "default" in ref_value["properties"][key]:
                 if value == ref_value["properties"][key]["default"]:
                     print(f"values for {values_param}.{key} are the same!")
@@ -174,6 +191,11 @@ def compare_complex_element(
                     value,
                     customized_schema_internal,
                 )
+        elif key not in current_schema_element["properties"]:
+            print(
+                f"Skipping {values_param}.{key} - Qubership-only key, not present in upstream schema"
+            )
+            continue
         elif "default" in current_schema_element["properties"][key]:
             if value == current_schema_element["properties"][key]["default"]:
                 print(f"values for {values_param}.{key} are the same!")
@@ -259,11 +281,31 @@ def replace_common_key(current_element, old_key, new_key):
                 replace_common_key(current_element[key], old_key, new_key)
 
 
+def deep_merge_schema_properties(base, override):
+    result = copy.deepcopy(base)
+    for key, value in override.items():
+        if (
+            key in result
+            and isinstance(result[key], dict)
+            and isinstance(value, dict)
+            and "properties" in result[key]
+            and "properties" in value
+        ):
+            merged = copy.deepcopy(result[key])
+            merged["properties"] = deep_merge_schema_properties(
+                result[key]["properties"], value["properties"]
+            )
+            result[key] = merged
+        else:
+            result[key] = copy.deepcopy(value)
+    return result
+
+
 def add_qubership_custom_schema(qubership_schema_internal, customized_schema_internal):
     replace_common_key(qubership_schema_internal, "airflow_base_ref", "$ref")
-    customized_schema_internal["properties"] = (
-        customized_schema_internal["properties"]
-        | qubership_schema_internal["properties"]
+    customized_schema_internal["properties"] = deep_merge_schema_properties(
+        customized_schema_internal["properties"],
+        qubership_schema_internal["properties"],
     )
 
 
@@ -273,7 +315,7 @@ parser.add_argument("--additional_schema", default="qubership_values.schema.json
 parser.add_argument("--target_schema", default="target/values.schema.json")
 args = parser.parse_args()
 customized_schema = reuse_existing_params()
-with open(args.complete_values, "r") as default_qubership_values:
+with open(args.complete_values, "r", encoding="utf-8") as default_qubership_values:
     qubership_values = yaml.safe_load(default_qubership_values)
 update_defaults_for_existing_schema(qubership_values, customized_schema)
 remove_common_key(customized_schema, "x-docsSection")

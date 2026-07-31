@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
     "platformAirflowMonitoring": {
@@ -559,49 +559,17 @@
       "type": "boolean",
       "default": true
     },
-    "httpRoute": {
-      "structuredValue": true,
-      "description": "Status provisioner configuration",
+    "apiServer": {
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "apiServer": {
-          "structuredValue": true,
-          "description": "Status provisioner configuration",
+        "httpRoute": {
           "type": "object",
-          "additionalProperties": false,
+          "additionalProperties": true,
           "properties": {
-            "enabled": {
-              "description": "Whether to enable apiServer http route",
-              "type": "boolean",
-              "default": false
-            },
-            "annotations": {
-              "description": "Annotations to add to the api server http route.",
-              "type": "object",
-              "default": {},
-              "additionalProperties": {
-                "type": "string"
-              }
-            },
-            "parentRefs": {
-              "description": "parentRefs for api server http route (can be templated).",
-              "type": "array",
-              "default": []
-            },
-            "hostnames": {
-              "description": "hostnames for api server http route (can be templated).",
-              "type": "array",
-              "default": []
-            },
-            "rules": {
-              "description": "rules for api server http route.",
-              "type": "array",
-              "default": []
-            },
             "redirectRoute": {
               "structuredValue": true,
-              "description": "redirect route configuration for custom TLS",
+              "description": "Redirect HTTPRoute for HTTP→HTTPS (Qubership extension)",
               "type": "object",
               "additionalProperties": false,
               "properties": {
@@ -611,7 +579,7 @@
                   "default": false
                 },
                 "parentRefs": {
-                  "description": "parentRefs for api server redirect http route (can be templated).",
+                  "description": "parentRefs for the redirect HTTPRoute (can be templated).",
                   "type": "array",
                   "default": [],
                   "examples": [
@@ -626,7 +594,7 @@
             },
             "backendTLSPolicy": {
               "structuredValue": true,
-              "description": "backendTLSPolicy configuration in case of airflow-api enabled TLS",
+              "description": "BackendTLSPolicy for gateway-to-pod TLS (Qubership extension)",
               "type": "object",
               "additionalProperties": false,
               "properties": {

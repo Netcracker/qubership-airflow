@@ -8,10 +8,10 @@ Find a Deployment Status Provisioner image in various places.
 Calculates resources that should be monitored during deployment by Deployment Status Provisioner.
 */}}
 {{- define "airflow.monitoredResources" -}}
-  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") (not .Values.workers.persistence.enabled) .Values.workers.replicas -}}
+  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") (not .Values.workers.celery.persistence.enabled) .Values.workers.celery.replicas -}}
   {{- printf "Deployment %s-worker, " (include "airflow.fullname" .) -}}
   {{- end -}}
-  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") .Values.workers.persistence.enabled .Values.workers.replicas -}}
+  {{- if and (ne (.Values.executor | toString) "KubernetesExecutor") .Values.workers.celery.persistence.enabled .Values.workers.celery.replicas -}}
   {{- printf "StatefulSet %s-worker, " (include "airflow.fullname" .) -}}
   {{- end -}}
   {{- if .Values.scheduler.replicas }}
@@ -23,7 +23,7 @@ Calculates resources that should be monitored during deployment by Deployment St
   {{- if .Values.dagProcessor.replicas }}
   {{- printf "Deployment %s-dag-processor, " (include "airflow.fullname" .) -}}
   {{- end }}
-  {{- if and .Values.statsd.enabled .Values.scheduler.replicas .Values.webserver.replicas }}
+  {{- if and .Values.statsd.enabled .Values.scheduler.replicas .Values.apiServer.replicas }}
   {{- printf "Deployment %s-statsd, " (include "airflow.fullname" .) -}}
   {{- end }}
   {{- if index .Values "airflow-site-manager" "enabled" }}
@@ -120,12 +120,6 @@ app.kubernetes.io/technology: python
 {{- define "deployment_only_labels_triggerer" -}}
 {{ include "deployment_only_labels" . }}
 app.kubernetes.io/component: {{ .Values.componentLabel | default "airflow-triggerer" }}
-app.kubernetes.io/technology: python
-{{- end }}
-
-{{- define "deployment_only_labels_webserver" -}}
-{{ include "deployment_only_labels" . }}
-app.kubernetes.io/component: {{ .Values.componentLabel | default "airflow-webserver" }}
 app.kubernetes.io/technology: python
 {{- end }}
 

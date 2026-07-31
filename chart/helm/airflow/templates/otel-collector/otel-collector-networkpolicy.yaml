@@ -17,41 +17,43 @@
  under the License.
 */}}
 
-################################
-## Airflow Webserver NetworkPolicy
-#################################
-{{- if and .Values.webserver.enabled (semverCompare "<3.0.0" .Values.airflowVersion) .Values.networkPolicies.enabled }}
-{{- $from := or .Values.webserver.networkPolicy.ingress.from .Values.webserver.extraNetworkPolicies }}
+#######################################
+## Airflow OTel Collector NetworkPolicy
+#######################################
+{{- if and .Values.networkPolicies.enabled (or .Values.otelCollector.tracesEnabled .Values.otelCollector.metricsEnabled) }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "airflow.fullname" . }}-webserver-policy
+  name: {{ include "airflow.fullname" . }}-otel-collector-policy
   labels:
     tier: airflow
-    component: airflow-webserver-policy
+    component: otel-collector-policy
     release: {{ .Release.Name }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: {{ .Release.Service }}
-    {{- if or .Values.labels .Values.webserver.labels }}
-      {{- mustMerge .Values.webserver.labels .Values.labels | toYaml | nindent 4 }}
+    {{- if or .Values.labels .Values.otelCollector.labels }}
+      {{- mustMerge .Values.otelCollector.labels .Values.labels | toYaml | nindent 4 }}
     {{- end }}
 spec:
   podSelector:
     matchLabels:
       tier: airflow
-      component: webserver
+      component: otel-collector
       release: {{ .Release.Name }}
   policyTypes:
-    - Ingress
-  {{- if $from }}
+  - Ingress
   ingress:
-    - from: {{- toYaml $from | nindent 6 }}
-      ports:
-      {{ range .Values.webserver.networkPolicy.ingress.ports }}
-        -
-          {{- range $key, $val := . }}
-          {{ $key }}: {{ tpl (toString $val) $ }}
-          {{- end }}
-      {{- end }}
-  {{- end }}
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: airflow
+          release: {{ .Release.Name }}
+    {{- if .Values.otelCollector.extraNetworkPolicies }}
+      {{- toYaml .Values.otelCollector.extraNetworkPolicies | nindent 4 }}
+    {{- end }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.ports.otelCollectorOtlpHttp }}
+    - protocol: TCP
+      port: {{ .Values.ports.otelCollectorOtlpGrpc }}
 {{- end }}

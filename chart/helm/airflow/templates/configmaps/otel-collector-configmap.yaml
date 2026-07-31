@@ -17,14 +17,14 @@
  under the License.
 */}}
 
-################################
-## Airflow ConfigMap
-#################################
-{{- if and .Values.webserver.webserverConfig (not .Values.webserver.webserverConfigConfigMapName) }}
+###########################
+## OTel Collector ConfigMap
+###########################
+{{- if or .Values.otelCollector.tracesEnabled .Values.otelCollector.metricsEnabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "airflow_webserver_config_configmap_name" . }}
+  name: {{ include "airflow.fullname" . }}-otel-collector
   labels:
     tier: airflow
     component: config
@@ -34,11 +34,40 @@ metadata:
     {{- with .Values.labels }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with .Values.webserver.configMapAnnotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
 data:
-  webserver_config.py: |-
-    {{- tpl .Values.webserver.webserverConfig . | nindent 4 }}
+  config.yml: |
+{{- if .Values.otelCollector.config }}
+{{ tpl .Values.otelCollector.config . | indent 4 }}
+{{- else }}
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:{{ .Values.ports.otelCollectorOtlpGrpc }}
+          http:
+            endpoint: 0.0.0.0:{{ .Values.ports.otelCollectorOtlpHttp }}
+
+    processors:
+      batch: {}
+
+    exporters:
+      logging:
+        verbosity: basic
+
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [logging]
+{{- end }}
 {{- end }}
