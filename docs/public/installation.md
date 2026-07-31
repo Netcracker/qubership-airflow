@@ -2636,14 +2636,6 @@ apiServer:
         namespace: envoy-api-gateway
     hostnames:
       - airflow-gateway.your.k8s.hostname
-    rules:
-      - matches:
-          - path:
-              type: PathPrefix
-              value: /
-        backendRefs:
-          - name: my-release-api-server
-            port: 8080
 ```
 
 ## Enabling HPAs for workers and API server
