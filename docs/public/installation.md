@@ -656,6 +656,8 @@ customPreinstallJob:
     'dbaas-connection-params-preins':
       stringData: |
         DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
+        DBAAS_USER: 'insert dbaas user here'
+        DBAAS_PASSWORD: 'insert dbaas password here'
         DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
         DBAAS_PG_BACKUP_DISABLED: 'true'
         DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -663,7 +665,7 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
-        DBAAS_M2M_ENABLED: 'true'
+        DBAAS_M2M_ENABLED: 'false'
   extraEnvFrom: ~
   extraVolumes:
     - name: dbaas-connection-params-preins
@@ -753,6 +755,8 @@ customPreinstallJob:
     'dbaas-connection-params-preins':
       stringData: |
         DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
+        DBAAS_USER: 'insert dbaas user here'
+        DBAAS_PASSWORD: 'insert dbaas password here'
         DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
         DBAAS_PG_BACKUP_DISABLED: 'true'
         DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -760,7 +764,7 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
-        DBAAS_M2M_ENABLED: 'true'
+        DBAAS_M2M_ENABLED: 'false'
   extraVolumes:
     - name: dbaas-connection-params-preins
       secret:
@@ -783,8 +787,8 @@ customPreinstallJob:
       mountPath: /var/run/secrets/tokens/dbaas
 ```
 
-In the above example, please note the `DBAAS_M2M_ENABLED` parameter. When it is set to `true`, the script will grant DBaaS permissions to all airflow service accounts for created PG/redis databases. `HELM_RELEASE_NAME` environment variable (or `dbaas-connection-params-preins` secret parameter) can be used to define service account names. By default it's `airflow`, so service account name example would be `airflow-dag-processor`. Authentication used will depend on whether `DBAAS_USER`/`DBAAS_PASSWORD` parameters are specified. If they are, login to DBaaS in the script will be done using these credentials, if not, authentication will be done using k8s token (that is mounted using `customPreinstallJob.extraVolumes`/`customPreinstallJob.extraVolumeMounts`). If `DBAAS_M2M_ENABLED` parameter is set to false, permissions to airflow service accounts will not be granted in DBaaS. In this case, `dbaas-m2m-token` extraVolumes/extraVolumeMounts are not needed.
-Note that `DBAAS_M2M_ENABLED` parameters and `customPreinstallJob.runOnUpdate` can be used to run preinstall job during airflow update in order to update database permissions when migrating from password authentication in DBaaS to m2m.
+In the above example, please note the `DBAAS_M2M_ENABLED` parameter. When it is set to `true`, the script will grant DBaaS permissions to all airflow service accounts for created PG/redis databases. `HELM_RELEASE_NAME` environment variable (or `dbaas-connection-params-preins` secret parameter) can be used to define service account names. By default it's `airflow`, so service account name example would be `airflow-dag-processor`. Authentication used will depend on whether `DBAAS_USER`/`DBAAS_PASSWORD` parameters are specified. If they are, login to DBaaS in the script will be done using these credentials, if not, authentication will be done using k8s token (that is mounted using `customPreinstallJob.extraVolumes`/`customPreinstallJob.extraVolumeMounts`). If `DBAAS_M2M_ENABLED` parameter is set to `false` (default), permissions to airflow service accounts will not be granted in DBaaS.
+Note that `DBAAS_M2M_ENABLED` and `customPreinstallJob.runOnUpdate` can be used to run the preinstall job during an Airflow update in order to grant database permissions to service accounts when migrating from password authentication in DBaaS to m2m.
 
 Platform also provides a DBaaS integration package for Airflow that [implements](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) Airflow custom secrets' backend. For more information, refer to [https://airflow.apache.org/docs/apache-airflow/3.3.0/security/secrets/secrets-backend/index.html](https://airflow.apache.org/docs/apache-airflow/3.3.0/security/secrets/secrets-backend/index.html). It is intended to be used with the custom preinstall job DBaaS script. The custom secrets' backend gets Redis and PG connections for Airflow from DBaaS. To enable custom secrets' backend, the following parameters must be specified (set by default):
 
@@ -808,6 +812,7 @@ extraSecrets:
   'dbaas-connection-params-main':
     stringData: |
       DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
+      DBAAS_PASSWORD: 'insert dbaas password here'
       DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
       DBAAS_PG_BACKUP_DISABLED: 'true'
       DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -816,7 +821,7 @@ extraSecrets:
       DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
       AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
       MAAS_HOST: 'insert.api.maas.addres.here.svc'
-      DBAAS_M2M_ENABLED: 'true'
+      DBAAS_M2M_ENABLED: 'false'
       MAAS_M2M_ENABLED: 'true'
 #      MAAS_USER: 'insert maas user here when not using m2m'
 #      MAAS_PASSWORD: 'insert maas password here when not using m2m'
@@ -866,7 +871,7 @@ config:
 
 In the above example, MAAS parameters are not needed, if MAAS integration is not used.
 
-For DBaaS, by default, m2m authentication using k8s service accounts is used. However, if needed, it is possible to use password authentication. For this, `DBAAS_M2M_ENABLED` parameter must be set to `false`, and `DBAAS_USER`/`DBAAS_PASSWORD` parameters must be specified in stringData of `dbaas-connection-params-main` secret. Also, no need to pass `dbaas-m2m-token` volume/volumeMount in this case.
+For DBaaS, by default, password authentication is used (`DBAAS_M2M_ENABLED: 'false'`), and `DBAAS_PASSWORD`/`DBAAS_PG_DB_OWNER` must be specified in the stringData of `dbaas-connection-params-main` secret. To switch to m2m authentication using k8s service accounts, set `DBAAS_M2M_ENABLED` to `true` and remove `DBAAS_PASSWORD` from the secret. The `dbaas-m2m-token` volume/volumeMount is included by default and is used automatically when m2m is enabled.
 
 For MaaS, by default, m2m authentication using k8s service accounts is used. However, if needed, it is possible to use password authentication. For this, `MAAS_M2M_ENABLED` parameter must be set to `false`, and `MAAS_USER`/`MAAS_PASSWORD` parameters must be specified in stringData of `dbaas-connection-params-main` secret. Also, no need to pass `maas-m2m-token` volume/volumeMount in this case.
 
