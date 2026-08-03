@@ -474,10 +474,10 @@ extraSecrets:
       DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
       AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
       MAAS_HOST: 'insert.api.maas.addres.here.svc'
-      DBAAS_M2M_ENABLED: 'true'
+      DBAAS_PASSWORD: 'insert dbaas password here'
+      DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
+      DBAAS_M2M_ENABLED: 'false'
       MAAS_M2M_ENABLED: 'true'
-#      DBAAS_PASSWORD: 'insert dbaas password here when not using m2m'
-#      DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here when not using m2m'
 #      MAAS_USER: 'insert maas user here when using maas and not using m2m'
 #      MAAS_PASSWORD: 'insert maas password here'
 # eg:
@@ -3856,6 +3856,8 @@ customPreinstallJob:
     'dbaas-connection-params-preins':
       stringData: |
         DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
+        DBAAS_USER: 'insert dbaas user here'
+        DBAAS_PASSWORD: 'insert dbaas password here'
         DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
         DBAAS_PG_BACKUP_DISABLED: 'true'
         DBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'
@@ -3863,7 +3865,7 @@ customPreinstallJob:
         DBAAS_REDIS_BACKUP_DISABLED: 'true'
         DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
         AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
-        DBAAS_M2M_ENABLED: 'true'
+        DBAAS_M2M_ENABLED: 'false'
   extraEnvFrom: ~
   extraVolumes:
     - name: dbaas-connection-params-preins

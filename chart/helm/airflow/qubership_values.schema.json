@@ -305,7 +305,7 @@
           "type": "object",
           "default": {
             "dbaas-connection-params-preins": {
-              "stringData": "DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'\nDBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'\nDBAAS_PG_BACKUP_DISABLED: 'true'\nDBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'\nDBAAS_REDIS_DB_OWNER: 'insert dbaas redis password here'\nDBAAS_REDIS_BACKUP_DISABLED: 'true'\nDBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'\nAIRFLOW_EXECUTOR: '{{ .Values.executor }}'\nDBAAS_M2M_ENABLED: 'true'\n"
+              "stringData": "DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'\nDBAAS_USER: 'insert dbaas user here'\nDBAAS_PASSWORD: 'insert dbaas password here'\nDBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'\nDBAAS_PG_BACKUP_DISABLED: 'true'\nDBAAS_PG_MICROSERVICE_NAME: 'insert pg microservice name here'\nDBAAS_REDIS_DB_OWNER: 'insert dbaas redis password here'\nDBAAS_REDIS_BACKUP_DISABLED: 'true'\nDBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'\nAIRFLOW_EXECUTOR: '{{ .Values.executor }}'\nDBAAS_M2M_ENABLED: 'false'\n"
             }
           },
           "additionalProperties": {
