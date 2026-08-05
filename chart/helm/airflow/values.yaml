@@ -474,6 +474,7 @@ extraSecrets:
       DBAAS_REDIS_MICROSERVICE_NAME: 'insert redis microservice name here'
       AIRFLOW_EXECUTOR: '{{ .Values.executor }}'
       MAAS_HOST: 'insert.api.maas.addres.here.svc'
+      DBAAS_USER: 'insert dbaas user here'
       DBAAS_PASSWORD: 'insert dbaas password here'
       DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
       DBAAS_M2M_ENABLED: 'false'
