@@ -812,6 +812,7 @@ extraSecrets:
   'dbaas-connection-params-main':
     stringData: |
       DBAAS_HOST: 'insert.api.dbaas.addres.here.svc'
+      DBAAS_USER: 'insert dbaas user here'
       DBAAS_PASSWORD: 'insert dbaas password here'
       DBAAS_PG_DB_OWNER: 'insert dbaas pg owner here'
       DBAAS_PG_BACKUP_DISABLED: 'true'
