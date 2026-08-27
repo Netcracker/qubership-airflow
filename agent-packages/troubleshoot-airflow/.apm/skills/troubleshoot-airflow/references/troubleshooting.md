@@ -1,19 +1,8 @@
-The topics covered in this section are as follows:
+This file is a level-anchored copy of [docs/public/troubleshooting.md](/docs/public/troubleshooting.md), adapted for
+agent navigation: every issue title is a `##` header so it can be located with a single grep, and no other line uses
+`##`. Content is otherwise the same as the public doc. Resync from the public doc if it changes.
 
-* [Airflow DAG has Failed State](#airflow-dag-has-failed-state)
-* [Tasks are Stuck in Queued State](#tasks-are-stuck-in-queued-state)
-* [DAGs are Stuck in Running State](#dags-are-stuck-in-running-state)
-* [Webserver Pod Restarts Multiple Times](#api-server-pod-restarts-multiple-times)
-* [Airflow Pods Restart Multiple Times](#airflow-pods-restart-multiple-times)
-* [Task does not Execute and Worker Logs are Stuck in Celery Executor](#task-does-not-execute-and-worker-logs-are-stuck-in-celery-executor)
-* [Task does not Execute and Worker Logs Contain Redis Connection Error](#task-does-not-execute-and-worker-logs-contain-redis-connection-error)
-* [Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible](#task-fails-with-error-and-no-logs-available-while-the-logs-for-other-successful-tasks-are-visible)
-* [Wrong Protocol Resolution in redirect_uri in IDP Integration](#wrong-protocol-resolution-in-redirect_uri-in-idp-integration)
-* [Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multiple-tries)
-* [Airflow API Server Startup Failed due to Insufficient Resources](#airflow-api-server-startup-failed-due-to-insufficient-resources)
-* [Error Codes](#error-codes)
-
-# Airflow DAG has Failed State
+## Airflow DAG has Failed State
 
 If DAG has failed state, check the logs for issues.
 
@@ -22,7 +11,7 @@ To retry a failed DAG:
 * Use the `Clear` option on failed task details. This option clears the current state and re-runs the DAG.
 * Use the `retry` policy on DAG's configuration. This policy allows to automate retries if something is wrong.
 
-# Tasks are Stuck in Queued State
+## Tasks are Stuck in Queued State
 
 **Solution**:
 
@@ -31,7 +20,7 @@ To retry a failed DAG:
 * Check if the workers and scheduler are using the same queue.
 * If the current DAG has specific queue to execute, then check if there is any active worker to match this.
 
-# DAGs are Stuck in Running State
+## DAGs are Stuck in Running State
 
 If all new DAGs are stuck in running state, it could indicate a problem with the scheduler.
 
@@ -41,7 +30,10 @@ Check if the scheduler instance is alive. This problem could also be seen in the
 
 If the scheduler is alive, and tasks are stuck in the queued state, see [Tasks are Stuck in Queued State](#tasks-are-stuck-in-queued-state).
 
-# API server Pod Restarts Multiple Times
+## API server Pod Restarts Multiple Times
+
+Note: the public doc's table of contents links to this section as "Webserver Pod Restarts Multiple Times" — a
+leftover from before the pre-3.x webserver component was renamed to api-server. Same section, stale TOC label.
 
 If api server pod keeps restarting, it indicates a problem with the database and caused by unavailability of database.
 
@@ -52,16 +44,15 @@ If api server pod keeps restarting, it indicates a problem with the database and
 * Check if the database has no data loss. If Airflow table is lost, you can use backup/restore to resolve this issue.
 * Check the [Airflow Pods Restart Multiple Times](#airflow-pods-restart-multiple-times).
 
-# Airflow Pods Restart Multiple Times
+## Airflow Pods Restart Multiple Times
 
 If any of Airflow's services restart frequently after some time of work, or if it does not start, check if there are enough resources for Airflow pods. For more information on the minimal amount of resources, refer to the **Hardware Requirements** section in the _Airflow Service Installation Procedure_.
 
-# Task does not Execute and Worker Logs are Stuck in Celery Executor
+## Task does not Execute and Worker Logs are Stuck in Celery Executor
 
 If the Airflow tasks do not execute with `airflow.exceptions.AirflowTaskTimeout: Timeout, PID: 5620` scheduler error in the logs, and worker logs stop as shown below, check if your Redis has SSL enabled and if it has, configure the Redis SSL connection in `data.brokerUrl` installation parameter.
 
 ```
-
 /home/airflow/.local/lib/python3.9/site-packages/airflow/configuration.py:436: FutureWarning: The 'hostname_callable' setting in [core] has the old default value of 'airflow.utils.net:get_host_ip_address'. This value has been changed to 'airflow.utils.net.get_host_ip_address' in the running config, but please update your config before Apache Airflow 2.1.
   warnings.warn(
 [2023-04-05 08:27:19 +0000] [20] [INFO] Starting gunicorn 20.1.0
@@ -69,28 +60,28 @@ If the Airflow tasks do not execute with `airflow.exceptions.AirflowTaskTimeout:
 [2023-04-05 08:27:19 +0000] [20] [INFO] Using worker: sync
 [2023-04-05 08:27:19 +0000] [21] [INFO] Booting worker with pid: 21
 [2023-04-05 08:27:19 +0000] [22] [INFO] Booting worker with pid: 22
- 
+
  -------------- celery@airflow-worker-5b8c4749c5-6p2w1 v5.2.7 (dawn-chorus)
---- ***** ----- 
+--- ***** -----
 -- ******* ---- Linux-5.4.219-126.411.amzn2.x86_64-x86_64-with-glibc2.31 2023-04-05 08:27:20
-- *** --- * --- 
+- *** --- * ---
 - ** ---------- [config]
 - ** ---------- .> app:         airflow.executors.celery_executor:0x7f148c834ee0
 - ** ---------- .> transport:   redis://:**@your.redis.address:6379//
 - ** ---------- .> results:     postgresql://root:**@your.pg.address:5432/pg_db
 - *** --- * --- .> concurrency: 16 (prefork)
 -- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
---- ***** ----- 
+--- ***** -----
  -------------- [queues]
                 .> default          exchange=default(direct) key=default
-                
+
 
 [tasks]
   . airflow.executors.celery_executor.execute_command
 2023-04-05T08:27:20.251325968Z
 ```
 
-# Task does not Execute and Worker Logs Contain Redis Connection Error
+## Task does not Execute and Worker Logs Contain Redis Connection Error
 
 If a task does not execute and worker logs contain Redis connection error, check the Redis connection parameters. For example, consider the following error:
 
@@ -101,7 +92,7 @@ Trying again in 2.00 seconds... (1/100)
 
 This issue is similar to the previous one in which a non-SSL Redis connection string with SSL enabled Redis is used.
 
-# Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible
+## Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible
 
 When a task fails with an error and instead of the logs, the message `*** Could not read served logs: Request URL is missing an 'http://' or 'https://' protocol.` is present, it means that the Airflow executor for some reason can't start executing the task. In this case, check the following:
 
@@ -111,14 +102,14 @@ When a task fails with an error and instead of the logs, the message `*** Could 
 * Airflow pods resources
 * When using remote DAG storage, DAG availability on all Airflow pods
 
-# Wrong Protocol Resolution in redirect_uri in IDP Integration
+## Wrong Protocol Resolution in redirect_uri in IDP Integration
 
 This section briefly describes possible solutions to the problem when you get `Invalid parameter: redirect_uri` error with configured IDP integration, and the only difference is in redirect_uri HTTP/HTTPS protocol, for example:
 
 ```
 https://your.idp.keycloak.address/auth/realms/realmname/protocol/openid-connect/auth...&redirect_uri=http%3A%2F%2Fyour.airflow.address...
 ```
-instead of 
+instead of
 ```
 https://your.idp.keycloak.address/auth/realms/realmname/protocol/openid-connect/auth...&redirect_uri=https%3A%2F%2Fyour.airflow.address...
 ```
@@ -188,20 +179,20 @@ class CustomAuthRemoteUserView(AuthOAuthView):
 
 ```
 
-# Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries
+## Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries
 
 This issue can be observed in airflow setups with multiple workers and with log stored on workers. In this case, airflow logs are present in the airflow user interface for the latest try of a task with multiple tries but are missing for some of other tries. The issue happens because airflow task log reader tries to find the logs only on the worker, where the latest attempt was executed. Hence, if previous tries were executed on different workers, the logs will not be visible in airflow user interface. The logs for the previous attemts can be found on other workers in the **/opt/airflow/logs** folder. To check on what worker previous attempts were executed, it is possible to check `Details` tab of a task and pick required Task Try on this tab. If it is critical to view the task logs in the user interface, it is recommended to configure the remote logging storage. It can be done similarly to [logging configuration for kubernetes executor workers](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor).
 
-# Airflow API Server Startup Failed due to Insufficient Resources
- 
-By default, the API Server starts 4 worker processes. Airflow uses a backend library to manage the child processes and this library can cause killing of child processes, if a hard-coded startup timeout is exceeded. 
+## Airflow API Server Startup Failed due to Insufficient Resources
+
+By default, the API Server starts 4 worker processes. Airflow uses a backend library to manage the child processes and this library can cause killing of child processes, if a hard-coded startup timeout is exceeded.
 
 Possible solutions are described below.
 
 **Option 1**
 
 As suggested in the discussion https://github.com/apache/airflow/issues/52270
-for most cases in Airflow, a default of `1` worker is sufficient.  
+for most cases in Airflow, a default of `1` worker is sufficient.
 If you encounter the performance issues, increase the number of **API Server replicas** instead of workers per pod.
 
 Configuration for a single worker:
@@ -220,7 +211,7 @@ apiServer:
       memory: 300Mi
     requests:
       cpu: 300m
-      memory: 300Mi 
+      memory: 300Mi
 ```
 
 **Option 2**
@@ -237,22 +228,22 @@ apiServer:
       memory: 1500Mi
     requests:
       cpu: 800m
-      memory: 1500Mi 
+      memory: 1500Mi
 ```
 You may still see log messages such as:
 ```yaml
 INFO:     Waiting for child process [16]
-INFO:     Child process [16] died 
+INFO:     Child process [16] died
 ```
 
 **Note**: It is generally recommended to increase the API Server replicas, with each replica running a single worker. This avoids startup timeouts and memory issues that can occur when running multiple workers in a single pod.
 
-# Error Codes
+## Error Codes
 
 The error codes information is given in the table below.
 
 | Error Code   | Message Text (English)                                                      | Scenario                                                                                                                                                         | Reason                                           | Solution                                                                                            |
-|--------------|-----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+|--------------|-------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|-------------------------------------------------------------------------------------------------------|
 | AIRFLOW-8300 | "Could not get DBaaS Redis database. Response code: &s"                     | During the Airflow deployment, the DB creation script tries to configure the Redis database in DBaaS to construct a connection string for the Kubernetes secret. | The configuration issue or DBaaS is unavailable. | Check the DBaaS and Redis configuration. Check that DBaaS works properly.                           |
 | AIRFLOW-8301 | "Could not get DBAAS PG database. Response code: &s"                        | During the Airflow deployment, the DB creation script tries to configure the PG database in DBaaS to construct a connection string for the Kubernetes secret.    | The configuration issue or DBaaS is unavailable. | Check the DBaaS and PG configuration. Check that DBaaS works properly.                              |
 | AIRFLOW-8302 | "Could not get DBAAS airflow connection database. Response code: %s"        | Airflow could not get one of the Airflow connections of Postgres type.                                                                                           | The configuration issue or DBaaS is unavailable. | Check the DBaaS and the `config.secrets.backend` configuration. Check that DBaaS and PG work properly.  |

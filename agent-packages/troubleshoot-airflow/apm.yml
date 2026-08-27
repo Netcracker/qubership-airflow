@@ -1,0 +1,11 @@
+name: troubleshoot-airflow
+version: 1.0.0
+description: Troubleshooting guidance for the Qubership Airflow Helm deployment.
+targets:
+- claude
+- copilot
+- cursor
+dependencies:
+  apm: []
+  mcp: []
+includes: auto
