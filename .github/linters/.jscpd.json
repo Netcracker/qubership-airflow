@@ -3,6 +3,7 @@
     "ignore": [
         "**/.git/**",
         "**/chart/**",
-        "**/docs/examples/**"
+        "**/docs/examples/**",
+        "**/agent-packages/troubleshoot-airflow/**"
     ]
 }
