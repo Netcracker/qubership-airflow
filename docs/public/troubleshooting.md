@@ -11,6 +11,7 @@ The topics covered in this section are as follows:
 * [Wrong Protocol Resolution in redirect_uri in IDP Integration](#wrong-protocol-resolution-in-redirect_uri-in-idp-integration)
 * [Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multiple-tries)
 * [Airflow API Server Startup Failed due to Insufficient Resources](#airflow-api-server-startup-failed-due-to-insufficient-resources)
+* [Preinstall Job Fails and Logs are Unavailable](#preinstall-job-fails-and-logs-are-unavailable)
 * [Error Codes](#error-codes)
 
 # Airflow DAG has Failed State
@@ -246,6 +247,39 @@ INFO:     Child process [16] died
 ```
 
 **Note**: It is generally recommended to increase the API Server replicas, with each replica running a single worker. This avoids startup timeouts and memory issues that can occur when running multiple workers in a single pod.
+
+# Preinstall Job Fails and Logs are Unavailable
+
+The preinstall job sometimes fails and its pod is removed before anyone can read its logs. In this case, make the job hang instead of running the DB-creation script, then run the script manually from a shell in the job pod.
+
+**Solution**:
+
+1. Override the preinstall job's command to sleep instead of running `create_dbs_dbaas.py`:
+
+   ```yaml
+   customPreinstallJob:
+     command:
+       - /bin/sleep
+     args:
+       - "590"
+   ```
+
+   **Note**: The job's `activeDeadlineSeconds` is fixed at `600` and is not configurable through `values.yaml`. Kubernetes kills the job, regardless of what the container is running, once it has been active for 600 seconds. Keep the sleep duration under 600 seconds, or Kubernetes terminates the pod before you finish.
+
+2. Install or upgrade with this override. The preinstall job pod starts and sleeps instead of running the DB-creation script.
+3. Open a shell in the running preinstall job pod, for example:
+
+   ```sh
+   kubectl exec -it <preinstall-job-pod-name> -n <namespace> -- /bin/sh
+   ```
+
+4. Run the DB-creation script manually and watch its output directly:
+
+   ```sh
+   python /bin/create_dbs_dbaas.py
+   ```
+
+5. Remove the `command`/`args` override before the next real install or upgrade. While the override is in place, the DB-creation script never runs automatically, and the preinstall job only sleeps.
 
 # Error Codes
 

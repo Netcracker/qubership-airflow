@@ -30,6 +30,7 @@ description: Diagnose and resolve failures in a Qubership Airflow Helm deploymen
 | Keycloak/IDP login error `Invalid parameter: redirect_uri`, scheme is `http` where `https` is expected | Wrong Protocol Resolution in redirect_uri in IDP Integration |
 | Logs for earlier task tries missing in UI; only the latest try's logs show | Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries |
 | api-server container killed during startup: `Waiting for child process` / `Child process died` | Airflow API Server Startup Failed due to Insufficient Resources |
+| Preinstall job fails and its pod is gone (logs unreadable) before anyone can inspect it | Preinstall Job Fails and Logs are Unavailable |
 | Log/exception contains `[error_code=AIRFLOW-XXXX]` | Error Codes |
 
 Start every diagnosis by getting the exact error text or log line and the affected component (`api-server`,
@@ -67,6 +68,12 @@ different reasons), ask which one applies rather than guessing.
 - Every Helm chart change recommended here must be verified with `helm template qubership-airflow chart/helm/airflow`
   before telling the user to redeploy — this is a hard repo rule (see AGENTS.md), not optional for troubleshooting
   suggestions specifically.
+- The preinstall job's `activeDeadlineSeconds` is hardcoded to `600` in
+  `chart/helm/airflow/templates/qspreinstallhooks/custom-preinstall-job.yaml` (both the Job and pod-template level)
+  and isn't exposed through `values.yaml`. When recommending the "sleep instead of running the DB-creation script"
+  workaround (see "Preinstall Job Fails and Logs are Unavailable"), don't suggest a sleep duration at or above 600
+  seconds — Kubernetes kills the job at the 600-second mark regardless of what the container is running, cutting the
+  debugging window short.
 
 ## Config value conventions
 
