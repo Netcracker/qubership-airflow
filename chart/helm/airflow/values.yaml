@@ -3529,8 +3529,6 @@ config:
     otel_on: '{{ ternary "True" "False" .Values.otelCollector.tracesEnabled }}'
   fab:
     enable_proxy_fix: 'True'
-  api:
-    parameter_to_make_service_monitor_happy: parameter_value_to_make_service_monitor_happy
   celery:
     flower_url_prefix: '{{ ternary "" .Values.ingress.flower.path (eq .Values.ingress.flower.path "/") }}'
     worker_concurrency: 16
