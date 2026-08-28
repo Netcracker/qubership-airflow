@@ -1,5 +1,5 @@
 name: Sync Troubleshooting Skill
-run-name: "Sync troubleshooting skill #${{ github.run_number }} — triggered by ${{ github.actor }} (${{ github.event_name }})"
+run-name: "Sync troubleshooting skill references #${{ github.run_number }} — triggered by ${{ github.actor }} (${{ github.event_name }})"
 
 on:
   push:
@@ -24,14 +24,15 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Sync troubleshooting doc into skill
+      - name: Sync reference docs into skill
         uses: netcracker/qubership-workflow-hub/actions/sync-files-action@27fd7674286e5f561a6fd8277f2f389ff96ddb9e  # v2.6.0
         with:
           files: |
             [
-              { "from": "docs/public/troubleshooting.md", "to": "agent-packages/troubleshoot-airflow/.apm/skills/troubleshoot-airflow/references/troubleshooting.md" }
+              { "from": "docs/public/troubleshooting.md", "to": "agent-packages/troubleshoot-airflow/.apm/skills/troubleshoot-airflow/references/troubleshooting.md" },
+              { "from": "docs/public/monitoring.md", "to": "agent-packages/troubleshoot-airflow/.apm/skills/troubleshoot-airflow/references/monitoring.md" }
             ]
-          title: "chore: sync troubleshooting skill reference"
-          commit-message: "chore: sync troubleshooting skill reference"
+          title: "chore: sync troubleshooting skill references"
+          commit-message: "chore: sync troubleshooting skill references"
           auto-merge: ${{ inputs.auto-merge || 'true' }}
           token: ${{ secrets.GITHUB_TOKEN }}

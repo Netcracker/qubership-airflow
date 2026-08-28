@@ -1,13 +1,17 @@
 ---
 name: troubleshoot-airflow
-description: Diagnose and resolve failures in a Qubership Airflow Helm deployment — DAGs/tasks stuck or failed, scheduler/api-server/worker pod restarts, Celery/Redis broker errors, missing task logs, IDP/Keycloak redirect_uri protocol mismatches, api-server startup-resource issues, DBaaS/MaaS secrets-backend errors (including AIRFLOW-8300–8310, AIRFLOW-1930/1931 log codes), or a Disaster-Recovery mode-switch (site-manager) failure. Falls back to a general checklist, framed for the user to check, when nothing matches.
+description: Diagnose and resolve failures in a Qubership Airflow Helm deployment — DAGs/tasks stuck or failed, scheduler/api-server/worker pod restarts, Celery/Redis broker errors, missing task logs, IDP/Keycloak redirect_uri protocol mismatches, api-server startup-resource issues, DBaaS/MaaS secrets-backend errors (including AIRFLOW-8300–8310, AIRFLOW-1930/1931 log codes), a Disaster-Recovery mode-switch (site-manager) failure, or a firing Prometheus/Kubernetes alert (kube metrics, problematic pods, scheduler/worker/API CPU/memory/error, StatsD exporter, DAG/task/cleanup-job alerts). Falls back to a general checklist, framed for the user to check, when nothing matches.
 ---
 
-## Reading the reference file
+## Reading the reference files
 
-`references/troubleshooting.md` is a byte-for-byte mirror of [docs/public/troubleshooting.md](/docs/public/troubleshooting.md),
-kept in sync by the `sync-troubleshooting-skill` CI workflow on every push to `main`. Don't hand-edit the reference
-file — edit the public doc instead and let the workflow (or a manual `apm update`) propagate the change.
+`references/troubleshooting.md` and `references/monitoring.md` are byte-for-byte mirrors of
+[docs/public/troubleshooting.md](/docs/public/troubleshooting.md) and
+[docs/public/monitoring.md](/docs/public/monitoring.md), kept in sync by the `sync-troubleshooting-skill` CI workflow
+on every push to `main`. Don't hand-edit either reference file — edit the corresponding public doc instead and let
+the workflow (or a manual `apm update`) propagate the change.
+
+### `references/troubleshooting.md`
 
 1. Grep issue headers with line numbers: `grep -n "^## " references/troubleshooting.md`. This is level-anchored —
    only issue titles and the Error Codes section use `##`; nothing else in the file does.
@@ -18,6 +22,22 @@ file — edit the public doc instead and let the workflow (or a manual `apm upda
    match the code. If the code isn't in the table, grep the codebase for it directly —
    `grep -rn "AIRFLOW-XXXX" docker/` — before concluding it's undocumented; the code's log-call site usually explains
    the trigger condition well enough on its own even when the table hasn't caught up yet.
+
+### `references/monitoring.md`
+
+This file documents Grafana dashboard panels first, then a single `# Kubernetes Alerts` section at the end (from
+`grep -n "^# Kubernetes Alerts" references/monitoring.md` onward) — that's the only part relevant to this skill; the
+dashboard-panel documentation above it isn't troubleshooting content and doesn't need to be read.
+
+Inside that section, each alert is a `|Alert|Possible Reason|` table row immediately followed by a `**Solution**:`
+paragraph — there's no per-alert heading to grep. Instead:
+
+1. Grep the alert's exact name as it appears in the request/log, e.g. `grep -n "Worker CPU load"
+   references/monitoring.md`.
+2. Read a few lines from that match onward — the same match line has the Possible Reason, and the Solution follows
+   within the next handful of lines.
+3. If the alert name doesn't match verbatim (e.g. paraphrased by the user), check the jump table below for the
+   closest documented alert before concluding it's undocumented.
 
 ## Symptom → reference section
 
@@ -47,6 +67,31 @@ different reasons), ask which one applies rather than guessing.
 Note: the reference file's own table of contents links to the "API server Pod Restarts Multiple Times" section as
 "Webserver Pod Restarts Multiple Times" — a leftover from before the pre-3.x webserver component was renamed to
 api-server. Same section, stale TOC label; don't be thrown by the mismatch.
+
+## Alert → reference section
+
+| Alert (exact text in references/monitoring.md) | Component affected |
+|---|---|
+| No kube metrics for Airflow namespace | Platform Kubernetes-metrics monitoring |
+| Problematic pods | Any Airflow pod |
+| Scheduler CPU load | Scheduler |
+| Scheduler error | Scheduler |
+| Scheduler memory load | Scheduler |
+| API error | api-server |
+| StatsD prometheus exporter is not available | StatsD exporter |
+| Worker CPU load | Worker |
+| Worker error | Worker |
+| Worker memory load | Worker |
+| Worker statefulset is degraded | Worker |
+| Some DAG runs longer than [number] seconds | DAG runtime |
+| Some DAG failed | DAG |
+| Some task failed | Task |
+| There are failed jobs in airflow namespace | Cleanup database job (most likely) |
+| Cleanup database cronjob takes too long to complete | Cleanup database cronjob |
+
+All 16 alerts resolve to a "Possible Reason" plus "**Solution**:" pair in the `# Kubernetes Alerts` section of
+`references/monitoring.md` — grep the alert text as described above rather than trying to guess a line number, since
+there are no per-alert headers.
 
 ## Guardrails
 
