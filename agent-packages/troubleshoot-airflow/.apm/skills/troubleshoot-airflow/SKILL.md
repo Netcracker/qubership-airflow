@@ -52,6 +52,8 @@ paragraph — there's no per-alert heading to grep. Instead:
 | Worker log shows `Cannot connect to redis://...: Connection reset by peer` | Task does not Execute and Worker Logs Contain Redis Connection Error |
 | Task fails; `*** Could not read served logs: Request URL is missing an 'http://' or 'https://' protocol` | Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible |
 | Keycloak/IDP login error `Invalid parameter: redirect_uri`, scheme is `http` where `https` is expected | Wrong Protocol Resolution in redirect_uri in IDP Integration |
+| IDP login fails only when Airflow sits behind a reverse proxy (nginx-ingress, etc.) | Login Fails When Running Airflow Behind a Reverse Proxy with IDP Integration |
+| IDP auth silently fails, no error in Airflow/Keycloak logs, browser console shows `Set-Cookie header is ignored ... combined size ... must be less than or equal to 4096 characters` | Authentication with IDP Integration Silently Fails Due to Cookie Size Limit |
 | Logs for earlier task tries missing in UI; only the latest try's logs show | Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries |
 | api-server container killed during startup: `Waiting for child process` / `Child process died` | Airflow API Server Startup Failed due to Insufficient Resources |
 | Preinstall job fails and its pod is gone (logs unreadable) before anyone can inspect it | Preinstall Job Fails and Logs are Unavailable |
@@ -95,6 +97,11 @@ there are no per-alert headers.
 
 ## Guardrails
 
+- For the "Set-Cookie header is ignored ... 4096 characters" IDP auth failure, the fix is Keycloak-side (reduce the
+  user's assigned roles/claims). The Qubership Keycloak integration package
+  (`docker/keycloakrbacintegrationpackage/qskeycloakintegration/qs_keycloak_integration.py`) doesn't expose any
+  cookie-storage or session-backend override — don't suggest an Airflow/Helm-side config knob for this; there isn't
+  one.
 - Don't recommend `kubectl scale` on Airflow Deployments/StatefulSets (`tier=airflow`) in a namespace managed by
   `airflow-site-manager` outside of an actual DR switchover. The next switchover call
   (`site-manager/pkg/disasterrecovery/airflow/manager.go`) drives every `component=<name>` Deployment/StatefulSet to

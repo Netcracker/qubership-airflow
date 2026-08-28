@@ -9,6 +9,8 @@ The topics covered in this section are as follows:
 * [Task does not Execute and Worker Logs Contain Redis Connection Error](#task-does-not-execute-and-worker-logs-contain-redis-connection-error)
 * [Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible](#task-fails-with-error-and-no-logs-available-while-the-logs-for-other-successful-tasks-are-visible)
 * [Wrong Protocol Resolution in redirect_uri in IDP Integration](#wrong-protocol-resolution-in-redirect_uri-in-idp-integration)
+* [Login Fails When Running Airflow Behind a Reverse Proxy with IDP Integration](#login-fails-when-running-airflow-behind-a-reverse-proxy-with-idp-integration)
+* [Authentication with IDP Integration Silently Fails Due to Cookie Size Limit](#authentication-with-idp-integration-silently-fails-due-to-cookie-size-limit)
 * [Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multiple-tries)
 * [Airflow API Server Startup Failed due to Insufficient Resources](#airflow-api-server-startup-failed-due-to-insufficient-resources)
 * [Preinstall Job Fails and Logs are Unavailable](#preinstall-job-fails-and-logs-are-unavailable)
@@ -188,6 +190,36 @@ class CustomAuthRemoteUserView(AuthOAuthView):
 ...
 
 ```
+
+## Login Fails When Running Airflow Behind a Reverse Proxy with IDP Integration
+
+If IDP login fails only when Airflow runs behind a reverse proxy, add the `--proxy-headers` flag to the API server and set the `FORWARDED_ALLOW_IPS` environment variable. This is enough on most environments; see the [Airflow reverse proxy documentation](https://airflow.apache.org/docs/apache-airflow/stable/howto/run-behind-proxy.html) for more detail.
+
+**Solution**:
+
+```yaml
+apiServer:
+  args: ["bash", "-c", "exec airflow api-server --proxy-headers"]
+  env:
+    - name: FORWARDED_ALLOW_IPS
+      value: "*"  # Use "*" for trusted environments, or specify proxy IP ranges for production
+```
+
+## Authentication with IDP Integration Silently Fails Due to Cookie Size Limit
+
+If authentication with IDP integration does not work, and neither the Airflow nor the Keycloak logs show an error, check the browser console for an error similar to the following:
+
+```
+Set-Cookie header is ignored in response from url. The combined size of the name and value must be less than or equal to 4096 characters.
+```
+
+If this error is present, check the number of roles and other information assigned to the user in Keycloak.
+
+**Solution**:
+
+The Airflow Keycloak authentication manager stores a JWT containing the user information received from Keycloak in a cookie. Some browsers limit cookie size to 4 KB. If a user has too many assigned roles, or too much other information configured in Keycloak, the JWT exceeds that limit, the browser silently drops the cookie, and authentication fails without an error in either log.
+
+Reconfigure the user on the Keycloak side to reduce the amount of stored information — for example, reduce the number of assigned roles.
 
 ## Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries
 
