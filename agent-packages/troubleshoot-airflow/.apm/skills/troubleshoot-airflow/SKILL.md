@@ -5,6 +5,10 @@ description: Diagnose and resolve failures in a Qubership Airflow Helm deploymen
 
 ## Reading the reference file
 
+`references/troubleshooting.md` is a byte-for-byte mirror of [docs/public/troubleshooting.md](/docs/public/troubleshooting.md),
+kept in sync by the `sync-troubleshooting-skill` CI workflow on every push to `main`. Don't hand-edit the reference
+file — edit the public doc instead and let the workflow (or a manual `apm update`) propagate the change.
+
 1. Grep issue headers with line numbers: `grep -n "^## " references/troubleshooting.md`. This is level-anchored —
    only issue titles and the Error Codes section use `##`; nothing else in the file does.
 2. Match the symptom against the jump table below (or the raw headers if the table is stale) to pick a section.
@@ -12,8 +16,8 @@ description: Diagnose and resolve failures in a Qubership Airflow Helm deploymen
    the whole file for one lookup.
 4. If the symptom is a log line containing `[error_code=AIRFLOW-XXXX]`, jump straight to the Error Codes table and
    match the code. If the code isn't in the table, grep the codebase for it directly —
-   `grep -rn "AIRFLOW-XXXX" docker/` — before concluding it's undocumented; the table has known gaps (see the note
-   above it) and the code's log-call site usually explains the trigger condition well enough on its own.
+   `grep -rn "AIRFLOW-XXXX" docker/` — before concluding it's undocumented; the code's log-call site usually explains
+   the trigger condition well enough on its own even when the table hasn't caught up yet.
 
 ## Symptom → reference section
 
@@ -39,6 +43,10 @@ general description. Check context/attachments for already-provided logs before 
 
 If the symptom plausibly matches more than one row (e.g. "pod restarts" alone matches two different rows for two
 different reasons), ask which one applies rather than guessing.
+
+Note: the reference file's own table of contents links to the "API server Pod Restarts Multiple Times" section as
+"Webserver Pod Restarts Multiple Times" — a leftover from before the pre-3.x webserver component was renamed to
+api-server. Same section, stale TOC label; don't be thrown by the mismatch.
 
 ## Guardrails
 

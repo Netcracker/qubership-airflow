@@ -14,7 +14,7 @@ The topics covered in this section are as follows:
 * [Preinstall Job Fails and Logs are Unavailable](#preinstall-job-fails-and-logs-are-unavailable)
 * [Error Codes](#error-codes)
 
-# Airflow DAG has Failed State
+## Airflow DAG has Failed State
 
 If DAG has failed state, check the logs for issues.
 
@@ -23,7 +23,7 @@ To retry a failed DAG:
 * Use the `Clear` option on failed task details. This option clears the current state and re-runs the DAG.
 * Use the `retry` policy on DAG's configuration. This policy allows to automate retries if something is wrong.
 
-# Tasks are Stuck in Queued State
+## Tasks are Stuck in Queued State
 
 **Solution**:
 
@@ -32,7 +32,7 @@ To retry a failed DAG:
 * Check if the workers and scheduler are using the same queue.
 * If the current DAG has specific queue to execute, then check if there is any active worker to match this.
 
-# DAGs are Stuck in Running State
+## DAGs are Stuck in Running State
 
 If all new DAGs are stuck in running state, it could indicate a problem with the scheduler.
 
@@ -42,7 +42,7 @@ Check if the scheduler instance is alive. This problem could also be seen in the
 
 If the scheduler is alive, and tasks are stuck in the queued state, see [Tasks are Stuck in Queued State](#tasks-are-stuck-in-queued-state).
 
-# API server Pod Restarts Multiple Times
+## API server Pod Restarts Multiple Times
 
 If api server pod keeps restarting, it indicates a problem with the database and caused by unavailability of database.
 
@@ -53,11 +53,11 @@ If api server pod keeps restarting, it indicates a problem with the database and
 * Check if the database has no data loss. If Airflow table is lost, you can use backup/restore to resolve this issue.
 * Check the [Airflow Pods Restart Multiple Times](#airflow-pods-restart-multiple-times).
 
-# Airflow Pods Restart Multiple Times
+## Airflow Pods Restart Multiple Times
 
 If any of Airflow's services restart frequently after some time of work, or if it does not start, check if there are enough resources for Airflow pods. For more information on the minimal amount of resources, refer to the **Hardware Requirements** section in the _Airflow Service Installation Procedure_.
 
-# Task does not Execute and Worker Logs are Stuck in Celery Executor
+## Task does not Execute and Worker Logs are Stuck in Celery Executor
 
 If the Airflow tasks do not execute with `airflow.exceptions.AirflowTaskTimeout: Timeout, PID: 5620` scheduler error in the logs, and worker logs stop as shown below, check if your Redis has SSL enabled and if it has, configure the Redis SSL connection in `data.brokerUrl` installation parameter.
 
@@ -91,7 +91,7 @@ If the Airflow tasks do not execute with `airflow.exceptions.AirflowTaskTimeout:
 2023-04-05T08:27:20.251325968Z
 ```
 
-# Task does not Execute and Worker Logs Contain Redis Connection Error
+## Task does not Execute and Worker Logs Contain Redis Connection Error
 
 If a task does not execute and worker logs contain Redis connection error, check the Redis connection parameters. For example, consider the following error:
 
@@ -102,7 +102,7 @@ Trying again in 2.00 seconds... (1/100)
 
 This issue is similar to the previous one in which a non-SSL Redis connection string with SSL enabled Redis is used.
 
-# Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible
+## Task Fails with Error and no Logs Available While the Logs for Other Successful Tasks are Visible
 
 When a task fails with an error and instead of the logs, the message `*** Could not read served logs: Request URL is missing an 'http://' or 'https://' protocol.` is present, it means that the Airflow executor for some reason can't start executing the task. In this case, check the following:
 
@@ -112,7 +112,7 @@ When a task fails with an error and instead of the logs, the message `*** Could 
 * Airflow pods resources
 * When using remote DAG storage, DAG availability on all Airflow pods
 
-# Wrong Protocol Resolution in redirect_uri in IDP Integration
+## Wrong Protocol Resolution in redirect_uri in IDP Integration
 
 This section briefly describes possible solutions to the problem when you get `Invalid parameter: redirect_uri` error with configured IDP integration, and the only difference is in redirect_uri HTTP/HTTPS protocol, for example:
 
@@ -189,11 +189,11 @@ class CustomAuthRemoteUserView(AuthOAuthView):
 
 ```
 
-# Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries
+## Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries
 
 This issue can be observed in airflow setups with multiple workers and with log stored on workers. In this case, airflow logs are present in the airflow user interface for the latest try of a task with multiple tries but are missing for some of other tries. The issue happens because airflow task log reader tries to find the logs only on the worker, where the latest attempt was executed. Hence, if previous tries were executed on different workers, the logs will not be visible in airflow user interface. The logs for the previous attemts can be found on other workers in the **/opt/airflow/logs** folder. To check on what worker previous attempts were executed, it is possible to check `Details` tab of a task and pick required Task Try on this tab. If it is critical to view the task logs in the user interface, it is recommended to configure the remote logging storage. It can be done similarly to [logging configuration for kubernetes executor workers](/docs/public/installation.md#using-s3-remote-storage-for-storing-task-logs-with-kubernetes-executor).
 
-# Airflow API Server Startup Failed due to Insufficient Resources
+## Airflow API Server Startup Failed due to Insufficient Resources
  
 By default, the API Server starts 4 worker processes. Airflow uses a backend library to manage the child processes and this library can cause killing of child processes, if a hard-coded startup timeout is exceeded. 
 
@@ -248,7 +248,7 @@ INFO:     Child process [16] died
 
 **Note**: It is generally recommended to increase the API Server replicas, with each replica running a single worker. This avoids startup timeouts and memory issues that can occur when running multiple workers in a single pod.
 
-# Preinstall Job Fails and Logs are Unavailable
+## Preinstall Job Fails and Logs are Unavailable
 
 The preinstall job sometimes fails and its pod is removed before anyone can read its logs. In this case, make the job hang instead of running the DB-creation script, then run the script manually from a shell in the job pod.
 
@@ -281,7 +281,7 @@ The preinstall job sometimes fails and its pod is removed before anyone can read
 
 5. Remove the `command`/`args` override before the next real install or upgrade. While the override is in place, the DB-creation script never runs automatically, and the preinstall job only sleeps.
 
-# Error Codes
+## Error Codes
 
 The error codes information is given in the table below.
 
