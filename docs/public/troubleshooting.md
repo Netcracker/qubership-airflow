@@ -18,50 +18,50 @@ The topics covered in this section are as follows:
 
 ## Airflow DAG has Failed State
 
-If DAG has failed state, check the logs for issues.
+If a DAG is in a failed state, check its logs for issues.
 
 To retry a failed DAG:
 
-* Use the `Clear` option on failed task details. This option clears the current state and re-runs the DAG.
-* Use the `retry` policy on DAG's configuration. This policy allows to automate retries if something is wrong.
+* Use the **Clear** option on the failed task details. This clears the current state and re‑runs the DAG.
+* Use the `retry` policy in the DAG’s configuration. This policy automates retries when a failure occurs.
 
 ## Tasks are Stuck in Queued State
 
 **Solution**:
 
-* Check if there are active workers.
-* Check if Redis is alive.
-* Check if the workers and scheduler are using the same queue.
-* If the current DAG has specific queue to execute, then check if there is any active worker to match this.
+* Verify that active workers exist.
+* Confirm that Redis is operational.
+* Ensure the workers and scheduler are using the same queue.
+* If the DAG specifies a particular queue, verify that an active worker is subscribed to that queue.
 
 ## DAGs are Stuck in Running State
 
-If all new DAGs are stuck in running state, it could indicate a problem with the scheduler.
+If all new DAGs remain in the running state, this may indicate a problem with the scheduler.
 
 **Solution**:
 
-Check if the scheduler instance is alive. This problem could also be seen in the webserver. It displays `The scheduler does not appear to be running.` alarm on the top of the page.
+Check whether the scheduler instance is alive. The webserver may also display the alarm “The scheduler does not appear to be running.” at the top of the page.
 
-If the scheduler is alive, and tasks are stuck in the queued state, see [Tasks are Stuck in Queued State](#tasks-are-stuck-in-queued-state).
+If the scheduler is alive but tasks are still stuck in the queued state, see **[Tasks are Stuck in Queued State](#tasks-are-stuck-in-queued-state)**.
 
 ## API server Pod Restarts Multiple Times
 
-If api server pod keeps restarting, it indicates a problem with the database and caused by unavailability of database.
+If the API server pod keeps restarting, it indicates a problem with the database, typically caused by its unavailability.
 
 **Solution**:
 
-* Check if the database is alive.
-* Check if the database is available from api server.
-* Check if the database has no data loss. If Airflow table is lost, you can use backup/restore to resolve this issue.
-* Check the [Airflow Pods Restart Multiple Times](#airflow-pods-restart-multiple-times).
+* Verify that the database is alive.
+* Ensure the API server can reach the database.
+* Confirm that the database has not suffered data loss. If Airflow tables are missing, use backup/restore to recover them.
+* Review the **[Airflow Pods Restart Multiple Times](#airflow-pods-restart-multiple-times)** section.
 
 ## Airflow Pods Restart Multiple Times
 
-If any of Airflow's services restart frequently after some time of work, or if it does not start, check if there are enough resources for Airflow pods. For more information on the minimal amount of resources, refer to the **Hardware Requirements** section in the _Airflow Service Installation Procedure_.
+If any Airflow service restarts frequently or fails to start, verify that sufficient resources are allocated to the Airflow pods. For details on minimum resource requirements, refer to the **Hardware Requirements** section in the _Airflow Service Installation Procedure_.
 
 ## Task does not Execute and Worker Logs are Stuck in Celery Executor
 
-If the Airflow tasks do not execute with `airflow.exceptions.AirflowTaskTimeout: Timeout, PID: 5620` scheduler error in the logs, and worker logs stop as shown below, check if your Redis has SSL enabled and if it has, configure the Redis SSL connection in `data.brokerUrl` installation parameter.
+If the Airflow tasks do not execute and you see an `airflow.exceptions.AirflowTaskTimeout: Timeout, PID: 5620` scheduler error in the logs, and worker logs stop as shown below, verify whether your Redis instance has SSL enabled. If it does, configure the Redis SSL connection in the `data.brokerUrl` installation parameter.
 
 ```
 
