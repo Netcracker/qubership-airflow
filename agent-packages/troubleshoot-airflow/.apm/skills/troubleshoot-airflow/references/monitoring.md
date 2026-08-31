@@ -1,49 +1,49 @@
-This section provides information about the dashboards and metrics for Airflow service.
+This section provides information about the dashboards and metrics for the Airflow service.
 
 # Airflow Overview Dashboard
 
-The Airflow Overview dashboard provides information about Airflow status, pods, Airflow scheduler, executor, DAG parser, DAGs, and tasks. This dashboard is based both on the [third party Airflow plugin](https://github.com/epoch8/airflow-exporter) and on the [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.3.0/logging-monitoring/metrics.html) plus [statsd_exporter](https://github.com/prometheus/statsd_exporter) combination. Also, the dashboard uses Kubernetes metrics.
+The Airflow Overview dashboard provides information about Airflow status, pods, the Airflow scheduler, executor, DAG parser, DAGs, and tasks. This dashboard is based on both the [third‑party Airflow plugin](https://github.com/epoch8/airflow-exporter) and the [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.3.0/logging-monitoring/metrics.html), combined with the [statsd_exporter](https://github.com/prometheus/statsd_exporter). Additionally, the dashboard uses Kubernetes metrics.
 
 ## Dashboard Variables
 
 The following is a list of dashboard variables:
 
-* `datasource` - Specifies the datasource for the dashboard.
-* `airflow_namespace` - Specifies the Airflow namespace.
-* `dag_id` - Specifies the dag_id.
-* `task_id` - Specifies the task_id.
-* `statsd_pod` - Specifies the StatsD exporter pod to take metrics from. The current StatsD pod can be seen in the StatsD pod availability panel.
-* `dag_file`- Specifies the dag file for dag parsing metrics. It is different from the `dag_id` variable since the dag file name is not necessarily the same as the dag name, as a single dag file can contain multiple dags.
-* `cluster` - Specifies the K8s cluster name when Airflow is deployed in the DR scheme. It allows monitoring of both active and standby Airflows using one dashboard.
+* `datasource` – Specifies the data source for the dashboard.
+* `airflow_namespace` – Specifies the Airflow namespace.
+* `dag_id` – Specifies the DAG ID.
+* `task_id` – Specifies the task ID.
+* `statsd_pod` – Specifies the StatsD exporter pod to collect metrics from. The current StatsD pod can be seen in the *StatsD pod availability* panel.
+* `dag_file` – Specifies the DAG file for DAG‑parsing metrics. This differs from the `dag_id` variable because a single DAG file may contain multiple DAGs and the file name is not necessarily the same as the DAG name.
+* `cluster` – Specifies the Kubernetes cluster name when Airflow is deployed in a DR scheme. It enables monitoring of both active and standby Airflow instances using a single dashboard.
 
 ## Airflow Status and Resources
 
-This section is based on the third party Airflow plugin and shows the status of the Airflow pods and resources used. The following panels are available:
+This section is based on the third‑party Airflow plugin and shows the status of Airflow pods and the resources they use. The following panels are available:
 
-* `Airflow State` - Displays the Airflow status. If no scheduler/api/worker/DAG processor pod is available it displays the `DOWN` status. If at least one pod of each type (scheduler/api/worker/DAG processor) is available, but some scheduler/api/worker pods are in other states than `running`, it displays `DEGRADED` status, otherwise displays `UP` status.
-* `Unavailable Pods Count` - Displays the number of scheduler/api/worker/DAG processor unavailable pods in Airflow namespace.
-* `Available Scheduler/Worker/API/Flower Pods Count` - Displays the number of available Scheduler/Worker/API/Flower Pods.
-* `Failed job runs` - Displays the number of failed jobs in Airflow namespace.
-* `CPU/Memory usage` - Displays CPU/memory usages per pod.
-* `CPU/Memory limits usage` - Displays CPU/memory limits usages per pod.
-* `Receive/Transmit Bandwidth` - Displays network statistics in the namespace.
-* `Rate of Received/Transmitted Packets` - Displays overall incoming and outcoming network packets per second.
+* `Airflow State` – Displays the overall Airflow status. If no scheduler, API, worker, or DAG‑processor pod is available, the status is shown as `DOWN`. If at least one pod of each type is present but any scheduler, API, or worker pod is not in the `running` state, the status is shown as `DEGRADED`. Otherwise, the status is displayed as `UP`.
+* `Unavailable Pods Count` – Shows the number of unavailable scheduler, API, worker, or DAG‑processor pods in the Airflow namespace.
+* `Available Scheduler/Worker/API/Flower Pods Count` – Shows the number of available Scheduler, Worker, API, and Flower pods.
+* `Failed job runs` – Displays the number of failed jobs in the Airflow namespace.
+* `CPU/Memory usage` – Shows CPU and memory usage per pod.
+* `CPU/Memory limits usage` – Shows CPU and memory limits usage per pod.
+* `Receive/Transmit Bandwidth` – Displays network statistics for the namespace.
+* `Rate of Received/Transmitted Packets` – Shows the overall incoming and outgoing network packets per second.
 
 ## Airflow DAGs and Task Status
 
-This section is based on the third party Airflow plugin and shows status of Airflow DAGs and tasks. The following panels are available:
+This section is based on the third‑party Airflow plugin and shows the status of Airflow DAGs and tasks. The following panels are available:
 
 * `Last DAG run` - Displays the status of the latest DAG run for DAGs.
 * `Number of failed DAGs` - Displays the number of failed DAGs in the selected time period.
 * `Currently Running DAGs max duration` - Displays the maximum duration of currently running DAGs for each DAG.
 * `Airflow DAG runs per second` - Displays the successful and failed Airflow DAG runs per second.
 * `Airflow running DAGs` - Displays the Airflow running DAGs.
-* `Airflow  task runs per second` - Displays the Airflow task status `successful`, `failed`, `upstream failed`, `skipped task` runs per second.
+* `Airflow task runs per second` – Displays the number of Airflow task runs per second, broken down by status (`successful`, `failed`, `upstream failed`, `skipped`).
 * `Airflow active tasks` - Displays the number of current Airflow tasks in `running`, `queued`, `scheduled`, `up for retry` and `none` states.
 
 ## StatsD Scheduler and Executor Metrics
 
-This section is based on the official Airflow metrics and shows metrics related to scheduler and executor. The following panels are available:
+This section is based on the official Airflow metrics and shows metrics related to the scheduler and executor. The following panels are available:
 
 * `Airflow executor queued tasks` - Shows queued tasks for Airflow executor.
 * `Airflow executor open slots` - Shows the number of open slots in Airflow executor.
@@ -110,23 +110,23 @@ Check if there are failed or not working pods in Airflow. This could be caused b
 
 |Alert|Possible Reason|
 |---|---|
-|Scheduler CPU load|Scheduler does not have enough CPU resources.|
+| Scheduler CPU load | Scheduler does not have enough CPU resources. |
 
 **Solution**:
 
 Increase the CPU resources for the scheduler.
 
-|Alert|Possible Reason|
+| Alert | Possible Reason |
 |---|---|
-|Scheduler error|Scheduler is down.|
+| Scheduler error | Scheduler is down. |
 
 **Solution**:
 
 Check the scheduler state and logs to determine the error.
 
-|Alert|Possible Reason|
+| Alert | Possible Reason |
 |---|---|
-|Scheduler memory load|Scheduler does not have enough memory resources.|
+| Scheduler memory load | Scheduler does not have enough memory resources. |
 
 **Solution**:
 
@@ -140,81 +140,81 @@ Increase the memory resources for the scheduler.
 
 Check the API server state and logs to determine the error.
 
-|Alert|Possible Reason|
+| Alert | Possible Reason |
 |---|---|
-|StatsD prometheus exporter is not available|StatsD Prometheus exporter was installed and is no longer available.|
+| StatsD Prometheus exporter is not available | The StatsD Prometheus exporter was installed but is no longer available. |
 
 **Solution**:
 
 Check the StatsD Prometheus exporter state and logs to determine the error.
 
-| Alert           |Possible Reason|
-|-----------------|---|
-| Worker CPU load |Worker does not have enough CPU resources.|
+| Alert | Possible Reason |
+|------|-----------------|
+| Worker CPU load | Worker does not have enough CPU resources. |
 
 **Solution**:
 
 Increase the CPU resources for the workers or increase the number of workers. Also consider decreasing the `celery.worker_concurrency` value defined using the `workers.celery.instances` in the Helm chart parameter.
 
-|Alert|Possible Reason|
+| Alert | Possible Reason |
 |---|---|
-|Worker error|All workers are down.|
+| Worker error | All workers are down. |
 
 **Solution**:
 
 Check workers state and logs to determine the error.
 
-|Alert|Possible Reason|
+| Alert | Possible Reason |
 |---|---|
-|Worker memory load|Scheduler does not have enough memory resources.|
+| Worker memory load | Worker does not have enough memory resources. |
 
 **Solution**:
 
 Increase the memory resources for workers or increase the number of workers. Also consider decreasing the `celery.worker_concurrency` value defined using the `workers.celery.instances` in the Helm chart parameter.
 
-|Alert|Possible Reason|
+| Alert | Possible Reason |
 |---|---|
-|Worker statefulset is degraded|There are problems with some workers.|
+| Worker StatefulSet is degraded | Some workers are experiencing problems. |
 
 **Solution**:
 
 Check workers state and logs of the problem workers to determine the error.
 
-|Alert|Possible Reason|
+| Alert | Possible Reason |
 |---|---|
-|Some DAG runs longer than [number] seconds |Some DAGs are running for too long.|
+| Some DAG runs longer than `[number]` seconds | Some DAGs are running for an unusually long time. |
 
 **Solution**:
 
 Check if some DAGs are stuck for some reason. If some DAGs can run for a long time, you might want to increase the `.Values.prometheusRule.dagAlerts.maxDagRunDuration` parameter.
 
-|Alert|Possible Reason|
+| Alert | Possible Reason |
 |---|---|
-|Some DAG failed|There are failed DAGs in Airflow.|
+| Some DAG failed | There are failed DAGs in Airflow. |
 
 **Solution**:
 
 There are failed DAG runs in Airflow. To fix the alert, delete these runs or manually change their state.
 
-|Alert|Possible Reason|
+| Alert | Possible Reason |
 |---|---|
-|Some task failed |There are some failed tasks in Airflow.|
+| Some task failed | There are failed tasks in Airflow. |
 
 **Solution**:
 
 There are failed task runs in Airflow. To fix the alert, fix the task, or delete these runs, or manually change their state.
 
-| Alert                                       | Possible Reason                                          |
-|---------------------------------------------|----------------------------------------------------------|
-| There are failed jobs in airflow namespace  | Some jobs(probably cleanup database cronJob) are failed. |
+| Alert | Possible Reason |
+|------|-----------------|
+| There are failed jobs in the Airflow namespace | Some jobs (likely the cleanup‑database CronJob) have failed. |
 
 **Solution**:
 
 Check cleanup database job logs.
 
-|Alert| Possible Reason                                     |
-|---|-----------------------------------------------------|
-|Cleanup database cronjob takes too long to complete | Cleanup database cronjob got stuck for some reason. |
+| Alert | Possible Reason |
+|---|---|
+| Cleanup database CronJob takes too long to complete | The cleanup‑database CronJob became stuck. |
 
 **Solution**:
 
