@@ -1,0 +1,6 @@
+---
+description: Guidance for diagnosing Qubership Airflow deployment failures.
+globs: "**/*"
+---
+
+When diagnosing failures in a Qubership Airflow deployment, apply the `troubleshoot-airflow` skill.

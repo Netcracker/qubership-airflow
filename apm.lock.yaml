@@ -1,0 +1,19 @@
+lockfile_version: '1'
+generated_at: '2026-09-01T05:47:39.774938+00:00'
+apm_version: 0.15.0
+dependencies:
+- repo_url: _local/troubleshoot-airflow
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/troubleshoot-airflow
+  - .claude/rules/troubleshoot-airflow.md
+  - .claude/skills/troubleshoot-airflow
+  - .cursor/rules/troubleshoot-airflow.mdc
+  - .github/instructions/troubleshoot-airflow.instructions.md
+  deployed_file_hashes:
+    .claude/rules/troubleshoot-airflow.md: sha256:8139085e0ee673d020c94bb1a60d2c14691e72fc772c3c09daa1d17070f1b8e6
+    .cursor/rules/troubleshoot-airflow.mdc: sha256:18a00d57bbcc01e9d51bf69c422e53729363df5bea30d4a2545e6cdc9e5f104b
+    .github/instructions/troubleshoot-airflow.instructions.md: sha256:f05231b439287fcb1d3015b60e8be35364ff96df0ea40d59f5f145cc0fdb463b
+  source: local
+  local_path: ./agent-packages/troubleshoot-airflow/
+  is_dev: true
