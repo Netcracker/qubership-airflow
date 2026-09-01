@@ -6,7 +6,7 @@ generated_at: '2026-08-31T07:49:16.034262+00:00'
 apm_version: 0.27.0
 dependencies:
 - repo_url: _local/troubleshoot-airflow
-  name: troubleshoot-mongodb
+  name: troubleshoot-airflow
   version: 1.0.0
   package_type: apm_package
   source: local
