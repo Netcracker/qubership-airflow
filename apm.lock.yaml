@@ -1,6 +1,6 @@
 # Stub lockfile - must be removed once
 # apm in https://github.com/Netcracker/qubership-workflow-hub/blob/main/actions/apm-packages-update/action.yml
-# updated to newer version
+# updated to newer APM version
 lockfile_version: '1'
 generated_at: '2026-08-31T07:49:16.034262+00:00'
 apm_version: 0.27.0
