@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 import logging
 import time
 import warnings
@@ -176,68 +175,95 @@ with DAG(
     # 1. Clean up old catalog if present
     drop_existing_catalog = SQLExecuteQueryOperator(
         task_id="drop_existing_catalog",
-        sql="DROP CATALOG IF EXISTS {{ var.json.trino_catalog_config.catalog_name }}",
+        sql=(
+            "DROP CATALOG IF EXISTS " "{{ var.json.trino_catalog_config.catalog_name }}"
+        ),
         conn_id="trino_default",
     )
 
     # 2. Dynamically build CREATE CATALOG WITH (...) statement from Variable
     create_catalog = SQLExecuteQueryOperator(
         task_id="create_catalog",
-        sql="""
-        CREATE CATALOG {{ var.json.trino_catalog_config.catalog_name }} USING {{ var.json.trino_catalog_config.connector_type }}
-        WITH (
-            {%- for key, value in var.json.trino_catalog_config.catalog_properties.items() %}
-            "{{ key }}" = '{{ value }}'{{ "," if not loop.last else "" }}
-            {%- endfor %}
-        )
-        """,
+        sql=(
+            "CREATE CATALOG "
+            "{{ var.json.trino_catalog_config.catalog_name }} USING "
+            "{{ var.json.trino_catalog_config.connector_type }}\n"
+            "WITH (\n"
+            "{%- for key, value in "
+            "var.json.trino_catalog_config.catalog_properties.items() %}\n"
+            "\"{{ key }}\" = '{{ value }}'"
+            '{{ "," if not loop.last else "" }}\n'
+            "{%- endfor %}\n"
+            ")"
+        ),
         conn_id="trino_default",
     )
 
     # 3. Create Schema
     create_schema = SQLExecuteQueryOperator(
         task_id="create_schema",
-        sql="CREATE SCHEMA IF NOT EXISTS {{ var.json.trino_catalog_config.catalog_name }}.{{ var.json.trino_catalog_config.schema_name }}",
+        sql=(
+            "CREATE SCHEMA IF NOT EXISTS "
+            "{{ var.json.trino_catalog_config.catalog_name }}."
+            "{{ var.json.trino_catalog_config.schema_name }}"
+        ),
         conn_id="trino_default",
     )
 
     # 4. Drop table if left over from previous runs
     drop_table_initial = SQLExecuteQueryOperator(
         task_id="drop_table_initial",
-        sql="DROP TABLE IF EXISTS {{ var.json.trino_catalog_config.catalog_name }}.{{ var.json.trino_catalog_config.schema_name }}.{{ var.json.trino_catalog_config.table_name }}",
+        sql=(
+            "DROP TABLE IF EXISTS "
+            "{{ var.json.trino_catalog_config.catalog_name }}."
+            "{{ var.json.trino_catalog_config.schema_name }}."
+            "{{ var.json.trino_catalog_config.table_name }}"
+        ),
         conn_id="trino_default",
     )
 
     # 5. Create Fresh Table
     create_table = SQLExecuteQueryOperator(
         task_id="create_table",
-        sql="""
-        CREATE TABLE {{ var.json.trino_catalog_config.catalog_name }}.{{ var.json.trino_catalog_config.schema_name }}.{{ var.json.trino_catalog_config.table_name }} (
-            id BIGINT,
-            event_name VARCHAR,
-            created_at TIMESTAMP(6)
-        )
-        """,
+        sql=(
+            "CREATE TABLE "
+            "{{ var.json.trino_catalog_config.catalog_name }}."
+            "{{ var.json.trino_catalog_config.schema_name }}."
+            "{{ var.json.trino_catalog_config.table_name }} (\n"
+            "    id BIGINT,\n"
+            "    event_name VARCHAR,\n"
+            "    created_at TIMESTAMP(6)\n"
+            ")"
+        ),
         conn_id="trino_default",
     )
 
     # 6. Insert 3 fresh records
     insert_data = SQLExecuteQueryOperator(
         task_id="insert_data",
-        sql="""
-        INSERT INTO {{ var.json.trino_catalog_config.catalog_name }}.{{ var.json.trino_catalog_config.schema_name }}.{{ var.json.trino_catalog_config.table_name }} (id, event_name, created_at)
-        VALUES 
-            (1, 'pipeline_started', current_timestamp),
-            (2, 'data_ingested', current_timestamp),
-            (3, 'pipeline_completed', current_timestamp)
-        """,
+        sql=(
+            "INSERT INTO "
+            "{{ var.json.trino_catalog_config.catalog_name }}."
+            "{{ var.json.trino_catalog_config.schema_name }}."
+            "{{ var.json.trino_catalog_config.table_name }} "
+            "(id, event_name, created_at)\n"
+            "VALUES\n"
+            "    (1, 'pipeline_started', current_timestamp),\n"
+            "    (2, 'data_ingested', current_timestamp),\n"
+            "    (3, 'pipeline_completed', current_timestamp)"
+        ),
         conn_id="trino_default",
     )
 
     # 7. Verify exact row count == 3
     verify_row_count = SQLValueCheckOperator(
         task_id="verify_row_count",
-        sql="SELECT COUNT(*) FROM {{ var.json.trino_catalog_config.catalog_name }}.{{ var.json.trino_catalog_config.schema_name }}.{{ var.json.trino_catalog_config.table_name }}",
+        sql=(
+            "SELECT COUNT(*) FROM "
+            "{{ var.json.trino_catalog_config.catalog_name }}."
+            "{{ var.json.trino_catalog_config.schema_name }}."
+            "{{ var.json.trino_catalog_config.table_name }}"
+        ),
         pass_value=3,
         conn_id="trino_default",
     )
@@ -245,7 +271,12 @@ with DAG(
     # 8. Verify actual row content
     verify_row_contents = SQLExecuteQueryOperator(
         task_id="verify_row_contents",
-        sql="SELECT id, event_name FROM {{ var.json.trino_catalog_config.catalog_name }}.{{ var.json.trino_catalog_config.schema_name }}.{{ var.json.trino_catalog_config.table_name }} ORDER BY id",
+        sql=(
+            "SELECT id, event_name FROM "
+            "{{ var.json.trino_catalog_config.catalog_name }}."
+            "{{ var.json.trino_catalog_config.schema_name }}."
+            "{{ var.json.trino_catalog_config.table_name }} ORDER BY id"
+        ),
         handler=assert_row_contents,
         conn_id="trino_default",
     )
@@ -253,21 +284,32 @@ with DAG(
     # 9. Cleanup: Drop Table
     drop_table = SQLExecuteQueryOperator(
         task_id="drop_table",
-        sql="DROP TABLE IF EXISTS {{ var.json.trino_catalog_config.catalog_name }}.{{ var.json.trino_catalog_config.schema_name }}.{{ var.json.trino_catalog_config.table_name }}",
+        sql=(
+            "DROP TABLE IF EXISTS "
+            "{{ var.json.trino_catalog_config.catalog_name }}."
+            "{{ var.json.trino_catalog_config.schema_name }}."
+            "{{ var.json.trino_catalog_config.table_name }}"
+        ),
         conn_id="trino_default",
     )
 
     # 10. Cleanup: Drop Schema
     drop_schema = SQLExecuteQueryOperator(
         task_id="drop_schema",
-        sql="DROP SCHEMA IF EXISTS {{ var.json.trino_catalog_config.catalog_name }}.{{ var.json.trino_catalog_config.schema_name }}",
+        sql=(
+            "DROP SCHEMA IF EXISTS "
+            "{{ var.json.trino_catalog_config.catalog_name }}."
+            "{{ var.json.trino_catalog_config.schema_name }}"
+        ),
         conn_id="trino_default",
     )
 
     # 11. Cleanup: Drop Catalog
     drop_catalog = SQLExecuteQueryOperator(
         task_id="drop_catalog",
-        sql="DROP CATALOG IF EXISTS {{ var.json.trino_catalog_config.catalog_name }}",
+        sql=(
+            "DROP CATALOG IF EXISTS " "{{ var.json.trino_catalog_config.catalog_name }}"
+        ),
         conn_id="trino_default",
     )
 
