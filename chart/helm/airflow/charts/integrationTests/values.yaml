@@ -12,6 +12,7 @@ secret:
     host: ""
     port: ""
     user: ""
+    password: ""
     catalog_config: {}
 
 serviceAccount:

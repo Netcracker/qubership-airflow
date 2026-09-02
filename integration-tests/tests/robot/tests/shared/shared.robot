@@ -139,11 +139,12 @@ Get Trino Connection Properties
         ${TRINO_HOST}=  Get File  /var/run/secrets/airflowtests/trino-host
         ${TRINO_PORT}=  Get File  /var/run/secrets/airflowtests/trino-port
         ${TRINO_USER}=  Get File  /var/run/secrets/airflowtests/trino-user
+        ${TRINO_PASSWORD}=  Get File  /var/run/secrets/airflowtests/trino-password
         ${CATALOG_CONFIG_JSON}=  Get File  /var/run/secrets/airflowtests/trino-catalog-config
         Log To Console  \nTrino connection properties loaded from secrets
-        RETURN  ${TRINO_HOST}  ${TRINO_PORT}  ${TRINO_USER}  ${CATALOG_CONFIG_JSON}
+        RETURN  ${TRINO_HOST}  ${TRINO_PORT}  ${TRINO_USER}  ${TRINO_PASSWORD}  ${CATALOG_CONFIG_JSON}
     EXCEPT  FileNotFoundError
         Log To Console  \nTrino secrets not found - test will be skipped
-        RETURN  ${None}  ${None}  ${None}  ${None}
+        RETURN  ${None}  ${None}  ${None}  ${None}  ${None}
     END
 

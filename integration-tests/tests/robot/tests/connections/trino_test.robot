@@ -8,8 +8,8 @@ Library   ../shared/lib/airflowLibrary.py
 
 *** Keywords ***
 Create Trino Connection
-    [Arguments]   ${TRINO_HOST}   ${TRINO_PORT}   ${TRINO_USER}
-    &{data}=   Create Dictionary   connection_id=trino_default   conn_type=http   description=Trino connection   host=${TRINO_HOST}   login=${TRINO_USER}   port=${TRINO_PORT}   schema=https
+    [Arguments]   ${TRINO_HOST}   ${TRINO_PORT}   ${TRINO_USER}   ${TRINO_PASSWORD}
+    &{data}=   Create Dictionary   connection_id=trino_default   conn_type=http   description=Trino connection   host=${TRINO_HOST}   login=${TRINO_USER}   password=${TRINO_PASSWORD}   port=${TRINO_PORT}   schema=https
     &{headers}=   Create Dictionary   Content-Type=application/json   Accept=application/json
     ${resp}=   POST On Session   airflowsession   /api/v2/connections   json=${data}   headers=${headers}
     Should Be Equal As Integers   ${resp.status_code}   201
@@ -40,11 +40,11 @@ Run DAG To Check Trino Connection
     Skip If   ${count} == 0   Airflow doesn't have available dags!
 
     # Get Trino connection details from shared keyword
-    ${TRINO_HOST}   ${TRINO_PORT}   ${TRINO_USER}   ${CATALOG_CONFIG_JSON}=   Get Trino Connection Properties
+    ${TRINO_HOST}   ${TRINO_PORT}   ${TRINO_USER}   ${TRINO_PASSWORD}   ${CATALOG_CONFIG_JSON}=   Get Trino Connection Properties
     Skip If   $TRINO_HOST is None or $TRINO_HOST == ''   Trino connection not configured in secrets
 
     # Create connection and variable
-    Create Trino Connection   ${TRINO_HOST}   ${TRINO_PORT}   ${TRINO_USER}
+    Create Trino Connection   ${TRINO_HOST}   ${TRINO_PORT}   ${TRINO_USER}   ${TRINO_PASSWORD}
     Set Trino Catalog Variable   ${CATALOG_CONFIG_JSON}
 
     # Run the DAG

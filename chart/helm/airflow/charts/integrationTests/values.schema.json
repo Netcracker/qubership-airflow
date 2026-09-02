@@ -76,6 +76,11 @@
               "type": "string",
               "default": ""
             },
+            "password": {
+              "description": "Specifies the password for authentication in Trino.",
+              "type": "string",
+              "default": ""
+            },
             "catalog_config": {
               "description": "Specifies the Trino catalog configuration as a JSON object.",
               "type": "object",
