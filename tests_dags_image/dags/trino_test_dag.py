@@ -22,7 +22,9 @@ class TrinoHttpCursor:
     """Simulates a DB-API 2.0 cursor for SQLExecuteQueryOperator and SQLValueCheckOperator."""
 
     def __init__(self, data: list = None, columns: list = None):
-        self._data = [tuple(row) if isinstance(row, list) else (row,) for row in (data or [])]
+        self._data = [
+            tuple(row) if isinstance(row, list) else (row,) for row in (data or [])
+        ]
         self.description = [
             (col.get("name"), col.get("type"), None, None, None, None, None)
             for col in (columns or [])
@@ -63,7 +65,14 @@ class TrinoHttpDbHook(HttpHook):
         """Used by standard SQL operators to retrieve all records."""
         return self.run(sql, handler=lambda cur: cur.fetchall())
 
-    def run(self, sql: str, autocommit: bool = False, parameters=None, handler=None, **kwargs):
+    def run(
+        self,
+        sql: str,
+        autocommit: bool = False,
+        parameters=None,
+        handler=None,
+        **kwargs,
+    ):
         conn = self.get_connection(self.http_conn_id)
         user = conn.login or "airflow"
         session = self.get_conn()
@@ -144,10 +153,16 @@ class SQLValueCheckOperator(BaseSQLValueCheckOperator):
 
 def assert_row_contents(cursor):
     rows = cursor.fetchall()
-    expected = [(1, "pipeline_started"), (2, "data_ingested"), (3, "pipeline_completed")]
+    expected = [
+        (1, "pipeline_started"),
+        (2, "data_ingested"),
+        (3, "pipeline_completed"),
+    ]
     actual = [(r[0], r[1]) for r in rows]
     if actual != expected:
-        raise ValueError(f"Data verification failed! Expected: {expected}, Got: {actual}")
+        raise ValueError(
+            f"Data verification failed! Expected: {expected}, Got: {actual}"
+        )
     return rows
 
 
