@@ -8,6 +8,11 @@ secret:
   dbaas:
     user: ""
     password: ""
+  trino:
+    host: ""
+    port: ""
+    user: ""
+    catalog_config: {}
 
 serviceAccount:
   create: true
