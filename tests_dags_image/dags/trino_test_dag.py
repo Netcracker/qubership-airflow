@@ -1,8 +1,10 @@
 from datetime import datetime
 import logging
 import time
-import warnings
 import urllib3
+import warnings
+
+from requests.auth import HTTPBasicAuth
 
 from airflow import DAG
 from airflow.providers.common.sql.operators.sql import (
@@ -73,31 +75,45 @@ class TrinoHttpDbHook(HttpHook):
         **kwargs,
     ):
         conn = self.get_connection(self.http_conn_id)
-        user = conn.login or "airflow"
+        user = conn.login or "test"
+        password = conn.password or ""
         session = self.get_conn()
 
         schema_prefix = conn.schema or "https"
         port = f":{conn.port}" if conn.port else ""
         base_url = f"{schema_prefix}://{conn.host}{port}"
 
+        # 1. Attach HTTP Basic Auth to the session for API calls
+        # When password authentication is enabled, /v1/statement mandates the Authorization header.
+        session.auth = HTTPBasicAuth(user, password)
+
+        # 2. Complete Trino client headers required by coordinator API
         headers = {
             "Content-Type": "text/plain",
+            "User-Agent": "Airflow-TrinoHttpHook/1.0",
             "X-Trino-User": user,
+            "X-Trino-Source": "airflow",
             "X-Trino-Catalog": "system",
             "X-Trino-Schema": "metadata",
         }
 
-        # 1. Post statement
+        # 3. Post statement
         response = session.post(
             f"{base_url}/v1/statement",
             data=sql.strip().encode("utf-8"),
             headers=headers,
             verify=False,
         )
+
+        # If coordinator returns an error with a body, print it for debugging
+        if response.status_code == 401:
+            logging.error(f"401 Response Headers: {dict(response.headers)}")
+            logging.error(f"401 Response Body: {response.text}")
+
         response.raise_for_status()
         data = response.json()
 
-        # 2. Poll until complete and data is populated
+        # 4. Poll until complete and data is populated
         result_rows = []
         columns = []
         while "nextUri" in data:
@@ -121,12 +137,12 @@ class TrinoHttpDbHook(HttpHook):
         if "columns" in data and data["columns"]:
             columns = data["columns"]
 
-        # 3. Check for errors
+        # 5. Check for errors
         if "error" in data:
             error_message = data["error"].get("message", "Unknown Trino error")
             raise RuntimeError(f"Trino Query Failed: {error_message}")
 
-        # 4. Construct cursor
+        # 6. Construct cursor
         cursor = TrinoHttpCursor(
             data=result_rows,
             columns=columns,
