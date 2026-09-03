@@ -2909,7 +2909,7 @@ Example `trino_catalog_config` variable value (as JSON):
 |integrationTests.secret.trino.host|Specifies the Trino server host name or IP address.|
 |integrationTests.secret.trino.port|Specifies the Trino server port number.|
 |integrationTests.secret.trino.user|Specifies the user for authentication in Trino.|
-|integrationTests.secret.trino.password|Specifies the password for authentication in Trino.|
+|integrationTests.secret.trino.password|Specifies the password for authentication in Trino. Dont add if the connection to trino is insecure |
 |integrationTests.secret.trino.catalog_config|Specifies the Trino catalog configuration as a JSON object with the following structure: `catalog_name`, `connector_type`, `schema_name`, `table_name`, and `catalog_properties`.|
 |integrationTests.serviceAccount.create|Specifies whether the service account for Airflow integration tests is to be deployed or not.|
 |integrationTests.serviceAccount.name|Specifies the name of the service account that is used to deploy Airflow integration tests.|
