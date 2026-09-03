@@ -67,6 +67,7 @@ This section provides information about the Airflow installation using [slightly
       - [Grafana Dashboard](#grafana-dashboard)
       - [Prometheus Alerts](#prometheus-alerts)
   - [Status Provisioner Job](#status-provisioner-job)
+  - [Trino Connection Integration](#trino-connection-integration)
   - [Integration Tests](#integration-tests)
 - [Installation](#installation)
   - [On-Prem](#on-prem)
@@ -2845,6 +2846,56 @@ statusProvisioner:
 
 **Note**: In case of installation in the DR schema, the Status Provisioner skips status checking for components that have replicas set to 0.
 
+## Trino Connection Integration
+
+Airflow integration tests can validate Trino SQL connections using the `sql_trino_variable_catalog` DAG. This DAG tests Trino operations including catalog creation, schema management, and data verification.
+
+### Configuring Trino Integration Tests
+
+To enable Trino connection testing, configure the Trino connection parameters in the integration tests configuration. When configured, the test runner will:
+
+1. Create an HTTP connection to the Trino server
+2. Set the catalog configuration as an Airflow variable
+3. Unpause and trigger the `sql_trino_variable_catalog` DAG
+4. Wait for DAG execution to complete
+
+The DAG execution flow:
+   - Create a test catalog with specified connector
+   - Create a schema within the catalog
+   - Create a test table with sample data
+   - Verify row count matches expectations
+   - Verify data content correctness
+   - Clean up all created resources (table, schema, catalog)
+
+**Note**: When Trino credentials are not configured in the integration test secrets, the Trino test will be automatically skipped.
+
+### Using Trino Tests via Airflow UI
+
+To manually run the Trino test DAG via the Airflow UI:
+
+1. Navigate to the Airflow Web UI
+2. Locate the `sql_trino_variable_catalog` DAG in the DAGs list
+3. Ensure the Trino connection named `trino_default` is created with proper credentials
+4. Set the `trino_catalog_config` Airflow variable with the desired catalog configuration
+5. Unpause the DAG
+6. Trigger a DAG run
+7. Monitor the task execution in the graph view
+
+Example `trino_catalog_config` variable value (as JSON):
+
+```json
+{
+  "catalog_name": "test_catalog",
+  "connector_type": "iceberg",
+  "schema_name": "test_schema",
+  "table_name": "test_table",
+  "catalog_properties": {
+    "connector.name": "iceberg",
+    "warehouse.location": "s3://my-warehouse"
+  }
+}
+```
+
 ## Integration Tests
 
 |Name|Description|
@@ -2855,6 +2906,11 @@ statusProvisioner:
 |integrationTests.secret.airflow.password|Specifies the password for authentication in Airflow.|
 |integrationTests.secret.dbaas.user|Specifies the user for authentication in DBaaS. Only used when `dbaasM2mEnabled` is `false`.|
 |integrationTests.secret.dbaas.password|Specifies the password for authentication in DBaaS. Only used when `dbaasM2mEnabled` is `false`.|
+|integrationTests.secret.trino.host|Specifies the Trino server host name or IP address.|
+|integrationTests.secret.trino.port|Specifies the Trino server port number.|
+|integrationTests.secret.trino.user|Specifies the user for authentication in Trino.|
+|integrationTests.secret.trino.password|Specifies the password for authentication in Trino.|
+|integrationTests.secret.trino.catalog_config|Specifies the Trino catalog configuration as a JSON object with the following structure: `catalog_name`, `connector_type`, `schema_name`, `table_name`, and `catalog_properties`.|
 |integrationTests.serviceAccount.create|Specifies whether the service account for Airflow integration tests is to be deployed or not.|
 |integrationTests.serviceAccount.name|Specifies the name of the service account that is used to deploy Airflow integration tests.|
 |integrationTests.dbaasM2mEnabled|Enables M2M authentication for DBaaS requests using a Kubernetes projected service account token. When enabled, `secret.dbaas.user` and `secret.dbaas.password` are ignored.|
@@ -2889,6 +2945,12 @@ integrationTests:
     dbaas:
       user: ""
       password: ""
+    trino:
+      host: ""
+      port: ""
+      user: ""
+      password: ""
+      catalog_config: {}
   serviceAccount:
     create: true
     name: "airflow-integration-tests"
@@ -2930,8 +2992,9 @@ integrationTests:
 This section contains information about integration test tags that can be used to test the Airflow service. You can use the following tags:
 
 * `airflow` tag runs all tests connected to the Airflow service.
-    * `smoke` tag runs all tests connected to the smoke scenarios like `Check Status API`, `Run Dag To Check PG Connection`, and `Run noop_dag` tests.
+    * `smoke` tag runs all tests connected to the smoke scenarios like `Check Status API`, `Run Dag To Check PG Connection`, `Run Dag To Check Trino Connection`, and `Run noop_dag` tests.
       * `pg_connection_dag` tag runs `Run Dag To Check PG Connection` test.
+      * `trino_connection_dag` tag runs `Run Dag To Check Trino Connection` test.
     * `ha` tag runs all tests connected to the HA scenarios.
       * `worker` tag runs `Test HA Case With Worker Pods Sleep Dag` and `Test HA Case With Worker Pods Sleep Dag With Retries` tests.
       * `scheduler` tag runs `Test HA Case With Scheduler Pod Sleep Dag With Retries` test.
@@ -2951,7 +3014,7 @@ This section contains information about integration test tags that can be used t
     
 **Note**: In case of running tests with the `airflow` tag, increase the timeouts for the status provisioner `statusProvisioner.integrationTestsTimeout: 3000`.
 
-**Note**: For proper work of all integration tests, the following dags should be present in Airflow: `noop_dag`, `sleeping_dag`, `sleep_dag_with_retries`, `postgres_operator_test_dag`.
+**Note**: For proper work of all integration tests, the following dags should be present in Airflow: `noop_dag`, `sleeping_dag`, `sleep_dag_with_retries`, `postgres_operator_test_dag`, and `sql_trino_variable_catalog` (if Trino testing is enabled).
     
 # Installation
 
