@@ -2831,43 +2831,44 @@ Status Provisioner is a component for providing the overall service status.
 |statusProvisioner.priorityClassName|Specifies the priority class name for Status Provisioner.|
 
 ```yaml
-statusProvisioner:
-  enabled: true
-  dockerImage: ghcr.io/netcracker/qubership-deployment-status-provisioner:main
-  lifetimeAfterCompletion: 600
-  podReadinessTimeout: 300
-  integrationTestsTimeout: 300
-  labels: {}
-  securityContexts:
-    pod: {}
-    container: {}
-  resources: {}
-```
+ statusProvisioner:
+   enabled: true
+   dockerImage: ghcr.io/netcracker/qubership-deployment-status-provisioner:main
+   lifetimeAfterCompletion: 600
+   podReadinessTimeout: 300
+   integrationTestsTimeout: 300
+   labels: {}
+   securityContexts:
+     pod: {}
+     container: {}
+   resources: {}
+ ```
 
 **Note**: In case of installation in the DR schema, the Status Provisioner skips status checking for components that have replicas set to 0.
 
 ## Trino Connection Integration
 
-Airflow integration tests can validate Trino SQL connections using the `sql_trino_variable_catalog` DAG. This DAG tests Trino operations including catalog creation, schema management, and data verification.
+Airflow integration tests can verify Trino SQL connections by executing the `sql_trino_variable_catalog` DAG. This DAG exercises Trino functionality, including catalog creation, schema management, and data verification.
 
 ### Configuring Trino Integration Tests
 
-To enable Trino connection testing, configure the Trino connection parameters in the integration tests configuration. When configured, the test runner will:
+To enable Trino connection testing, set the Trino connection parameters in the integration‑tests configuration. Once configured, the test runner will:
 
-1. Create an HTTP connection to the Trino server
-2. Set the catalog configuration as an Airflow variable
-3. Unpause and trigger the `sql_trino_variable_catalog` DAG
-4. Wait for DAG execution to complete
+1. Create an HTTP connection to the Trino server.  
+2. Store the catalog configuration as an Airflow variable.  
+3. Unpause and trigger the `sql_trino_variable_catalog` DAG.  
+4. Wait for the DAG execution to finish.
 
-The DAG execution flow:
-   - Create a test catalog with specified connector
-   - Create a schema within the catalog
-   - Create a test table with sample data
-   - Verify row count matches expectations
-   - Verify data content correctness
-   - Clean up all created resources (table, schema, catalog)
+**DAG execution flow**
 
-**Note**: When Trino credentials are not configured in the integration test secrets, the Trino test will be automatically skipped.
+- Create a test catalog using the specified connector.  
+- Create a schema inside the catalog.  
+- Create a test table and populate it with sample data.  
+- Verify that the row count matches the expected value.  
+- Confirm that the table’s data content is correct.  
+- Clean up all resources that were created (table, schema, and catalog).
+
+**Note**: If Trino credentials are absent from the integration‑test secrets, the Trino test will be skipped automatically.
 
 ### Using Trino Tests via Airflow UI
 
