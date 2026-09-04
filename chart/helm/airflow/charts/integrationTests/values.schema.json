@@ -53,6 +53,52 @@
               "default": "admin"
             }
           }
+        },
+        "trino": {
+          "description": "Trino connection configuration for integration tests.",
+          "type": "object",
+          "properties": {
+            "host": {
+              "description": "Specifies the host name of the Trino server.",
+              "type": "string",
+              "default": ""
+            },
+            "port": {
+              "description": "Specifies the port of the Trino server.",
+              "type": [
+                "string",
+                "integer"
+              ],
+              "default": ""
+            },
+            "user": {
+              "description": "Specifies the user for authentication in Trino.",
+              "type": "string",
+              "default": ""
+            },
+            "password": {
+              "description": "Specifies the password for authentication in Trino.",
+              "type": "string",
+              "default": ""
+            },
+            "catalog_config": {
+              "description": "Specifies the Trino catalog configuration as a JSON object.",
+              "type": "object",
+              "default": {},
+              "examples": [
+                {
+                  "catalog_name": "test_catalog",
+                  "connector_type": "iceberg",
+                  "schema_name": "test_schema",
+                  "table_name": "test_table",
+                  "catalog_properties": {
+                    "connector.name": "iceberg",
+                    "warehouse.location": "s3://my-warehouse"
+                  }
+                }
+              ]
+            }
+          }
         }
       }
     },
