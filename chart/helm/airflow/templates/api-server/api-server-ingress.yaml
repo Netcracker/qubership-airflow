@@ -20,6 +20,7 @@
 ################################
 ## Airflow API Server Ingress
 #################################
+{{- /* Qubership custom change: when ingress.apiServer.enabled is null, GATEWAY_SYSTEM_TYPE decides whether the Ingress is created */}}
 {{- if and .Values.apiServer.enabled (eq (include "airflow.apiServer.ingressEnabled" .) "true") }}
 {{- /* Qubership custom change: fail only when both toggles are explicitly true. When derived from GATEWAY_SYSTEM_TYPE, both resources can coexist. */}}
 {{- if and (eq (toString .Values.ingress.apiServer.enabled) "true") (eq (toString .Values.apiServer.httpRoute.enabled) "true") }}
