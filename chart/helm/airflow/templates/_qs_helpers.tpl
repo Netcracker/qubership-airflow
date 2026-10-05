@@ -5,6 +5,28 @@ Find a Deployment Status Provisioner image in various places.
     {{- printf "%s" .Values.statusProvisioner.dockerImage -}}
 {{- end -}}
 {{/*
+Whether to render the API server Ingress. Uses ingress.apiServer.enabled when it is set to true or false.
+Otherwise it is true when GATEWAY_SYSTEM_TYPE contains "legacy-ingress".
+*/}}
+{{- define "airflow.apiServer.ingressEnabled" -}}
+{{- if eq .Values.ingress.apiServer.enabled nil -}}
+{{- contains "legacy-ingress" (.Values.GATEWAY_SYSTEM_TYPE | default "" | toString) -}}
+{{- else -}}
+{{- .Values.ingress.apiServer.enabled -}}
+{{- end -}}
+{{- end -}}
+{{/*
+Whether to render the API server HTTPRoute. Uses apiServer.httpRoute.enabled when it is set to true or false.
+Otherwise it is true when GATEWAY_SYSTEM_TYPE contains "gateway-api-default".
+*/}}
+{{- define "airflow.apiServer.httpRouteEnabled" -}}
+{{- if eq .Values.apiServer.httpRoute.enabled nil -}}
+{{- contains "gateway-api-default" (.Values.GATEWAY_SYSTEM_TYPE | default "" | toString) -}}
+{{- else -}}
+{{- .Values.apiServer.httpRoute.enabled -}}
+{{- end -}}
+{{- end -}}
+{{/*
 Calculates resources that should be monitored during deployment by Deployment Status Provisioner.
 */}}
 {{- define "airflow.monitoredResources" -}}

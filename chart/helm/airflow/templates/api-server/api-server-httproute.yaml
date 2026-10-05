@@ -20,8 +20,9 @@
 ##################################
 ## Airflow API Server HTTPRoute
 ##################################
-{{- if and .Values.apiServer.enabled .Values.apiServer.httpRoute.enabled }}
-{{- if .Values.ingress.apiServer.enabled }}
+{{- if and .Values.apiServer.enabled (eq (include "airflow.apiServer.httpRouteEnabled" .) "true") }}
+{{- /* Qubership custom change: fail only when both toggles are explicitly true. When derived from GATEWAY_SYSTEM_TYPE, both resources can coexist. */}}
+{{- if and (eq (toString .Values.ingress.apiServer.enabled) "true") (eq (toString .Values.apiServer.httpRoute.enabled) "true") }}
 {{- fail "`apiServer.httpRoute.enabled` and `ingress.apiServer.enabled` are both set to `true`. HTTPRoute (Gateway API) is an alternative to the API server Ingress; enable only one of them." }}
 {{- end }}
 {{- if not (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1") }}
@@ -49,7 +50,8 @@ metadata:
   annotations: {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  parentRefs: {{- toYaml .Values.apiServer.httpRoute.parentRefs | nindent 4 }}
+  {{- /* Qubership custom change: tpl renders the GATEWAY_SYSTEM_NAME and GATEWAY_SYSTEM_NAMESPACE defaults */}}
+  parentRefs: {{- tpl (toYaml .Values.apiServer.httpRoute.parentRefs) . | nindent 4 }}
   {{- with .Values.apiServer.httpRoute.hostnames }}
   hostnames:
     {{- range . }}

@@ -161,12 +161,21 @@ ipFamilies: []
 # registries. Items can be either strings or {name: secret} objects.
 imagePullSecrets: []
 
+# Qubership platform parameters that switch the API Server between Ingress and HTTPRoute
+# when `ingress.apiServer.enabled` and `apiServer.httpRoute.enabled` are null.
+# GATEWAY_SYSTEM_TYPE is "legacy-ingress", "gateway-api-default", or both separated by a comma.
+GATEWAY_SYSTEM_TYPE: "legacy-ingress"
+# Name and namespace of the Gateway that the API Server HTTPRoutes attach to by default.
+GATEWAY_SYSTEM_NAME: "default-external-gateway"
+GATEWAY_SYSTEM_NAMESPACE: "gateway-system"
+
 # Ingress configuration
 ingress:
   # Configs for the Ingress of the API Server (Airflow 3+)
   apiServer:
-    # Enable API Server ingress resource
-    enabled: false
+    # Enable API Server ingress resource.
+    # null creates it when GATEWAY_SYSTEM_TYPE contains "legacy-ingress". Set true or false to override.
+    enabled: ~
 
     # Annotations for the API Server Ingress
     annotations:
@@ -1729,8 +1738,9 @@ apiServer:
   # The HTTPRoute references an externally managed Gateway via `parentRefs`.
   httpRoute:
     # Enable API Server HTTPRoute resource.
-    # Mutually exclusive with `ingress.apiServer.enabled`; enable only one of them.
-    enabled: false
+    # null creates it when GATEWAY_SYSTEM_TYPE contains "gateway-api-default". Set true or false to override.
+    # Setting both this and `ingress.apiServer.enabled` to true fails the deployment.
+    enabled: ~
 
     # Extra labels for the API Server HTTPRoute
     labels: {}
@@ -1738,12 +1748,16 @@ apiServer:
     # Annotations for the API Server HTTPRoute
     annotations: {}
 
-    # List of parent Gateway references this HTTPRoute attaches to. Required when enabled.
+    # List of parent Gateway references this HTTPRoute attaches to (templated). Required when enabled.
+    # The default attaches to the Gateway from GATEWAY_SYSTEM_NAME and GATEWAY_SYSTEM_NAMESPACE.
     # See https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io/v1.ParentReference
-    parentRefs: ~
-    # - name: my-gateway
-    #   namespace: gateway-system
-    #   sectionName: https
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: "{{ .Values.GATEWAY_SYSTEM_NAME }}"
+        namespace: "{{ .Values.GATEWAY_SYSTEM_NAMESPACE }}"
+        # Uncomment when `redirectRoute` is enabled, so this route targets only the HTTPS listener.
+        # port: 443
 
     # Hostnames this HTTPRoute should match (templated). Empty matches all.
     hostnames: []
@@ -1763,11 +1777,14 @@ apiServer:
     redirectRoute:
       # Enable a separate HTTPRoute that issues a 301 HTTP→HTTPS redirect
       enabled: false
-      # parentRefs for the redirect HTTPRoute (typically the HTTP listener of the gateway)
-      parentRefs: []
-      # - name: default-external-gateway
-      #   namespace: envoy-gateway
-      #   port: 80
+      # parentRefs for the redirect HTTPRoute (templated). The default targets the HTTP listener (port 80)
+      # of the Gateway from GATEWAY_SYSTEM_NAME and GATEWAY_SYSTEM_NAMESPACE.
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .Values.GATEWAY_SYSTEM_NAME }}"
+          namespace: "{{ .Values.GATEWAY_SYSTEM_NAMESPACE }}"
+          port: 80
 
     backendTLSPolicy:
       # Enable a BackendTLSPolicy to configure TLS between the gateway and the API server pod
