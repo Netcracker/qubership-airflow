@@ -582,6 +582,11 @@
           "type": "object",
           "additionalProperties": true,
           "properties": {
+            "enabled": {
+              "description": "Enable the HTTPRoute resource. Null creates it when GATEWAY_SYSTEM_TYPE contains \"gateway-api-default\".",
+              "type": ["boolean", "null"],
+              "default": null
+            },
             "redirectRoute": {
               "structuredValue": true,
               "description": "Redirect HTTPRoute for HTTP→HTTPS (Qubership extension)",
