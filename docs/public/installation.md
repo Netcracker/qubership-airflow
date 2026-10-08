@@ -441,7 +441,7 @@ The Helm chart works and uses the same parameters as defined in the community ve
 * Added labels required by Qubership release.
 * Status provisioner job and parameters for it are added.
 * For scheduler, webserver and api-server deployments support of custom Qubership rolling update deployment strategies were added. The `useQubershipDeployerUpdateStrategies` parameter is added that can be used to disable Qubership update strategies (must be set to `false`).
-* HTTP Route and related objects for api server and parameters for their configuration are added.
+* Automatic HTTPRoute/ingress switch logic is added based on the `GATEWAY_SYSTEM_TYPE`, `GATEWAY_SYSTEM_NAME`, and `GATEWAY_SYSTEM_NAMESPACE` parameters. When `ingress.apiServer.enabled` and `apiServer.httpRoute.enabled` are `null` (the default), the API server Ingress is created if `GATEWAY_SYSTEM_TYPE` contains `legacy-ingress`, and the HTTPRoute is created if it contains `gateway-api-default`. If it contains both values, both resources are created. Set either parameter to `true` or `false` to override this logic. Setting both to `true` fails the deployment. By default, `parentRefs` of the HTTPRoute and the redirect HTTPRoute point to the Gateway defined by `GATEWAY_SYSTEM_NAME` and `GATEWAY_SYSTEM_NAMESPACE`. For more information, refer to [HTTPRoute for K8S Gateway API Support](#httproute-for-k8s-gateway-api-support).
 * Since HTTP Route for api server is present, `gateway-api-converter.netcracker.com/ignore: "true"` annotation is added by default to airflow API server ingress to indicate that it does not need to be converted to HTTPRoute.
 * `values.schema.json` is changed. `values.schema.json` is not stored in this repository, but during the transfer-image build airflow schema is downloaded from airflow repository and modified in a way so only parameters that are used in Qubership platform are left in the schema. The default values for these parameters are changed to default values from Qubership platform. Also new Quberhip platform related parameters are added.
 * `airflowPodSecurityContext` template logic is modified in order to remove `runAsUser` and `fsGroup` from default security if .Values.PAAS_PLATFORM parameter is set to "OPENSHIFT".
@@ -2611,27 +2611,64 @@ It is possible to deploy 3 objects:
 * Redirect HTTPRoute. It can be used for redirecting airflow user interface client from HTTP to HTTPS when using gateway with custom certificate.
 * BackendTLSPolicy. It is required for verifying airflow certificate when TLS is enabled on airflow API server inside K8S.
 
+The Qubership platform provides the `GATEWAY_SYSTEM_TYPE`, `GATEWAY_SYSTEM_NAME`, and `GATEWAY_SYSTEM_NAMESPACE` parameters, which describe the shared Gateway in the cluster. When `ingress.apiServer.enabled` and `apiServer.httpRoute.enabled` are `null` (the default), the chart derives them independently from `GATEWAY_SYSTEM_TYPE`:
+* If `GATEWAY_SYSTEM_TYPE` contains `legacy-ingress`, the API server Ingress is created.
+* If `GATEWAY_SYSTEM_TYPE` contains `gateway-api-default`, the API server HTTPRoute is created.
+* If `GATEWAY_SYSTEM_TYPE` contains both values (for example, `"legacy-ingress, gateway-api-default"`), both the Ingress and the HTTPRoute are created.
+
+Set `ingress.apiServer.enabled` or `apiServer.httpRoute.enabled` to `true` or `false` to override this logic regardless of `GATEWAY_SYSTEM_TYPE`. Setting both to `true` fails the deployment. The HTTPRoute also requires the Gateway API CRDs in the cluster. The deployment fails if they are missing.
+
 Following configuration parameters are available:
 
 |Name|Type|Default|Description|
 |---|---|---|---|
-|apiServer.httpRoute.enabled|`boolean`|`false`|Specifies if HTTPRoute for API server is deployed.|
+|GATEWAY_SYSTEM_TYPE|`string`|`legacy-ingress`|Specifies whether to create the Ingress (`legacy-ingress`), the HTTPRoute (`gateway-api-default`), or both (`"legacy-ingress, gateway-api-default"`) when `ingress.apiServer.enabled` and `apiServer.httpRoute.enabled` are `null`|
+|GATEWAY_SYSTEM_NAME|`string`|`default-external-gateway`|Name of the shared Gateway, used as the default `parentRefs[].name` for HTTPRoutes|
+|GATEWAY_SYSTEM_NAMESPACE|`string`|`gateway-system`|Namespace of the shared Gateway, used as the default `parentRefs[].namespace` for HTTPRoutes|
+|ingress.apiServer.enabled|`boolean`|`null`|Specifies if Ingress for API server is deployed. `null` derives the value from `GATEWAY_SYSTEM_TYPE`. Set to `true` or `false` to override.|
+|apiServer.httpRoute.enabled|`boolean`|`null`|Specifies if HTTPRoute for API server is deployed. `null` derives the value from `GATEWAY_SYSTEM_TYPE`. Set to `true` or `false` to override.|
 |apiServer.httpRoute.labels|`object`|`{}`|Extra labels for the HTTPRoute resource|
 |apiServer.httpRoute.annotations|`object`|`{}`|Annotations for HTTPRoute and related objects|
-|apiServer.httpRoute.parentRefs|`array`|`~`|parentRefs for HTTPRoute (required when enabled)|
+|apiServer.httpRoute.parentRefs|`array`|see below|parentRefs for HTTPRoute (required when enabled, templated). Defaults to a single ref built from `GATEWAY_SYSTEM_NAME` and `GATEWAY_SYSTEM_NAMESPACE`.|
 |apiServer.httpRoute.hostnames|`array`|`[]`|hostnames for HTTPRoute|
 |apiServer.httpRoute.path|`string`|`"/"`|Default routing rule path (used when `rules` is empty)|
 |apiServer.httpRoute.pathType|`string`|`PathPrefix`|Path type for the default rule: `PathPrefix`, `Exact`, or `RegularExpression`|
 |apiServer.httpRoute.rules|`array`|`[]`|Custom routing rules. When set, overrides the default rule from `path`+`pathType`.|
 |apiServer.httpRoute.redirectRoute.enabled|`boolean`|`false`|Specifies if redirect HTTPRoute for API server is deployed|
-|apiServer.httpRoute.redirectRoute.parentRefs|`array`|`[]`|parentRefs for redirect HTTPRoute|
+|apiServer.httpRoute.redirectRoute.parentRefs|`array`|see below|parentRefs for redirect HTTPRoute (templated). Defaults to a single ref built from `GATEWAY_SYSTEM_NAME` and `GATEWAY_SYSTEM_NAMESPACE` that targets port `80`.|
 |apiServer.httpRoute.backendTLSPolicy.enabled|`boolean`|`false`|Specifies if backendTLSPolicy should be deployed|
 |apiServer.httpRoute.backendTLSPolicy.hostname|`string`|`''`|Hostname for backendTLSPolicy|
 |apiServer.httpRoute.backendTLSPolicy.caCertificateRefs|`array`|`[]`|caCertificateRefs for backendTLSPolicy|
 |apiServer.httpRoute.backendTLSPolicy.wellKnownCACertificates|`string`|`""`|wellKnownCACertificates for backendTLSPolicy|
 |apiServer.httpRoute.backendTLSPolicy.subjectAltNames|`array`|`[]`|subjectAltNames for backendTLSPolicy|
 
-Configuration example can be found below:
+Default `apiServer.httpRoute.parentRefs`:
+```yaml
+apiServer:
+  httpRoute:
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: "{{ .Values.GATEWAY_SYSTEM_NAME }}"
+        namespace: "{{ .Values.GATEWAY_SYSTEM_NAMESPACE }}"
+        # Uncomment when redirectRoute is enabled, so this route targets only the HTTPS listener.
+        # port: 443
+```
+
+Default `apiServer.httpRoute.redirectRoute.parentRefs`:
+```yaml
+apiServer:
+  httpRoute:
+    redirectRoute:
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .Values.GATEWAY_SYSTEM_NAME }}"
+          namespace: "{{ .Values.GATEWAY_SYSTEM_NAMESPACE }}"
+          port: 80
+```
+
+Configuration example with explicit settings that override the defaults can be found below:
 ```yaml
 apiServer:
   httpRoute:

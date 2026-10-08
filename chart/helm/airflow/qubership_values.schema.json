@@ -559,6 +559,21 @@
       "type": "boolean",
       "default": true
     },
+    "GATEWAY_SYSTEM_TYPE": {
+      "description": "The Gateway mode that applications use: \"legacy-ingress\", \"gateway-api-default\", or both separated by a comma. When ingress.apiServer.enabled or apiServer.httpRoute.enabled is null, this value decides whether the API server Ingress, HTTPRoute, or both are created.",
+      "type": "string",
+      "default": "legacy-ingress"
+    },
+    "GATEWAY_SYSTEM_NAME": {
+      "description": "The name of the Gateway that HTTPRoutes attach to by default, used as parentRefs[].name.",
+      "type": "string",
+      "default": "default-external-gateway"
+    },
+    "GATEWAY_SYSTEM_NAMESPACE": {
+      "description": "The namespace of the Gateway that HTTPRoutes attach to by default, used as parentRefs[].namespace.",
+      "type": "string",
+      "default": "gateway-system"
+    },
     "apiServer": {
       "type": "object",
       "additionalProperties": true,
@@ -567,6 +582,11 @@
           "type": "object",
           "additionalProperties": true,
           "properties": {
+            "enabled": {
+              "description": "Enable the HTTPRoute resource. Null creates it when GATEWAY_SYSTEM_TYPE contains \"gateway-api-default\".",
+              "type": ["boolean", "null"],
+              "default": null
+            },
             "redirectRoute": {
               "structuredValue": true,
               "description": "Redirect HTTPRoute for HTTP→HTTPS (Qubership extension)",
@@ -579,13 +599,14 @@
                   "default": false
                 },
                 "parentRefs": {
-                  "description": "parentRefs for the redirect HTTPRoute (can be templated).",
+                  "description": "parentRefs for the redirect HTTPRoute (can be templated). The default targets port 80 of the Gateway from GATEWAY_SYSTEM_NAME and GATEWAY_SYSTEM_NAMESPACE.",
                   "type": "array",
-                  "default": [],
-                  "examples": [
+                  "default": [
                     {
-                      "name": "default-external-gateway",
-                      "namespace": "envoy-gateway",
+                      "group": "gateway.networking.k8s.io",
+                      "kind": "Gateway",
+                      "name": "{{ .Values.GATEWAY_SYSTEM_NAME }}",
+                      "namespace": "{{ .Values.GATEWAY_SYSTEM_NAMESPACE }}",
                       "port": 80
                     }
                   ]
