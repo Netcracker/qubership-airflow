@@ -34,6 +34,16 @@ spec:
     {{- end }}
   {{- end }}
   rules:
+  {{- range .Values.apiServer.httpRoute.redirectRoute.rules }}
+    - matches:
+        {{- if .matches }}
+        {{- toYaml .matches | nindent 8 }}
+        {{- else }}
+        - path:
+            type: {{ .path.type | default "PathPrefix" }}
+            value: {{ .path.value | default "/" }}
+        {{- end }}
+  {{- end }}          
   - filters:
     - type: RequestRedirect
       requestRedirect:
