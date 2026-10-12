@@ -609,12 +609,7 @@
                       "path": {
                         "type": "PathPrefix",
                         "value": "/"
-                      },
-                      "backendRefs": [
-                        {
-                          "port": 8888
-                        }
-                      ]
+                      }
                     }
                   ],
                   "items": {
