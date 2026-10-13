@@ -584,7 +584,10 @@
           "properties": {
             "enabled": {
               "description": "Enable the HTTPRoute resource. Null creates it when GATEWAY_SYSTEM_TYPE contains \"gateway-api-default\".",
-              "type": ["boolean", "null"],
+              "type": [
+                "boolean",
+                "null"
+              ],
               "default": null
             },
             "redirectRoute": {
@@ -597,6 +600,21 @@
                   "description": "Whether to enable redirect HTTPRoute",
                   "type": "boolean",
                   "default": false
+                },
+                "rules": {
+                  "description": "Rules for the gateway.",
+                  "type": "array",
+                  "default": [
+                    {
+                      "path": {
+                        "type": "PathPrefix",
+                        "value": "/"
+                      }
+                    }
+                  ],
+                  "items": {
+                    "type": "object"
+                  }
                 },
                 "parentRefs": {
                   "description": "parentRefs for the redirect HTTPRoute (can be templated). The default targets port 80 of the Gateway from GATEWAY_SYSTEM_NAME and GATEWAY_SYSTEM_NAMESPACE.",

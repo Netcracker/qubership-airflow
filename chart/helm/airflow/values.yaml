@@ -1785,7 +1785,10 @@ apiServer:
           name: "{{ .Values.GATEWAY_SYSTEM_NAME }}"
           namespace: "{{ .Values.GATEWAY_SYSTEM_NAMESPACE }}"
           port: 80
-
+      rules:
+        - path:
+            type: PathPrefix
+            value: /
     backendTLSPolicy:
       # Enable a BackendTLSPolicy to configure TLS between the gateway and the API server pod
       enabled: false
