@@ -44,11 +44,11 @@ spec:
             value: {{ .path.value | default "/" }}
         {{- end }}
   {{- end }}          
-  - filters:
-    - type: RequestRedirect
-      requestRedirect:
-        scheme: https
-        statusCode: 301
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
 {{- end }}
 
 ---
