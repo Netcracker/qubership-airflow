@@ -1,6 +1,8 @@
 *** Variables ***
 ${AIRFLOW_HOST}             %{AIRFLOW_HOST}
 ${AIRFLOW_PORT}             %{AIRFLOW_PORT}
+${AIRFLOW_SCHEME}           %{AIRFLOW_SCHEME=http}
+${AIRFLOW_VERIFY_SSL}       %{AIRFLOW_VERIFY_SSL=false}
 ${AIRFLOW_NAMESPACE}        %{AIRFLOW_NAMESPACE}
 ${API_SERVICE_NAME}         %{API_SERVICE_NAME}
 ${SCHEDULER_DEPLOYMENT}     %{SCHEDULER_DEPLOYMENT}
@@ -25,7 +27,8 @@ Library  PlatformLibrary  managed_by_operator=${MANAGED_BY_OPERATOR}
 Preparation
     ${AIRFLOW_USER}=    Get File    /var/run/secrets/airflowtests/airflow-user
     ${AIRFLOW_PASSWORD}=    Get File    /var/run/secrets/airflowtests/airflow-password
-    Create Session    auth_session    http://${AIRFLOW_HOST}:${AIRFLOW_PORT}
+    ${verify}=    Evaluate    '${AIRFLOW_VERIFY_SSL}'.lower() == 'true'
+    Create Session    auth_session    ${AIRFLOW_SCHEME}://${AIRFLOW_HOST}:${AIRFLOW_PORT}    verify=${verify}
     &{auth_data}=    Create Dictionary
     ...    username=${AIRFLOW_USER}
     ...    password=${AIRFLOW_PASSWORD}
@@ -37,7 +40,7 @@ Preparation
     ...    Content-Type=application/json
     ${headers} =  Create Dictionary  Content-Type=application/json
     Set Global Variable  ${headers}
-    Create Session    airflowsession    http://${AIRFLOW_HOST}:${AIRFLOW_PORT}    headers=${headers_auth}
+    Create Session    airflowsession    ${AIRFLOW_SCHEME}://${AIRFLOW_HOST}:${AIRFLOW_PORT}    headers=${headers_auth}    verify=${verify}
 
 Get Names Of Entities
     ${IF_WORKERS_STATEFULSET} =  Run Keyword And Return Status  Get Stateful Set  ${WORKER_SERVICE_NAME}  ${AIRFLOW_NAMESPACE}
