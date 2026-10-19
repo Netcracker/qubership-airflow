@@ -52,6 +52,10 @@ spec:
               value: {{ .Values.workerServiceName }}
             - name: AIRFLOW_PORT
               value: {{ .Values.airflowPort | quote }}
+            - name: AIRFLOW_SCHEME
+              value: {{ .Values.airflowScheme | quote }}
+            - name: AIRFLOW_VERIFY_SSL
+              value: {{ .Values.airflowVerifySsl | quote }}
             - name: EXECUTOR_TYPE
               value: {{ .Values.executorType }}
             {{- if not (contains (include "airflow.imagesToTest" .) "No images by default") }}
