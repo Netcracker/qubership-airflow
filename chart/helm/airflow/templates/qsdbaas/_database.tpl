@@ -1,4 +1,5 @@
 {{/*
+Qubership custom template
 Name of the Secret that the dbaas-operator fills with the PostgreSQL connection properties of Airflow.
 */}}
 {{- define "airflow.dbaas.pgSecretName" -}}
