@@ -23,6 +23,14 @@
           "type": "string",
           "default": ""
         },
+        "rbac": {
+          "description": "Role and RoleBinding that let the dbaas-operator service account manage Secrets in the Airflow namespace.",
+          "type": "object",
+          "default": {
+            "create": true,
+            "operatorServiceAccount": "dbaas-operator"
+          }
+        },
         "postgresql": {
           "description": "Airflow metadata database.",
           "type": "object",
