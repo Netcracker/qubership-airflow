@@ -3868,6 +3868,11 @@ dbaasDeclarative:
   enabled: false
   # Namespace of the dbaas-operator instance that manages the resources. Required when enabled=true.
   operatorNamespace: ""
+  # The dbaas-operator has no cluster-wide Secret permissions. This Role and RoleBinding let its ServiceAccount
+  # create the connection Secrets in the Airflow namespace. Disable them if the namespace already grants this access.
+  rbac:
+    create: true
+    operatorServiceAccount: dbaas-operator
   postgresql:
     microserviceName: airflow
     namePrefix: ""

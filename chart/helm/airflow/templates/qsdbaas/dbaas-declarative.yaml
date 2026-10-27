@@ -3,6 +3,36 @@
 {{- $declarative := .Values.dbaasDeclarative }}
 {{- $_ := required "dbaasDeclarative.operatorNamespace is required when dbaasDeclarative.enabled is true" $declarative.operatorNamespace }}
 {{- $fullname := include "airflow.fullname" . }}
+{{- if $declarative.rbac.create }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $fullname }}-dbaas-operator-secrets
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: {{ .Release.Name }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $fullname }}-dbaas-operator-secrets
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $fullname }}-dbaas-operator-secrets
+subjects:
+  - kind: ServiceAccount
+    name: {{ $declarative.rbac.operatorServiceAccount }}
+    namespace: {{ $declarative.operatorNamespace }}
+{{- end }}
 {{- $useRedis := ne (.Values.executor | toString) "KubernetesExecutor" }}
 {{- $pgClassifier := dict "microserviceName" $declarative.postgresql.microserviceName "scope" "service" "isServiceDb" "true" }}
 {{- $redisClassifier := dict "microserviceName" $declarative.redis.microserviceName "scope" "service" "isServiceDb" "true" }}
