@@ -48,11 +48,6 @@
             "namePrefix": "",
             "secretName": ""
           }
-        },
-        "connections": {
-          "description": "Databases for Airflow connections resolved from the <conn_id>_dbaas backend properties.",
-          "type": "array",
-          "default": []
         }
       }
     },

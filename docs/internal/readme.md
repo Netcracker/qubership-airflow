@@ -125,7 +125,7 @@ Things to know before enabling it:
 * `dbaasDeclarative.operatorNamespace` is required. It is the namespace of the `dbaas-operator` that manages the resources.
 * The aggregator creates declarative databases with `backupDisabled=false`, and the owner is the classifier `microserviceName`. `DBAAS_PG_DB_OWNER`, `DBAAS_REDIS_DB_OWNER` and `DBAAS_*_BACKUP_DISABLED` have no effect.
 * Classifier, type and secret name are immutable on the CRs. To change them, delete and recreate the CR.
-* Connections configured in `config.secrets.backend_kwargs` need an entry in `dbaasDeclarative.connections` with the same classifier, plus a Secret volume and mount in `volumes` and `volumeMounts`. Only PostgreSQL connections are resolved. MaaS (Kafka) still uses the REST API.
+* The chart renders a database and a claim for every `*_dbaas` entry of `qs_secrets_backend_params` with `type: postgresql`, so connections are defined once for both modes. The resources are named `<fullname>-<connection name>`, and the Secret is `<fullname>-dbaas-<connection name>`, where the connection name is the key without `_dbaas`, in lowercase, with `-` instead of `_`. Mount each Secret in `volumes` and `volumeMounts` under `/etc/secrets/dbaas-secrets/`. `classifier.namespace` must be omitted or equal to the release namespace. `dbOwner`, `backupDisabled` and `originService` are ignored. Only PostgreSQL connections are resolved, and MaaS (Kafka) still uses the REST API.
 * Error code `AIRFLOW-8311` means that no mounted Secret matched. Check that the `DatabaseSecretClaim` exists, that its `status` is ready, and that the classifier matches the one the backend requests.
 
 ### IDP Configuration related issues
