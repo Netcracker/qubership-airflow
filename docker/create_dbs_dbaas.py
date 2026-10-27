@@ -37,13 +37,17 @@ negative_values = ("false", "False", "no", "No", False)
 dbaas_api_verify = read_secret_var_from_file("DBAAS_API_VERIFY", True)
 api_verify = False if dbaas_api_verify in negative_values else dbaas_api_verify
 dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
+# With the declarative approach the dbaas-operator creates databases and access policies from CRs.
+dbaas_operator_enabled = (
+    read_secret_var_from_file("DBAAS_OPERATOR_ENABLED", "false") == "true"
+)
 
 k8s_config.load_incluster_config()
 k8s_client = client.ApiClient()
 v1_apps_api = client.CoreV1Api(k8s_client)
 headers = {"Content-Type": "application/json"}
 auth = (dbaas_user, dbaas_password)
-if dbaas_m2m_enabled and not dbaas_user:
+if dbaas_m2m_enabled and not dbaas_user and not dbaas_operator_enabled:
     token = Path("/var/run/secrets/tokens/dbaas/token").read_text()
     headers["Authorization"] = f"Bearer {token}"
     auth = None
@@ -216,7 +220,8 @@ def grant_permissions_for_sas():
 
 def create_pg_secret():
     try:
-        get_pg_database()
+        if not dbaas_operator_enabled:
+            get_pg_database()
         # delete secrets in case of upgrade from old version
         delete_secret_ignore_not_found("metadata-secret")
         # second secret for  resultBackendSecretName
@@ -234,7 +239,8 @@ def create_pg_secret():
 
 def create_redis_secret():
     try:
-        get_redis_database()
+        if not dbaas_operator_enabled:
+            get_redis_database()
         delete_secret_ignore_not_found("broker-url-secret")
     except Exception:
         logging.exception(
@@ -245,5 +251,5 @@ def create_redis_secret():
 create_pg_secret()
 if airflow_executor != "KubernetesExecutor":
     create_redis_secret()
-if dbaas_m2m_enabled not in negative_values:
+if dbaas_m2m_enabled not in negative_values and not dbaas_operator_enabled:
     grant_permissions_for_sas()

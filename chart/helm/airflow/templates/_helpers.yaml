@@ -168,6 +168,11 @@ If release name contains chart name it will be used as a full name.
   - name: {{ $config.name }}
     value: {{ $config.value | quote }}
   {{- end }}
+  {{- /* Qubership custom change: Switch the secrets backend to the dbaas-operator Secrets--- */ -}}
+  {{- if .Values.dbaasDeclarative.enabled }}
+  - name: DBAAS_OPERATOR_ENABLED
+    value: "true"
+  {{- end }}
   # Dynamically created secret envs
   {{- range $i, $config := .Values.secret }}
   - name: {{ $config.envName }}

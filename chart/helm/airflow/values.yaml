@@ -402,6 +402,17 @@ volumes:
             expirationSeconds: 3600
             path: token
       defaultMode: 420
+  #---Qubership custom change: Secrets with database connection properties written by the dbaas-operator. They are optional, so legacy (REST) mode does not need them---
+  - name: dbaas-declarative-postgresql
+    secret:
+      secretName: '{{ include "airflow.dbaas.pgSecretName" . }}'
+      optional: true
+      defaultMode: 0400
+  - name: dbaas-declarative-redis
+    secret:
+      secretName: '{{ include "airflow.dbaas.redisSecretName" . }}'
+      optional: true
+      defaultMode: 0400
 
 # VolumeMounts for all Airflow containers (templated)
 volumeMounts:
@@ -428,6 +439,13 @@ volumeMounts:
   - name: maas-m2m-token
     readOnly: true
     mountPath: /var/run/secrets/tokens/maas
+  #---Qubership custom change: Mounts for the dbaas-operator secrets. The secrets backend scans every subdirectory of /etc/secrets/dbaas-secrets---
+  - name: dbaas-declarative-postgresql
+    readOnly: true
+    mountPath: /etc/secrets/dbaas-secrets/postgresql
+  - name: dbaas-declarative-redis
+    readOnly: true
+    mountPath: /etc/secrets/dbaas-secrets/redis
 
 # Secrets for all Airflow containers
 secret: []
@@ -3838,6 +3856,40 @@ integrationTests:
   enabled: false
   dbaasM2mEnabled: true
   maasM2mEnabled: true
+
+#---Qubership custom change: Declarative DBaaS. Databases are requested with dbaas-operator CRs instead of the DBaaS REST API---
+# Limitations compared to the REST API: the aggregator creates declarative databases with backupDisabled=false, and
+# the database owner is the classifier microserviceName. DBAAS_PG_DB_OWNER, DBAAS_REDIS_DB_OWNER and the
+# DBAAS_*_BACKUP_DISABLED parameters have no effect when enabled=true.
+dbaasDeclarative:
+  # Render InternalDatabase, DatabaseSecretClaim and DatabaseAccessPolicy resources and make Airflow read the
+  # connection properties from the Secrets that the dbaas-operator creates. The dbaas-operator CRDs must be installed.
+  # When true, Airflow never falls back to the DBaaS REST API for its own databases.
+  enabled: false
+  # Namespace of the dbaas-operator instance that manages the resources. Required when enabled=true.
+  operatorNamespace: ""
+  postgresql:
+    microserviceName: airflow
+    namePrefix: ""
+    # Defaults to <fullname>-dbaas-postgresql.
+    secretName: ""
+  redis:
+    microserviceName: airflow
+    namePrefix: ""
+    # Defaults to <fullname>-dbaas-redis.
+    secretName: ""
+  # Databases for Airflow connections that are resolved by the secrets backend from the <conn_id>_dbaas properties.
+  # The classifier must be the same as in config.secrets.backend_kwargs. Mount each Secret into the pods with the
+  # volumes and volumeMounts values, under /etc/secrets/dbaas-secrets/<name>.
+  # - name: my-pg                    # Used in resource names
+  #   type: postgresql
+  #   classifier:
+  #     microserviceName: my-service
+  #     scope: service
+  #   namePrefix: ""
+  #   settings: {}
+  #   secretName: ""                 # Defaults to <fullname>-dbaas-<name>
+  connections: []
 
 # dbaas logic:
 #

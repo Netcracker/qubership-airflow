@@ -7,6 +7,47 @@
       "type": "boolean",
       "default": false
     },
+    "dbaasDeclarative": {
+      "structuredValue": true,
+      "description": "Declarative DBaaS: databases are requested with dbaas-operator CRs instead of the DBaaS REST API.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "Render the dbaas-operator resources and read connection properties from the Secrets they create.",
+          "type": "boolean",
+          "default": false
+        },
+        "operatorNamespace": {
+          "description": "Namespace of the dbaas-operator instance that manages the resources. Required when enabled is true.",
+          "type": "string",
+          "default": ""
+        },
+        "postgresql": {
+          "description": "Airflow metadata database.",
+          "type": "object",
+          "default": {
+            "microserviceName": "airflow",
+            "namePrefix": "",
+            "secretName": ""
+          }
+        },
+        "redis": {
+          "description": "Celery broker database.",
+          "type": "object",
+          "default": {
+            "microserviceName": "airflow",
+            "namePrefix": "",
+            "secretName": ""
+          }
+        },
+        "connections": {
+          "description": "Databases for Airflow connections resolved from the <conn_id>_dbaas backend properties.",
+          "type": "array",
+          "default": []
+        }
+      }
+    },
     "serviceMonitor": {
       "structuredValue": true,
       "description": "Qubership Airflow Monitoring service monitor configuration.",

@@ -1,0 +1,42 @@
+{{- /* Qubership custom change: Declarative DBaaS resources for the dbaas-operator--- */ -}}
+{{- if .Values.dbaasDeclarative.enabled }}
+{{- $declarative := .Values.dbaasDeclarative }}
+{{- $_ := required "dbaasDeclarative.operatorNamespace is required when dbaasDeclarative.enabled is true" $declarative.operatorNamespace }}
+{{- $fullname := include "airflow.fullname" . }}
+{{- $useRedis := ne (.Values.executor | toString) "KubernetesExecutor" }}
+{{- $pgClassifier := dict "microserviceName" $declarative.postgresql.microserviceName "scope" "service" "isServiceDb" "true" }}
+{{- $redisClassifier := dict "microserviceName" $declarative.redis.microserviceName "scope" "service" "isServiceDb" "true" }}
+{{- include "airflow.dbaas.database" (dict "ctx" . "name" (printf "%s-postgresql" $fullname) "type" "postgresql" "classifier" $pgClassifier "namePrefix" $declarative.postgresql.namePrefix "secretName" (include "airflow.dbaas.pgSecretName" .)) }}
+{{- if $useRedis }}
+{{- include "airflow.dbaas.database" (dict "ctx" . "name" (printf "%s-redis" $fullname) "type" "redis" "classifier" $redisClassifier "namePrefix" $declarative.redis.namePrefix "secretName" (include "airflow.dbaas.redisSecretName" .)) }}
+{{- end }}
+{{- range $declarative.connections }}
+{{- include "airflow.dbaas.database" (dict "ctx" $ "name" (printf "%s-%s" $fullname .name) "type" .type "classifier" .classifier "namePrefix" .namePrefix "settings" .settings "secretName" (default (printf "%s-dbaas-%s" $fullname .name) .secretName)) }}
+{{- end }}
+{{- $services := list }}
+{{- range $component := list "api-server" "create-user-job" "dag-processor" "database-cleanup" "migrate-database-job" "scheduler" "worker" "triggerer" "flower" }}
+{{- $services = append $services (dict "name" (printf "%s-%s" $fullname $component) "roles" (list "admin")) }}
+{{- end }}
+{{- if and (index (default dict .Values.integrationTests) "enabled") (index (default dict .Values.integrationTests) "dbaasM2mEnabled") }}
+{{- $services = append $services (dict "name" (.Values.integrationTests.serviceAccount.name | default "airflow-integration-tests") "roles" (list "admin")) }}
+{{- end }}
+{{- $policyOwners := dict "postgresql" $declarative.postgresql.microserviceName }}
+{{- if and $useRedis (ne $declarative.redis.microserviceName $declarative.postgresql.microserviceName) }}
+{{- $_ := set $policyOwners "redis" $declarative.redis.microserviceName }}
+{{- end }}
+{{- range $suffix, $microserviceName := $policyOwners }}
+---
+apiVersion: dbaas.netcracker.com/v1
+kind: DatabaseAccessPolicy
+metadata:
+  name: {{ $fullname }}-{{ $suffix }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    release: {{ $.Release.Name }}
+spec:
+  operatorNamespace: {{ $declarative.operatorNamespace | quote }}
+  microserviceName: {{ $microserviceName | quote }}
+  services: {{- toYaml $services | nindent 4 }}
+  disableGlobalPermissions: false
+{{- end }}
+{{- end }}
