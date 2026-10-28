@@ -33,7 +33,7 @@ subjects:
     name: {{ $declarative.rbac.operatorServiceAccount }}
     namespace: {{ $declarative.operatorNamespace }}
 {{- end }}
-{{- $useRedis := ne (.Values.executor | toString) "KubernetesExecutor" }}
+{{- $useRedis := contains "CeleryExecutor" .Values.executor }}
 {{- $pgClassifier := dict "microserviceName" $declarative.postgresql.microserviceName "scope" "service" "isServiceDb" "true" }}
 {{- $redisClassifier := dict "microserviceName" $declarative.redis.microserviceName "scope" "service" "isServiceDb" "true" }}
 {{- include "airflow.dbaas.database" (dict "ctx" . "name" (printf "%s-postgresql" $fullname) "type" "postgresql" "classifier" $pgClassifier "namePrefix" $declarative.postgresql.namePrefix "secretName" (include "airflow.dbaas.pgSecretName" .)) }}
