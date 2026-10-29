@@ -7,6 +7,23 @@
       "type": "boolean",
       "default": false
     },
+    "qs_secrets_backend_params": {
+      "structuredValue": true,
+      "description": "Data for the secrets backend (config.secrets.backend_kwargs), keyed by <connection id>_dbaas or <connection id>_maas. Every _dbaas entry needs a classifier.",
+      "type": "object",
+      "default": {},
+      "patternProperties": {
+        "_dbaas$": {
+          "type": "object",
+          "required": ["classifier"],
+          "properties": {
+            "classifier": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
     "dbaasDeclarative": {
       "structuredValue": true,
       "description": "Declarative DBaaS: databases are requested with dbaas-operator CRs instead of the DBaaS REST API.",

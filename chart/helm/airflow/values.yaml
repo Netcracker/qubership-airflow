@@ -3857,6 +3857,9 @@ integrationTests:
   dbaasM2mEnabled: true
   maasM2mEnabled: true
 
+#---Qubership custom change: Data for config.secrets.backend_kwargs, keyed by "<connection id>_dbaas" or "<connection id>_maas"---
+qs_secrets_backend_params: {}
+
 #---Qubership custom change: Declarative DBaaS. Databases are requested with dbaas-operator CRs instead of the DBaaS REST API---
 # Limitations compared to the REST API: the aggregator creates declarative databases with backupDisabled=false, and
 # the database owner is the classifier microserviceName. DBAAS_PG_DB_OWNER, DBAAS_REDIS_DB_OWNER and the
