@@ -113,16 +113,18 @@ If you are seeing SSL errors of different types, it is necessary to check TLS co
 
 ### Declarative DBaaS
 
-By default, the secrets backend and the preinstall job request databases from the DBaaS REST API. With `dbaasDeclarative.enabled=true`, the chart renders `InternalDatabase`, `DatabaseSecretClaim` and `DatabaseAccessPolicy` resources instead, and the `dbaas-operator` writes connection properties into Secrets. The Secrets are mounted under `/etc/secrets/dbaas-secrets/`, and the backend matches them by classifier, database type and user role. See the [dbaas-operator documentation](https://github.com/Netcracker/qubership-dbaas/blob/main/docs/DBaaS%20Operator.md) for the CRs.
+By default, the secrets backend and the preinstall job request databases from the DBaaS REST API. With `dbaasDeclarative.enabled=true`, the chart renders `InternalDatabase` and `DatabaseSecretClaim` resources instead, and the `dbaas-operator` writes connection properties into Secrets. The Secrets are mounted under `/etc/secrets/dbaas-secrets/`, and the backend matches them by classifier, database type and user role. See the [dbaas-operator documentation](https://github.com/Netcracker/qubership-dbaas/blob/main/docs/DBaaS%20Operator.md) for the CRs.
 
 Both modes stay available in the same image:
 
 * `dbaasDeclarative.enabled=false` (default): the backend checks the mounted Secrets first, then uses the REST API. The Secrets are optional, so nothing needs to be mounted.
-* `dbaasDeclarative.enabled=true`: the backend sets `DBAAS_OPERATOR_ENABLED=true`, never calls the REST API for databases, and waits up to `DBAAS_OPERATOR_WAIT_SECONDS` (300 by default) for the Secret. The preinstall job skips database creation and the access policy.
+* `dbaasDeclarative.enabled=true`: the backend sets `DBAAS_OPERATOR_ENABLED=true`, never calls the REST API for databases, and waits up to `DBAAS_OPERATOR_WAIT_SECONDS` (300 by default) for the Secret. The preinstall job skips database creation and the access policy call.
 
 Things to know before enabling it:
 
 * `dbaasDeclarative.operatorNamespace` is required. It is the namespace of the `dbaas-operator` that manages the resources.
+* The chart does not render a `DatabaseAccessPolicy`. Airflow pods read the Secrets and never call DBaaS, so they need no grants. Code in DAGs that calls the DBaaS REST API directly still needs a grant from the database owner.
+* `dbaasDeclarative.postgresql.microserviceName` and `dbaasDeclarative.redis.microserviceName` are passed to the pods as `DBAAS_PG_MICROSERVICE_NAME` and `DBAAS_REDIS_MICROSERVICE_NAME`. They override the same keys in `dbaas-connection-params-main`, so the name is set in one place.
 * The aggregator creates declarative databases with `backupDisabled=false`, and the owner is the classifier `microserviceName`. `DBAAS_PG_DB_OWNER`, `DBAAS_REDIS_DB_OWNER` and `DBAAS_*_BACKUP_DISABLED` have no effect.
 * Classifier, type and secret name are immutable on the CRs. To change them, delete and recreate the CR.
 * The chart renders a database and a claim for every `*_dbaas` entry of `qs_secrets_backend_params` with `type: postgresql`, so connections are defined once for both modes. The resources are named `<fullname>-<connection name>`, and the Secret is `<fullname>-dbaas-<connection name>`, where the connection name is the key without `_dbaas`, in lowercase, with `-` instead of `_`. Mount each Secret in `volumes` and `volumeMounts` under `/etc/secrets/dbaas-secrets/`. The dbaas-operator rejects a claim whose `classifier.namespace` differs from the release namespace, so omit it or set it to the release namespace. `dbOwner`, `backupDisabled` and `originService` are ignored. Only PostgreSQL connections are resolved, and MaaS (Kafka) still uses the REST API.

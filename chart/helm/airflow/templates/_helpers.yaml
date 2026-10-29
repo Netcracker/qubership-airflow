@@ -172,6 +172,10 @@ If release name contains chart name it will be used as a full name.
   {{- if .Values.dbaasDeclarative.enabled }}
   - name: DBAAS_OPERATOR_ENABLED
     value: "true"
+  - name: DBAAS_PG_MICROSERVICE_NAME
+    value: {{ .Values.dbaasDeclarative.postgresql.microserviceName | quote }}
+  - name: DBAAS_REDIS_MICROSERVICE_NAME
+    value: {{ .Values.dbaasDeclarative.redis.microserviceName | quote }}
   {{- end }}
   # Dynamically created secret envs
   {{- range $i, $config := .Values.secret }}

@@ -47,33 +47,4 @@ subjects:
 {{- include "airflow.dbaas.database" (dict "ctx" $ "name" (printf "%s-%s" $fullname $connectionName) "type" "postgresql" "classifier" $params.classifier "namePrefix" $params.namePrefix "settings" $params.settings "secretName" (printf "%s-dbaas-%s" $fullname $connectionName)) }}
 {{- end }}
 {{- end }}
-{{- $policyOwners := dict "postgresql" $declarative.postgresql.microserviceName }}
-{{- if and $useRedis (ne $declarative.redis.microserviceName $declarative.postgresql.microserviceName) }}
-{{- $_ := set $policyOwners "redis" $declarative.redis.microserviceName }}
-{{- end }}
-{{- range $suffix, $microserviceName := $policyOwners }}
----
-apiVersion: dbaas.netcracker.com/v1
-kind: DatabaseAccessPolicy
-metadata:
-  name: {{ $fullname }}-{{ $suffix }}
-  namespace: {{ $.Release.Namespace }}
-  labels:
-    release: {{ $.Release.Name }}
-spec:
-  operatorNamespace: {{ $declarative.operatorNamespace | quote }}
-  microserviceName: {{ $microserviceName | quote }}
-  services:
-    {{- range list "api-server" "create-user-job" "dag-processor" "database-cleanup" "migrate-database-job" "scheduler" "worker" "triggerer" "flower" }}
-    - name: {{ $fullname }}-{{ . }}
-      roles:
-        - admin
-    {{- end }}
-    {{- if and (index (default dict $.Values.integrationTests) "enabled") (index (default dict $.Values.integrationTests) "dbaasM2mEnabled") }}
-    - name: {{ $.Values.integrationTests.serviceAccount.name | default "airflow-integration-tests" }}
-      roles:
-        - admin
-    {{- end }}
-  disableGlobalPermissions: false
-{{- end }}
 {{- end }}
