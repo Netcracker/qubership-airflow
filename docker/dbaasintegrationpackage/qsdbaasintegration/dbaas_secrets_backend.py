@@ -4,6 +4,7 @@ import json
 import logging
 import base64
 import ssl
+import time
 from pathlib import Path
 
 from airflow.secrets.base_secrets import BaseSecretsBackend
@@ -37,6 +38,19 @@ def read_secret_var_from_file(
         return env_value
 
 
+def get_microservice_name(env_name):
+    """
+    Return the microservice name that identifies the Airflow PG or Redis database.
+
+    With declarative DBaaS the chart passes the name used in the InternalDatabase and
+    DatabaseSecretClaim as an environment variable. It wins over the secret file, so the name
+    is configured in one place and cannot differ from the one in the CRs.
+    """
+    if dbaas_operator_enabled and os.getenv(env_name):
+        return os.getenv(env_name)
+    return read_secret_var_from_file(env_name, "airflow")
+
+
 positive_values = ("true", "True", "yes", "Yes", True)
 negative_values = ("false", "False", "no", "No", False)
 
@@ -67,6 +81,16 @@ dbaas_m2m_enabled = read_secret_var_from_file("DBAAS_M2M_ENABLED", True)
 maas_m2m_enabled = read_secret_var_from_file("MAAS_M2M_ENABLED", True)
 local_filesystem_backend_enabled = (
     read_secret_var_from_file("LOCAL_FILESYSTEM_BACKEND", True) in positive_values
+)
+# Declarative DBaaS: the dbaas-operator writes connection properties into mounted Secrets.
+dbaas_operator_enabled = (
+    read_secret_var_from_file("DBAAS_OPERATOR_ENABLED", "false") in positive_values
+)
+dbaas_mounted_secrets_dir = read_secret_var_from_file(
+    "DBAAS_MOUNTED_SECRETS_DIR", "/etc/secrets/dbaas-secrets"
+)
+dbaas_operator_wait_seconds = int(
+    read_secret_var_from_file("DBAAS_OPERATOR_WAIT_SECONDS", "300")
 )
 
 
@@ -142,6 +166,67 @@ class DBAASSecretsBackend(
                     auth=auth,
                     verify=self.api_verify,
                 )
+
+    @staticmethod
+    def _read_mounted_secret(secret_dir):
+        try:
+            metadata = json.loads((secret_dir / "metadata.json").read_text())
+            properties = json.loads(
+                (secret_dir / "connectionProperties.json").read_text()
+            )
+            return metadata, properties
+        except (OSError, ValueError) as e:
+            logging.debug(f"Skipping mounted DBaaS secret {secret_dir}: {e}")
+            return None
+
+    def _find_mounted_properties(self, classifier, db_type, user_role=""):
+        """
+        Find connection properties in the Secrets written by the dbaas-operator.
+
+        A Secret matches when classifier, lowercase type and requested role equal the request.
+        The operator defaults an omitted classifier namespace to the Secret namespace, so the
+        same default is applied to the requested classifier.
+        """
+        requested = {"namespace": self.namespace} | classifier
+        root = Path(dbaas_mounted_secrets_dir)
+        if not root.is_dir():
+            return None
+        for secret_dir in sorted(root.iterdir()):
+            secret = self._read_mounted_secret(secret_dir)
+            if secret is None:
+                continue
+            metadata, properties = secret
+            if (
+                metadata.get("classifier") == requested
+                and str(metadata.get("type", "")).lower() == db_type.lower()
+                and metadata.get("userRole", "") == user_role
+            ):
+                logging.info(
+                    f"found {db_type} database in mounted DBaaS secret {secret_dir.name}"
+                )
+                return properties
+        return None
+
+    def get_mounted_properties(self, classifier, db_type):
+        """
+        Return connection properties from a mounted operator Secret, or None to use the REST API.
+
+        With DBAAS_OPERATOR_ENABLED=true the operator owns database creation, so this waits up to
+        DBAAS_OPERATOR_WAIT_SECONDS for the Secret and never falls back to REST.
+        """
+        deadline = time.monotonic() + dbaas_operator_wait_seconds
+        while True:
+            properties = self._find_mounted_properties(classifier, db_type)
+            if properties is not None or not dbaas_operator_enabled:
+                return properties
+            if time.monotonic() >= deadline:
+                logging.error(
+                    f"[error_code=AIRFLOW-8311] No mounted DBaaS secret for {db_type} database with classifier"
+                    f" {classifier} in {dbaas_mounted_secrets_dir}. Check that the DatabaseSecretClaim exists"
+                    f" and the dbaas-operator reconciled it."
+                )
+                return None
+            time.sleep(5)
 
     def get_conn_value(self, conn_id: str, team_name: str | None = None) -> str | None:
         if self.qs_secrets_backend_properties == {}:
@@ -294,6 +379,11 @@ class DBAASSecretsBackend(
             logging.debug("Using airflow namespace for dbaas request")
             namespace = self.namespace
         db_type = dbaas_data["type"]
+        mounted_properties = self.get_mounted_properties(
+            dbaas_data["classifier"], db_type
+        )
+        if mounted_properties is not None or dbaas_operator_enabled:
+            return mounted_properties
         dbaas_by_classifier_data = {"classifier": dbaas_data["classifier"]}
         if "originService" in dbaas_data:
             dbaas_by_classifier_data.update(
@@ -373,9 +463,7 @@ class DBAASSecretsBackend(
         dbaas_pg_backup_disabled = read_secret_var_from_file(
             "DBAAS_PG_BACKUP_DISABLED", "true"
         )
-        dbaas_pg_microservice_name = read_secret_var_from_file(
-            "DBAAS_PG_MICROSERVICE_NAME", "airflow"
-        )
+        dbaas_pg_microservice_name = get_microservice_name("DBAAS_PG_MICROSERVICE_NAME")
         headers = {"Content-Type": "application/json"}
         data = {
             "originService": dbaas_pg_microservice_name,
@@ -386,6 +474,11 @@ class DBAASSecretsBackend(
                 "isServiceDb": "true",
             },
         }
+        mounted_properties = self.get_mounted_properties(
+            data["classifier"], "postgresql"
+        )
+        if mounted_properties is not None or dbaas_operator_enabled:
+            return mounted_properties
         response = self.requests_with_correct_auth(
             address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/postgresql",
             headers=headers,
@@ -428,8 +521,8 @@ class DBAASSecretsBackend(
         dbaas_redis_backup_disabled = read_secret_var_from_file(
             "DBAAS_REDIS_BACKUP_DISABLED", "true"
         )
-        dbaas_redis_microservice_name = read_secret_var_from_file(
-            "DBAAS_REDIS_MICROSERVICE_NAME", "airflow"
+        dbaas_redis_microservice_name = get_microservice_name(
+            "DBAAS_REDIS_MICROSERVICE_NAME"
         )
         headers = {"Content-Type": "application/json"}
         data = {
@@ -441,6 +534,9 @@ class DBAASSecretsBackend(
                 "isServiceDb": "true",
             },
         }
+        mounted_properties = self.get_mounted_properties(data["classifier"], "redis")
+        if mounted_properties is not None or dbaas_operator_enabled:
+            return mounted_properties
         response = self.requests_with_correct_auth(
             address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/redis",
             headers=headers,

@@ -1,0 +1,49 @@
+{{- /* Qubership custom change: Declarative DBaaS resources for the dbaas-operator--- */ -}}
+{{- if .Values.dbaasDeclarative.enabled }}
+{{- $declarative := .Values.dbaasDeclarative }}
+{{- $fullname := include "airflow.fullname" . }}
+{{- if $declarative.rbac.create }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $fullname }}-dbaas-operator-secrets
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: {{ .Release.Name }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $fullname }}-dbaas-operator-secrets
+  namespace: {{ .Release.Namespace }}
+  labels:
+    release: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $fullname }}-dbaas-operator-secrets
+subjects:
+  - kind: ServiceAccount
+    name: {{ $declarative.rbac.operatorServiceAccount }}
+    namespace: {{ include "airflow.dbaas.operatorNamespace" . }}
+{{- end }}
+{{- $useRedis := contains "CeleryExecutor" .Values.executor }}
+{{- $pgClassifier := dict "microserviceName" $declarative.postgresql.microserviceName "scope" "service" "isServiceDb" "true" }}
+{{- include "airflow.dbaas.database" (dict "ctx" . "name" (printf "%s-postgresql" $fullname) "type" "postgresql" "classifier" $pgClassifier "namePrefix" $declarative.postgresql.namePrefix "secretName" (include "airflow.dbaas.pgSecretName" .)) }}
+{{- if $useRedis }}
+{{- $redisClassifier := dict "microserviceName" $declarative.redis.microserviceName "scope" "service" "isServiceDb" "true" }}
+{{- include "airflow.dbaas.database" (dict "ctx" . "name" (printf "%s-redis" $fullname) "type" "redis" "classifier" $redisClassifier "namePrefix" $declarative.redis.namePrefix "secretName" (include "airflow.dbaas.redisSecretName" .)) }}
+{{- end }}
+{{- /* Connections come from the same qs_secrets_backend_params that config.secrets.backend_kwargs uses. The backend resolves only PostgreSQL. */ -}}
+{{- range $key, $params := (.Values.qs_secrets_backend_params | default dict) }}
+{{- if and (hasSuffix "_dbaas" $key) (eq (toString $params.type) "postgresql") }}
+{{- $connectionName := trimSuffix "_dbaas" $key | lower | replace "_" "-" }}
+{{- include "airflow.dbaas.database" (dict "ctx" $ "name" (printf "%s-%s" $fullname $connectionName) "type" "postgresql" "classifier" $params.classifier "namePrefix" $params.namePrefix "settings" $params.settings "secretName" (printf "%s-dbaas-%s" $fullname $connectionName)) }}
+{{- end }}
+{{- end }}
+{{- end }}

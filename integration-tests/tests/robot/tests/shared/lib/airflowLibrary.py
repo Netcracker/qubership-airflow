@@ -10,10 +10,39 @@ from pathlib import Path
 pl_lib = PlatformLibrary(managed_by_operator="true")
 
 
+def get_operator_pg_connection_properties(secrets):
+    """
+    Return PG connection properties from a Secret written by the dbaas-operator.
+
+    Used with declarative DBaaS, where the REST API must not be called for the Airflow database.
+    Returns None if no such Secret exists.
+    """
+    for secret in secrets.items:
+        data = secret.data or {}
+        if "metadata.json" not in data or "connectionProperties.json" not in data:
+            continue
+        metadata = json.loads(base64.b64decode(data["metadata.json"]))
+        if (
+            metadata.get("type") == "postgresql"
+            and metadata.get("classifier", {}).get("isServiceDb") == "true"
+        ):
+            properties = json.loads(base64.b64decode(data["connectionProperties.json"]))
+            return (
+                properties["host"],
+                properties["username"],
+                properties["password"],
+                properties.get("name") or properties["dbName"],
+            )
+    return None
+
+
 def get_pg_connection_properties(
     namespace, dbaas_secret="dbaas-connection-params-main", pg_secret="airflow-metadata"
 ):
     secrets = pl_lib.get_secrets(namespace)
+    operator_properties = get_operator_pg_connection_properties(secrets)
+    if operator_properties:
+        return operator_properties
     for secret in secrets.items:
         if dbaas_secret == secret.metadata.name:
             dbaas_host = base64.b64decode(secret.data.get("DBAAS_HOST")).decode()
