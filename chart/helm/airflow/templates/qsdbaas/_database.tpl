@@ -1,4 +1,10 @@
 {{/*
+Namespace of the dbaas-operator instance that manages the resources. The value is templated.
+*/}}
+{{- define "airflow.dbaas.operatorNamespace" -}}
+{{- tpl .Values.dbaasDeclarative.operatorNamespace . -}}
+{{- end -}}
+{{/*
 Name of the Secret that the dbaas-operator fills with the PostgreSQL connection properties of Airflow.
 */}}
 {{- define "airflow.dbaas.pgSecretName" -}}
@@ -32,7 +38,7 @@ metadata:
   labels:
     release: {{ $ctx.Release.Name }}
 spec:
-  operatorNamespace: {{ $ctx.Values.dbaasDeclarative.operatorNamespace | quote }}
+  operatorNamespace: {{ include "airflow.dbaas.operatorNamespace" $ctx | quote }}
   classifier: {{- toYaml $classifier | nindent 4 }}
   type: {{ .type }}
   {{- with .namePrefix }}
@@ -51,7 +57,7 @@ metadata:
     release: {{ $ctx.Release.Name }}
     app.kubernetes.io/name: {{ $c.microserviceName | quote }}
 spec:
-  operatorNamespace: {{ $ctx.Values.dbaasDeclarative.operatorNamespace | quote }}
+  operatorNamespace: {{ include "airflow.dbaas.operatorNamespace" $ctx | quote }}
   classifier: {{- toYaml $classifier | nindent 4 }}
   type: {{ .type }}
   secretName: {{ .secretName }}

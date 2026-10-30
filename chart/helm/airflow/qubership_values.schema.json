@@ -36,9 +36,9 @@
           "default": false
         },
         "operatorNamespace": {
-          "description": "Namespace of the dbaas-operator instance that manages the resources. Required when enabled is true.",
+          "description": "Namespace of the dbaas-operator instance that manages the resources. The value is templated.",
           "type": "string",
-          "default": ""
+          "default": "dbaas-operator"
         },
         "rbac": {
           "description": "Role and RoleBinding that let the dbaas-operator service account manage Secrets in the Airflow namespace.",

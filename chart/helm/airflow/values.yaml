@@ -3876,8 +3876,8 @@ dbaasDeclarative:
   # connection properties from the Secrets that the dbaas-operator creates. The dbaas-operator CRDs must be installed.
   # When true, Airflow never falls back to the DBaaS REST API for its own databases.
   enabled: false
-  # Namespace of the dbaas-operator instance that manages the resources. Required when enabled=true.
-  operatorNamespace: ""
+  # Namespace of the dbaas-operator instance that manages the resources. The value is templated.
+  operatorNamespace: "dbaas-operator"
   # The dbaas-operator has no cluster-wide Secret permissions. This Role and RoleBinding let its ServiceAccount
   # create the connection Secrets in the Airflow namespace. Disable them if the namespace already grants this access.
   rbac:

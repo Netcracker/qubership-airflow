@@ -1,7 +1,6 @@
 {{- /* Qubership custom change: Declarative DBaaS resources for the dbaas-operator--- */ -}}
 {{- if .Values.dbaasDeclarative.enabled }}
 {{- $declarative := .Values.dbaasDeclarative }}
-{{- $_ := required "dbaasDeclarative.operatorNamespace is required when dbaasDeclarative.enabled is true" $declarative.operatorNamespace }}
 {{- $fullname := include "airflow.fullname" . }}
 {{- if $declarative.rbac.create }}
 ---
@@ -31,7 +30,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: {{ $declarative.rbac.operatorServiceAccount }}
-    namespace: {{ $declarative.operatorNamespace }}
+    namespace: {{ include "airflow.dbaas.operatorNamespace" . }}
 {{- end }}
 {{- $useRedis := contains "CeleryExecutor" .Values.executor }}
 {{- $pgClassifier := dict "microserviceName" $declarative.postgresql.microserviceName "scope" "service" "isServiceDb" "true" }}
