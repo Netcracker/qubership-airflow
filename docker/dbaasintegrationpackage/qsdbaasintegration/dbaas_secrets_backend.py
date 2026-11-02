@@ -209,15 +209,15 @@ class DBAASSecretsBackend(
 
     def get_mounted_properties(self, classifier, db_type):
         """
-        Return connection properties from a mounted operator Secret, or None to use the REST API.
+        Return connection properties from a mounted operator Secret, or None if it does not appear.
 
-        With DBAAS_OPERATOR_ENABLED=true the operator owns database creation, so this waits up to
-        DBAAS_OPERATOR_WAIT_SECONDS for the Secret and never falls back to REST.
+        Used only with DBAAS_OPERATOR_ENABLED=true. The operator owns database creation, so this
+        waits up to DBAAS_OPERATOR_WAIT_SECONDS for the Secret and the caller never falls back to REST.
         """
         deadline = time.monotonic() + dbaas_operator_wait_seconds
         while True:
             properties = self._find_mounted_properties(classifier, db_type)
-            if properties is not None or not dbaas_operator_enabled:
+            if properties is not None:
                 return properties
             if time.monotonic() >= deadline:
                 logging.error(
@@ -379,11 +379,8 @@ class DBAASSecretsBackend(
             logging.debug("Using airflow namespace for dbaas request")
             namespace = self.namespace
         db_type = dbaas_data["type"]
-        mounted_properties = self.get_mounted_properties(
-            dbaas_data["classifier"], db_type
-        )
-        if mounted_properties is not None or dbaas_operator_enabled:
-            return mounted_properties
+        if dbaas_operator_enabled:
+            return self.get_mounted_properties(dbaas_data["classifier"], db_type)
         dbaas_by_classifier_data = {"classifier": dbaas_data["classifier"]}
         if "originService" in dbaas_data:
             dbaas_by_classifier_data.update(
@@ -474,11 +471,8 @@ class DBAASSecretsBackend(
                 "isServiceDb": "true",
             },
         }
-        mounted_properties = self.get_mounted_properties(
-            data["classifier"], "postgresql"
-        )
-        if mounted_properties is not None or dbaas_operator_enabled:
-            return mounted_properties
+        if dbaas_operator_enabled:
+            return self.get_mounted_properties(data["classifier"], "postgresql")
         response = self.requests_with_correct_auth(
             address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/postgresql",
             headers=headers,
@@ -534,9 +528,8 @@ class DBAASSecretsBackend(
                 "isServiceDb": "true",
             },
         }
-        mounted_properties = self.get_mounted_properties(data["classifier"], "redis")
-        if mounted_properties is not None or dbaas_operator_enabled:
-            return mounted_properties
+        if dbaas_operator_enabled:
+            return self.get_mounted_properties(data["classifier"], "redis")
         response = self.requests_with_correct_auth(
             address=f"{dbaas_host}/api/v3/dbaas/{self.namespace}/databases/get-by-classifier/redis",
             headers=headers,
