@@ -402,16 +402,14 @@ volumes:
             expirationSeconds: 3600
             path: token
       defaultMode: 420
-  #---Qubership custom change: Secrets with database connection properties written by the dbaas-operator. They are optional, so legacy (REST) mode does not need them---
+  #---Qubership custom change: Secrets with database connection properties written by the dbaas-operator. A pod starts after they exist. Without dbaasDeclarative they point to dbaas-connection-params-main and are not read---
   - name: dbaas-declarative-postgresql
     secret:
-      secretName: '{{ include "airflow.dbaas.pgSecretName" . }}'
-      optional: true
+      secretName: '{{ include "airflow.dbaas.pgVolumeSecretName" . }}'
       defaultMode: 0400
   - name: dbaas-declarative-redis
     secret:
-      secretName: '{{ include "airflow.dbaas.redisSecretName" . }}'
-      optional: true
+      secretName: '{{ include "airflow.dbaas.redisVolumeSecretName" . }}'
       defaultMode: 0400
 
 # VolumeMounts for all Airflow containers (templated)
@@ -439,13 +437,13 @@ volumeMounts:
   - name: maas-m2m-token
     readOnly: true
     mountPath: /var/run/secrets/tokens/maas
-  #---Qubership custom change: Mounts for the dbaas-operator secrets. The secrets backend scans every subdirectory of /etc/secrets/dbaas-secrets---
+  #---Qubership custom change: Mounts for the dbaas-operator secrets. The secrets backend reads the postgresql and redis directories of /var/run/secrets/dbaas-declarative---
   - name: dbaas-declarative-postgresql
     readOnly: true
-    mountPath: /etc/secrets/dbaas-secrets/postgresql
+    mountPath: /var/run/secrets/dbaas-declarative/postgresql
   - name: dbaas-declarative-redis
     readOnly: true
-    mountPath: /etc/secrets/dbaas-secrets/redis
+    mountPath: /var/run/secrets/dbaas-declarative/redis
 
 # Secrets for all Airflow containers
 secret: []
@@ -3867,7 +3865,7 @@ qs_secrets_backend_params: {}
 # Databases for Airflow connections are rendered from the *_dbaas entries of qs_secrets_backend_params that have
 # type=postgresql, so they are defined once for both modes. dbOwner, backupDisabled and originService of these entries
 # are ignored when enabled=true. Mount each created Secret (<fullname>-dbaas-<connection name>) into the pods with the
-# volumes and volumeMounts values at /etc/secrets/dbaas-secrets/<connection name>. The connection name is the key
+# volumes and volumeMounts values at /var/run/secrets/dbaas-declarative/<connection name>. The connection name is the key
 # without _dbaas, in lowercase, with - instead of _.
 # No DatabaseAccessPolicy is rendered: Airflow pods read the Secrets and do not call DBaaS.
 dbaasDeclarative:

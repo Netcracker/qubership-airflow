@@ -5,6 +5,27 @@ Namespace of the dbaas-operator instance that manages the resources. The value i
 {{- tpl .Values.dbaasDeclarative.operatorNamespace . -}}
 {{- end -}}
 {{/*
+Secret for the Airflow PostgreSQL volume. Without declarative DBaaS the volume is not read, so it points to
+the connection parameters Secret, which always exists. This keeps the volume required in both modes.
+*/}}
+{{- define "airflow.dbaas.pgVolumeSecretName" -}}
+{{- if .Values.dbaasDeclarative.enabled -}}
+{{- include "airflow.dbaas.pgSecretName" . -}}
+{{- else -}}
+dbaas-connection-params-main
+{{- end -}}
+{{- end -}}
+{{/*
+Secret for the Airflow Redis volume. See airflow.dbaas.pgVolumeSecretName.
+*/}}
+{{- define "airflow.dbaas.redisVolumeSecretName" -}}
+{{- if .Values.dbaasDeclarative.enabled -}}
+{{- include "airflow.dbaas.redisSecretName" . -}}
+{{- else -}}
+dbaas-connection-params-main
+{{- end -}}
+{{- end -}}
+{{/*
 Name of the Secret that the dbaas-operator fills with the PostgreSQL connection properties of Airflow.
 */}}
 {{- define "airflow.dbaas.pgSecretName" -}}

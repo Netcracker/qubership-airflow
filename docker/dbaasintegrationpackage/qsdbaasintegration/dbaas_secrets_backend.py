@@ -4,7 +4,6 @@ import json
 import logging
 import base64
 import ssl
-import time
 from pathlib import Path
 
 from airflow.secrets.base_secrets import BaseSecretsBackend
@@ -74,10 +73,7 @@ dbaas_operator_enabled = (
     read_secret_var_from_file("DBAAS_OPERATOR_ENABLED", "false") in positive_values
 )
 dbaas_mounted_secrets_dir = read_secret_var_from_file(
-    "DBAAS_MOUNTED_SECRETS_DIR", "/etc/secrets/dbaas-secrets"
-)
-dbaas_operator_wait_seconds = int(
-    read_secret_var_from_file("DBAAS_OPERATOR_WAIT_SECONDS", "300")
+    "DBAAS_MOUNTED_SECRETS_DIR", "/var/run/secrets/dbaas-declarative"
 )
 
 
@@ -159,7 +155,7 @@ class DBAASSecretsBackend(
         """
         Read connection properties from a Secret that the dbaas-operator wrote, mounted at secret_dir.
 
-        Return None while the Secret is not mounted yet. Raise ValueError if it holds another database type.
+        Return None if the Secret is missing or incomplete. Raise ValueError if it holds another database type.
         """
         try:
             metadata = json.loads((secret_dir / "metadata.json").read_text())
@@ -180,31 +176,25 @@ class DBAASSecretsBackend(
         """
         Return connection properties from the Secret mounted at DBAAS_MOUNTED_SECRETS_DIR/<directory>.
 
-        Used only with DBAAS_OPERATOR_ENABLED=true. The operator owns database creation, so this
-        waits up to DBAAS_OPERATOR_WAIT_SECONDS for the Secret and the caller never falls back to REST.
-        Return None if the Secret does not appear or holds another database type.
+        Used only with DBAAS_OPERATOR_ENABLED=true. The operator owns database creation, so the
+        caller never falls back to REST. The Secret volumes are required, so a pod starts only after
+        the Secret exists. Return None if the Secret is missing, incomplete or holds another database type.
         """
         secret_dir = Path(dbaas_mounted_secrets_dir) / directory
-        deadline = time.monotonic() + dbaas_operator_wait_seconds
-        while True:
-            try:
-                properties = self._read_mounted_properties(secret_dir, db_type)
-            except ValueError as e:
-                logging.error(f"[error_code=AIRFLOW-8312] {e}")
-                return None
-            if properties is not None:
-                logging.info(
-                    f"found {db_type} database in mounted DBaaS secret {directory}"
-                )
-                return properties
-            if time.monotonic() >= deadline:
-                logging.error(
-                    f"[error_code=AIRFLOW-8311] No mounted DBaaS secret for {db_type} database in {secret_dir}."
-                    f" Check that the DatabaseSecretClaim exists, the dbaas-operator reconciled it,"
-                    f" and its Secret is mounted at this path."
-                )
-                return None
-            time.sleep(5)
+        try:
+            properties = self._read_mounted_properties(secret_dir, db_type)
+        except ValueError as e:
+            logging.error(f"[error_code=AIRFLOW-8312] {e}")
+            return None
+        if properties is None:
+            logging.error(
+                f"[error_code=AIRFLOW-8311] No mounted DBaaS secret for {db_type} database in {secret_dir}."
+                f" Check that the DatabaseSecretClaim exists, the dbaas-operator reconciled it,"
+                f" and its Secret is mounted at this path."
+            )
+            return None
+        logging.info(f"found {db_type} database in mounted DBaaS secret {directory}")
+        return properties
 
     def get_conn_value(self, conn_id: str, team_name: str | None = None) -> str | None:
         if self.qs_secrets_backend_properties == {}:
