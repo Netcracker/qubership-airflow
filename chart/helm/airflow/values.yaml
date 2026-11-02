@@ -3867,10 +3867,9 @@ qs_secrets_backend_params: {}
 # Databases for Airflow connections are rendered from the *_dbaas entries of qs_secrets_backend_params that have
 # type=postgresql, so they are defined once for both modes. dbOwner, backupDisabled and originService of these entries
 # are ignored when enabled=true. Mount each created Secret (<fullname>-dbaas-<connection name>) into the pods with the
-# volumes and volumeMounts values under /etc/secrets/dbaas-secrets/<any name>.
-# No DatabaseAccessPolicy is rendered: Airflow pods read the Secrets and do not call DBaaS. The postgresql and redis
-# microserviceName values below are also passed to the pods as DBAAS_PG_MICROSERVICE_NAME and
-# DBAAS_REDIS_MICROSERVICE_NAME, and they override the same keys in the connection parameters secret.
+# volumes and volumeMounts values at /etc/secrets/dbaas-secrets/<connection name>. The connection name is the key
+# without _dbaas, in lowercase, with - instead of _.
+# No DatabaseAccessPolicy is rendered: Airflow pods read the Secrets and do not call DBaaS.
 dbaasDeclarative:
   # Render InternalDatabase and DatabaseSecretClaim resources and make Airflow read the
   # connection properties from the Secrets that the dbaas-operator creates. The dbaas-operator CRDs must be installed.
