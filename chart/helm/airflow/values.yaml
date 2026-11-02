@@ -405,11 +405,11 @@ volumes:
   #---Qubership custom change: Secrets with database connection properties written by the dbaas-operator. A pod starts after they exist. Without dbaasDeclarative they point to dbaas-connection-params-main and are not read---
   - name: dbaas-declarative-postgresql
     secret:
-      secretName: '{{ include "airflow.dbaas.pgVolumeSecretName" . }}'
+      secretName: '{{ ternary (include "airflow.dbaas.pgSecretName" .) "dbaas-connection-params-main" .Values.dbaasDeclarative.enabled }}'
       defaultMode: 0400
   - name: dbaas-declarative-redis
     secret:
-      secretName: '{{ include "airflow.dbaas.redisVolumeSecretName" . }}'
+      secretName: '{{ ternary (include "airflow.dbaas.redisSecretName" .) "dbaas-connection-params-main" .Values.dbaasDeclarative.enabled }}'
       defaultMode: 0400
 
 # VolumeMounts for all Airflow containers (templated)
