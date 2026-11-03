@@ -45,7 +45,7 @@ subjects:
 {{- range $key, $params := (.Values.qs_secrets_backend_params | default dict) }}
 {{- if and (hasSuffix "_dbaas" $key) (eq (toString $params.type) "postgresql") }}
 {{- $connectionName := trimSuffix "_dbaas" $key | lower | replace "_" "-" }}
-{{- include "airflow.dbaas.database" (dict "ctx" $ "name" (printf "%s-%s" $fullname $connectionName) "type" "postgresql" "classifier" $params.classifier "namePrefix" $params.namePrefix "settings" $params.settings "existing" (has (trimSuffix "_dbaas" $key) $declarative.existingConnections) "secretName" (printf "%s-dbaas-%s" $fullname $connectionName)) }}
+{{- include "airflow.dbaas.database" (dict "ctx" $ "name" (printf "%s-%s" $fullname $connectionName) "type" "postgresql" "classifier" $params.classifier "namePrefix" $params.namePrefix "settings" $params.settings "existing" (has (trimSuffix "_dbaas" $key) $declarative.existingConnections) "serviceName" $params.originService "secretName" (printf "%s-dbaas-%s" $fullname $connectionName)) }}
 {{- end }}
 {{- end }}
 {{- end }}

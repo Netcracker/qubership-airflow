@@ -18,9 +18,10 @@ Name of the Secret that the dbaas-operator fills with the Redis connection prope
 {{- end -}}
 {{/*
 Renders an InternalDatabase and a DatabaseSecretClaim for one database.
-Expects a dict with: ctx (root context), name, type, classifier, secretName, and optionally namePrefix, settings and existing.
+Expects a dict with: ctx (root context), name, type, classifier, secretName, and optionally namePrefix, settings, existing and serviceName.
 When existing is true, the database is owned by another service: only the DatabaseSecretClaim is rendered and its
-app.kubernetes.io/name label is dbaasDeclarative.serviceName, which the owner grants access to with a DatabaseAccessPolicy.
+app.kubernetes.io/name label is serviceName, or dbaasDeclarative.serviceName if it is empty. The owner grants that
+name access with a DatabaseAccessPolicy.
 Classifier keys other than microserviceName, scope, namespace, tenantId and customKeys become classifier.extraKeys.
 */}}
 {{- define "airflow.dbaas.database" -}}
@@ -59,7 +60,7 @@ metadata:
   namespace: {{ $ctx.Release.Namespace }}
   labels:
     release: {{ $ctx.Release.Name }}
-    app.kubernetes.io/name: {{ ternary $ctx.Values.dbaasDeclarative.serviceName $c.microserviceName (default false .existing) | quote }}
+    app.kubernetes.io/name: {{ ternary (.serviceName | default $ctx.Values.dbaasDeclarative.serviceName) $c.microserviceName (default false .existing) | quote }}
 spec:
   operatorNamespace: {{ include "airflow.dbaas.operatorNamespace" $ctx | quote }}
   classifier: {{- toYaml $classifier | nindent 4 }}

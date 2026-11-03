@@ -3887,6 +3887,7 @@ dbaasDeclarative:
   # The owner must grant serviceName access to the database with a DatabaseAccessPolicy.
   existingConnections: []
   # Service name in the claim label of existingConnections. It must differ from classifier.microserviceName.
+  # Connections from qs_secrets_backend_params use their originService instead, if it is set.
   serviceName: airflow
   postgresql:
     microserviceName: airflow
