@@ -34,16 +34,18 @@ subjects:
 {{- end }}
 {{- $useRedis := contains "CeleryExecutor" .Values.executor }}
 {{- $pgClassifier := dict "microserviceName" $declarative.postgresql.microserviceName "scope" "service" "isServiceDb" "true" }}
-{{- include "airflow.dbaas.database" (dict "ctx" . "name" (printf "%s-postgresql" $fullname) "type" "postgresql" "classifier" $pgClassifier "namePrefix" $declarative.postgresql.namePrefix "secretName" (include "airflow.dbaas.pgSecretName" .)) }}
+{{- if $declarative.postgresql.namespace }}{{- $_ := set $pgClassifier "namespace" $declarative.postgresql.namespace }}{{- end }}
+{{- include "airflow.dbaas.database" (dict "ctx" . "name" (printf "%s-postgresql" $fullname) "type" "postgresql" "classifier" $pgClassifier "namePrefix" $declarative.postgresql.namePrefix "existing" (has "postgresql" $declarative.existingConnections) "secretName" (include "airflow.dbaas.pgSecretName" .)) }}
 {{- if $useRedis }}
 {{- $redisClassifier := dict "microserviceName" $declarative.redis.microserviceName "scope" "service" "isServiceDb" "true" }}
-{{- include "airflow.dbaas.database" (dict "ctx" . "name" (printf "%s-redis" $fullname) "type" "redis" "classifier" $redisClassifier "namePrefix" $declarative.redis.namePrefix "secretName" (include "airflow.dbaas.redisSecretName" .)) }}
+{{- if $declarative.redis.namespace }}{{- $_ := set $redisClassifier "namespace" $declarative.redis.namespace }}{{- end }}
+{{- include "airflow.dbaas.database" (dict "ctx" . "name" (printf "%s-redis" $fullname) "type" "redis" "classifier" $redisClassifier "namePrefix" $declarative.redis.namePrefix "existing" (has "redis" $declarative.existingConnections) "secretName" (include "airflow.dbaas.redisSecretName" .)) }}
 {{- end }}
 {{- /* Connections come from the same qs_secrets_backend_params that config.secrets.backend_kwargs uses. The backend resolves only PostgreSQL. */ -}}
 {{- range $key, $params := (.Values.qs_secrets_backend_params | default dict) }}
 {{- if and (hasSuffix "_dbaas" $key) (eq (toString $params.type) "postgresql") }}
 {{- $connectionName := trimSuffix "_dbaas" $key | lower | replace "_" "-" }}
-{{- include "airflow.dbaas.database" (dict "ctx" $ "name" (printf "%s-%s" $fullname $connectionName) "type" "postgresql" "classifier" $params.classifier "namePrefix" $params.namePrefix "settings" $params.settings "secretName" (printf "%s-dbaas-%s" $fullname $connectionName)) }}
+{{- include "airflow.dbaas.database" (dict "ctx" $ "name" (printf "%s-%s" $fullname $connectionName) "type" "postgresql" "classifier" $params.classifier "namePrefix" $params.namePrefix "settings" $params.settings "existing" (has (trimSuffix "_dbaas" $key) $declarative.existingConnections) "secretName" (printf "%s-dbaas-%s" $fullname $connectionName)) }}
 {{- end }}
 {{- end }}
 {{- end }}

@@ -48,11 +48,25 @@
             "operatorServiceAccount": "dbaas-operator"
           }
         },
+        "existingConnections": {
+          "description": "Connections whose database is owned by another service. Only the DatabaseSecretClaim is rendered for them.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "serviceName": {
+          "description": "Service name in the claim label of existingConnections. The database owner grants it access with a DatabaseAccessPolicy.",
+          "type": "string",
+          "default": "airflow"
+        },
         "postgresql": {
           "description": "Airflow metadata database.",
           "type": "object",
           "default": {
             "microserviceName": "airflow",
+            "namespace": "",
             "namePrefix": "",
             "secretName": ""
           }
@@ -62,6 +76,7 @@
           "type": "object",
           "default": {
             "microserviceName": "airflow",
+            "namespace": "",
             "namePrefix": "",
             "secretName": ""
           }

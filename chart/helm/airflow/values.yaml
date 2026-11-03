@@ -3880,13 +3880,25 @@ dbaasDeclarative:
   rbac:
     create: true
     operatorServiceAccount: dbaas-operator
+  # Connections whose database is owned by another service, possibly in another namespace of the same composite.
+  # Names are "postgresql", "redis" or a connection name from qs_secrets_backend_params (the key without "_dbaas").
+  # For these, only the DatabaseSecretClaim is rendered, with classifier.namespace set to the owner namespace
+  # (postgresql.namespace, redis.namespace or classifier.namespace of the connection).
+  # The owner must grant serviceName access to the database with a DatabaseAccessPolicy.
+  existingConnections: []
+  # Service name in the claim label of existingConnections. It must differ from classifier.microserviceName.
+  serviceName: airflow
   postgresql:
     microserviceName: airflow
+    # Namespace of the database owner. Defaults to the release namespace.
+    namespace: ""
     namePrefix: ""
     # Defaults to <fullname>-dbaas-postgresql.
     secretName: ""
   redis:
     microserviceName: airflow
+    # Namespace of the database owner. Defaults to the release namespace.
+    namespace: ""
     namePrefix: ""
     # Defaults to <fullname>-dbaas-redis.
     secretName: ""
