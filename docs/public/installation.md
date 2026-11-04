@@ -899,7 +899,7 @@ Prerequisites:
 
 * The dbaas-operator and its CRDs are installed in the cluster.
 * The dbaas-operator has no cluster-wide permissions for Secrets. With `dbaasDeclarative.rbac.create: true` (default), the chart creates a Role and RoleBinding that let the operator service account write Secrets in the Airflow namespace. Disable it if the namespace already grants this access.
-* The `dbaas-connection-params-main` secret is still mounted into the pods, so it must exist. The default `extraSecrets` creates it. The secrets backend does not read `DBAAS_HOST` or the other DBaaS REST parameters for PostgreSQL and Redis in this mode. Keep `MAAS_HOST` and the other MaaS parameters in it if you use MaaS connections.
+* The `dbaas-connection-params-main` secret is still mounted into the pods, so it must exist. The default `extraSecrets` creates it. The secrets backend does not read `DBAAS_HOST` or the other DBaaS REST parameters for PostgreSQL and Redis in this mode. Keep `MAAS_HOST` and the other MaaS parameters in it if you use MaaS connections. If you don't use MaaS, you can disable the secret: set `extraSecrets` to `{'dbaas-connection-params-main': ~}` and override `volumes` and `volumeMounts` without the `dbaas-connection-params-main` entries. Because these parameters replace the defaults, copy all other entries from `values.yaml`, including `dbaas-declarative-postgresql` and `dbaas-declarative-redis`.
 
 ### Declarative DBaaS Parameters
 
@@ -936,7 +936,7 @@ The default `volumes` and `volumeMounts` mount the Secrets into all Airflow cont
 
 When `dbaasDeclarative.enabled` is `true`:
 
-* The secrets backend and the custom preinstall job do not request the metadata and broker databases from the DBaaS REST API. The preinstall job skips database creation, the M2M token read, and the permission grant.
+* The secrets backend and the custom preinstall job do not request the metadata and broker databases from the DBaaS REST API. The preinstall job skips database creation, the M2M token read, and the permission grant. Its only remaining action is deleting the `metadata-secret` and `broker-url-secret` secrets left by an earlier REST installation. On a new installation you can disable the job with `customPreinstallJob.enabled: false`.
 * `DBAAS_PG_MICROSERVICE_NAME` and `DBAAS_REDIS_MICROSERVICE_NAME` are not used. Set the microservice names in `dbaasDeclarative.postgresql.microserviceName` and `dbaasDeclarative.redis.microserviceName`.
 * The aggregator creates the databases with `backupDisabled=false`, and the database owner is the classifier `microserviceName`. `DBAAS_PG_DB_OWNER`, `DBAAS_REDIS_DB_OWNER`, and `DBAAS_*_BACKUP_DISABLED` have no effect.
 * The chart does not render a `DatabaseAccessPolicy`. Airflow pods read the Secrets and never call DBaaS, so they need no grants.
@@ -1012,6 +1012,8 @@ An installation that was deployed with the REST API can be upgraded with `dbaasD
 * After the upgrade, compare the database names in the new Secrets with the previous ones (the `name` field of `connectionProperties.json`).
 
 A different classifier makes the operator create new, empty databases, and Airflow starts with an empty metadata database.
+
+Keep `customPreinstallJob` enabled for this upgrade so that it deletes the old `metadata-secret` and `broker-url-secret`, or delete them manually.
 
 Switching back to the REST API (`dbaasDeclarative.enabled: false`) removes the operator resources from the release. Before you do it on an installation with data, check in the dbaas-operator documentation what deleting an `InternalDatabase` does to the physical database.
 
