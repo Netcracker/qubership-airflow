@@ -936,7 +936,7 @@ The default `volumes` and `volumeMounts` mount the Secrets into all Airflow cont
 
 When `dbaasDeclarative.enabled` is `true`:
 
-* The secrets backend and the custom preinstall job do not request the metadata and broker databases from the DBaaS REST API. The preinstall job skips database creation, the M2M token read, and the permission grant. Its only remaining action is deleting the `metadata-secret` and `broker-url-secret` secrets left by an earlier REST installation. On a new installation you can disable the job with `customPreinstallJob.enabled: false`.
+* The secrets backend and the custom preinstall job do not request the metadata and broker databases from the DBaaS REST API. The preinstall job skips database creation, the M2M token read, and the permission grant. Its only remaining action is deleting the `metadata-secret` and `broker-url-secret` secrets, which exist only if they were created by very old Qubership Airflow versions. On a new installation you can disable the job with `customPreinstallJob.enabled: false`.
 * `DBAAS_PG_MICROSERVICE_NAME` and `DBAAS_REDIS_MICROSERVICE_NAME` are not used. Set the microservice names in `dbaasDeclarative.postgresql.microserviceName` and `dbaasDeclarative.redis.microserviceName`.
 * The aggregator creates the databases with `backupDisabled=false`, and the database owner is the classifier `microserviceName`. `DBAAS_PG_DB_OWNER`, `DBAAS_REDIS_DB_OWNER`, and `DBAAS_*_BACKUP_DISABLED` have no effect.
 * The chart does not render a `DatabaseAccessPolicy`. Airflow pods read the Secrets and never call DBaaS, so they need no grants.
@@ -1013,7 +1013,7 @@ An installation that was deployed with the REST API can be upgraded with `dbaasD
 
 A different classifier makes the operator create new, empty databases, and Airflow starts with an empty metadata database.
 
-Keep `customPreinstallJob` enabled for this upgrade so that it deletes the old `metadata-secret` and `broker-url-secret`, or delete them manually.
+If the installation still has the `metadata-secret` and `broker-url-secret` secrets, which only very old Qubership Airflow versions create, keep `customPreinstallJob` enabled for this upgrade so that it deletes them, or delete them manually. Otherwise you can disable the job.
 
 Switching back to the REST API (`dbaasDeclarative.enabled: false`) removes the operator resources from the release. Before you do it on an installation with data, check in the dbaas-operator documentation what deleting an `InternalDatabase` does to the physical database.
 
