@@ -20,7 +20,7 @@ def check_awaited_message(ti, **kwargs):
 with DAG(
     dag_id=DAG_ID,
     start_date=datetime.datetime(2020, 2, 2),
-    schedule="@once",
+    schedule=None,  # run only when triggered explicitly (e.g. by integration tests)
     catchup=False,
 ) as dag:
     create_pet_table = SQLExecuteQueryOperator(
