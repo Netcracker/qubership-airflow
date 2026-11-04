@@ -899,7 +899,7 @@ Prerequisites:
 
 * The dbaas-operator and its CRDs are installed in the cluster.
 * The dbaas-operator has no cluster-wide permissions for Secrets. With `dbaasDeclarative.rbac.create: true` (default), the chart creates a Role and RoleBinding that let the operator service account write Secrets in the Airflow namespace. Disable it if the namespace already grants this access.
-* The `dbaas-connection-params-main` secret is still mounted into the pods, so keep creating it. It must contain at least `DBAAS_HOST`, which MaaS connections also use.
+* The `dbaas-connection-params-main` secret is still mounted into the pods, so it must exist. The default `extraSecrets` creates it. The secrets backend does not read `DBAAS_HOST` or the other DBaaS REST parameters for PostgreSQL and Redis in this mode. Keep `MAAS_HOST` and the other MaaS parameters in it if you use MaaS connections.
 
 ### Declarative DBaaS Parameters
 
