@@ -68,6 +68,13 @@ maas_m2m_enabled = read_secret_var_from_file("MAAS_M2M_ENABLED", True)
 local_filesystem_backend_enabled = (
     read_secret_var_from_file("LOCAL_FILESYSTEM_BACKEND", True) in positive_values
 )
+# Declarative DBaaS: the dbaas-operator writes connection properties into mounted Secrets.
+dbaas_operator_enabled = (
+    read_secret_var_from_file("DBAAS_OPERATOR_ENABLED", "false") in positive_values
+)
+dbaas_mounted_secrets_dir = read_secret_var_from_file(
+    "DBAAS_MOUNTED_SECRETS_DIR", "/var/run/secrets/dbaas-declarative"
+)
 
 
 class DBAASSecretsBackend(
@@ -143,6 +150,52 @@ class DBAASSecretsBackend(
                     verify=self.api_verify,
                 )
 
+    @staticmethod
+    def _read_mounted_properties(secret_dir, db_type):
+        """
+        Read connection properties from a Secret that the dbaas-operator wrote, mounted at secret_dir.
+
+        Return None if the Secret is missing or incomplete. Raise ValueError if it holds another database type.
+        """
+        try:
+            metadata = json.loads((secret_dir / "metadata.json").read_text())
+            properties = json.loads(
+                (secret_dir / "connectionProperties.json").read_text()
+            )
+        except (OSError, ValueError) as e:
+            logging.debug(f"DBaaS secret {secret_dir} is not ready: {e}")
+            return None
+        actual_type = str(metadata.get("type", ""))
+        if actual_type.lower() != db_type.lower():
+            raise ValueError(
+                f"DBaaS secret {secret_dir} is for a {actual_type} database, but {db_type} is expected."
+            )
+        return properties
+
+    def get_mounted_properties(self, directory, db_type):
+        """
+        Return connection properties from the Secret mounted at DBAAS_MOUNTED_SECRETS_DIR/<directory>.
+
+        Used only with DBAAS_OPERATOR_ENABLED=true. The operator owns database creation, so the
+        caller never falls back to REST. The Secret volumes are required, so a pod starts only after
+        the Secret exists. Return None if the Secret is missing, incomplete or holds another database type.
+        """
+        secret_dir = Path(dbaas_mounted_secrets_dir) / directory
+        try:
+            properties = self._read_mounted_properties(secret_dir, db_type)
+        except ValueError as e:
+            logging.error(f"[error_code=AIRFLOW-8312] {e}")
+            return None
+        if properties is None:
+            logging.error(
+                f"[error_code=AIRFLOW-8311] No mounted DBaaS secret for {db_type} database in {secret_dir}."
+                f" Check that the DatabaseSecretClaim exists, the dbaas-operator reconciled it,"
+                f" and its Secret is mounted at this path."
+            )
+            return None
+        logging.info(f"found {db_type} database in mounted DBaaS secret {directory}")
+        return properties
+
     def get_conn_value(self, conn_id: str, team_name: str | None = None) -> str | None:
         if self.qs_secrets_backend_properties == {}:
             return None
@@ -151,7 +204,7 @@ class DBAASSecretsBackend(
                 f"found {conn_id} in backend properties, will be received from DBAAS."
             )
             dbaas_data = self.qs_secrets_backend_properties[f"{conn_id}_dbaas"]
-            connection_data = self.get_conn_from_dbaas(dbaas_data)
+            connection_data = self.get_conn_from_dbaas(dbaas_data, conn_id)
             if dbaas_data["type"] == "postgresql":
                 return self.parse_pg_connection(connection_data)
         if f"{conn_id}_maas" in self.qs_secrets_backend_properties:
@@ -285,7 +338,7 @@ class DBAASSecretsBackend(
         kafka_conn = Connection(conn_type="kafka", extra=json.dumps(connection_extra))
         return kafka_conn.get_uri()
 
-    def get_conn_from_dbaas(self, dbaas_data):
+    def get_conn_from_dbaas(self, dbaas_data, conn_id):
         headers = {"Content-Type": "application/json"}
         if dbaas_conn_namespace_from_config in positive_values:
             logging.debug("Using namespace from config for dbaas request")
@@ -294,6 +347,12 @@ class DBAASSecretsBackend(
             logging.debug("Using airflow namespace for dbaas request")
             namespace = self.namespace
         db_type = dbaas_data["type"]
+        if dbaas_operator_enabled and db_type == "postgresql":
+            # The chart renders claims only for PostgreSQL connections. The Secret has to be mounted at
+            # <mounted secrets dir>/<connection id in lowercase with "-" instead of "_">.
+            return self.get_mounted_properties(
+                conn_id.lower().replace("_", "-"), db_type
+            )
         dbaas_by_classifier_data = {"classifier": dbaas_data["classifier"]}
         if "originService" in dbaas_data:
             dbaas_by_classifier_data.update(
@@ -365,6 +424,9 @@ class DBAASSecretsBackend(
         return connection_string
 
     def get_pg_database(self):
+        if dbaas_operator_enabled:
+            # The chart mounts the Secret of the Airflow PG database at this directory.
+            return self.get_mounted_properties("postgresql", "postgresql")
         logging.debug(
             f"DBAAS_properties type:{type(self.qs_secrets_backend_properties)}"
         )
@@ -422,6 +484,9 @@ class DBAASSecretsBackend(
             )
 
     def get_redis_database(self):
+        if dbaas_operator_enabled:
+            # The chart mounts the Secret of the Airflow Redis database at this directory.
+            return self.get_mounted_properties("redis", "redis")
         dbaas_redis_db_owner = read_secret_var_from_file(
             "DBAAS_REDIS_DB_OWNER", "airflow"
         )

@@ -7,6 +7,82 @@
       "type": "boolean",
       "default": false
     },
+    "qs_secrets_backend_params": {
+      "structuredValue": true,
+      "description": "Data for the secrets backend (config.secrets.backend_kwargs), keyed by <connection id>_dbaas or <connection id>_maas. Every _dbaas entry needs a classifier.",
+      "type": "object",
+      "default": {},
+      "patternProperties": {
+        "_dbaas$": {
+          "type": "object",
+          "required": ["classifier"],
+          "properties": {
+            "classifier": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "dbaasDeclarative": {
+      "structuredValue": true,
+      "description": "Declarative DBaaS: databases are requested with dbaas-operator CRs instead of the DBaaS REST API.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "description": "Render the dbaas-operator resources and read connection properties from the Secrets they create.",
+          "type": "boolean",
+          "default": false
+        },
+        "operatorNamespace": {
+          "description": "Namespace of the dbaas-operator instance that manages the resources. The value is templated.",
+          "type": "string",
+          "default": "dbaas-operator"
+        },
+        "rbac": {
+          "description": "Role and RoleBinding that let the dbaas-operator service account manage Secrets in the Airflow namespace.",
+          "type": "object",
+          "default": {
+            "create": true,
+            "operatorServiceAccount": "dbaas-operator"
+          }
+        },
+        "existingConnections": {
+          "description": "Connections whose database is owned by another service. Only the DatabaseSecretClaim is rendered for them.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "serviceName": {
+          "description": "Service name in the claim label of existingConnections. The database owner grants it access with a DatabaseAccessPolicy.",
+          "type": "string",
+          "default": "airflow"
+        },
+        "postgresql": {
+          "description": "Airflow metadata database.",
+          "type": "object",
+          "default": {
+            "microserviceName": "airflow",
+            "namespace": "",
+            "namePrefix": "",
+            "secretName": ""
+          }
+        },
+        "redis": {
+          "description": "Celery broker database.",
+          "type": "object",
+          "default": {
+            "microserviceName": "airflow",
+            "namespace": "",
+            "namePrefix": "",
+            "secretName": ""
+          }
+        }
+      }
+    },
     "serviceMonitor": {
       "structuredValue": true,
       "description": "Qubership Airflow Monitoring service monitor configuration.",
