@@ -893,13 +893,13 @@ For MaaS, by default, m2m authentication using k8s service accounts is used. How
 
 ## Declarative DBaaS Integration
 
-By default, the custom preinstall job and the secrets backend request databases from the DBaaS REST API. With `dbaasDeclarative.enabled: true`, the chart renders `InternalDatabase` and `DatabaseSecretClaim` resources for the [dbaas-operator](https://github.com/Netcracker/qubership-dbaas/blob/main/dbaas-operator/docs/DBaaS%20Operator.md) instead. The operator provisions the databases in DBaaS and writes their connection properties into Kubernetes Secrets. Airflow pods mount these Secrets, and the secrets backend reads the properties from the mounted files. In this mode Airflow does not call the DBaaS REST API for PostgreSQL and Redis. MaaS (Kafka) connections still use the REST API. The parameter is `false` by default, so existing installations are not affected.
+By default, the custom preinstall job and the secrets backend request databases from the DBaaS REST API. With `dbaasDeclarative.enabled: true`, the chart renders `InternalDatabase` and `DatabaseSecretClaim` resources for the [dbaas-operator](https://github.com/Netcracker/qubership-dbaas/blob/main/dbaas-operator/docs/DBaaS%20Operator.md) instead. The operator provisions the databases in DBaaS and writes their connection properties into Kubernetes Secrets. Airflow pods mount these Secrets, and the secrets backend reads the properties from the mounted files. In this mode, Airflow does not call the DBaaS REST API for PostgreSQL and Redis. MaaS (Kafka) connections still use the REST API. The parameter is `false` by default, so existing installations are not affected.
 
 Prerequisites:
 
 * The dbaas-operator and its CRDs are installed in the cluster.
 * The dbaas-operator has no cluster-wide permissions for Secrets. With `dbaasDeclarative.rbac.create: true` (default), the chart creates a Role and RoleBinding that let the operator service account write Secrets in the Airflow namespace. Disable it if the namespace already grants this access.
-* The `dbaas-connection-params-main` secret is still mounted into the pods, so it must exist. The default `extraSecrets` creates it. The secrets backend does not read `DBAAS_HOST` or the other DBaaS REST parameters for PostgreSQL and Redis in this mode. Keep `MAAS_HOST` and the other MaaS parameters in it if you use MaaS connections. If you don't use MaaS, you can disable the secret: set `extraSecrets` to `{'dbaas-connection-params-main': ~}` and override `volumes` and `volumeMounts` without the `dbaas-connection-params-main` entries. Because these parameters replace the defaults, copy all other entries from `values.yaml`, including `dbaas-declarative-postgresql` and `dbaas-declarative-redis`.
+* The `dbaas-connection-params-main` secret is still mounted into the pods, so it must exist. The default `extraSecrets` creates it. The secrets backend does not read `DBAAS_HOST` or the other DBaaS REST parameters for PostgreSQL and Redis in this mode. Keep `MAAS_HOST` and the other MaaS parameters in it if you use MaaS connections. If you do not use MaaS, you can disable the secret: set `extraSecrets` to `{'dbaas-connection-params-main': ~}` and override `volumes` and `volumeMounts` without the `dbaas-connection-params-main` entries. Because these parameters replace the defaults, copy all other entries from `values.yaml`, including `dbaas-declarative-postgresql` and `dbaas-declarative-redis`.
 
 ### Declarative DBaaS Parameters
 
@@ -913,7 +913,7 @@ Prerequisites:
 | `dbaasDeclarative.postgresql.namespace`        | release namespace             | Namespace in the classifier. Set it only for a database owned by another namespace (see [Using Databases Owned by Another Service](#using-databases-owned-by-another-service)). |
 | `dbaasDeclarative.postgresql.namePrefix`       | `""`                          | Prefix of the physical database name, same as `DBAAS_PG_DB_NAME_PREFIX` in the REST mode.                                                                                         |
 | `dbaasDeclarative.postgresql.secretName`       | `<fullname>-dbaas-postgresql` | Name of the Secret that the operator writes. Change it only together with the `dbaas-declarative-postgresql` volume.                                                              |
-| `dbaasDeclarative.redis.*`                     | as for `postgresql`           | The same parameters for the Celery broker database. The Redis resources are created only with `CeleryExecutor`. The default Secret name is `<fullname>-dbaas-redis`.              |
+| `dbaasDeclarative.redis.*`                     | as for `postgresql`           | The same parameters for the Celery broker database. The Redis resources are created only when using `CeleryExecutor`. The default Secret name is `<fullname>-dbaas-redis`.              |
 | `dbaasDeclarative.existingConnections`         | `[]`                          | Connections whose database is owned by another service. See [Using Databases Owned by Another Service](#using-databases-owned-by-another-service).                                |
 | `dbaasDeclarative.serviceName`                 | `airflow`                     | Service name that Airflow uses to claim the databases listed in `existingConnections`.                                                                                            |
 
@@ -936,17 +936,17 @@ The default `volumes` and `volumeMounts` mount the Secrets into all Airflow cont
 
 When `dbaasDeclarative.enabled` is `true`:
 
-* The secrets backend and the custom preinstall job do not request the metadata and broker databases from the DBaaS REST API. The preinstall job skips database creation, the M2M token read, and the permission grant. Its only remaining action is deleting the `metadata-secret` and `broker-url-secret` secrets, which exist only if they were created by specific configurations of very old Qubership Airflow versions. On a new installation you can disable the job with `customPreinstallJob.enabled: false`.
+* The secrets backend and the custom preinstall job do not request the metadata and broker databases from the DBaaS REST API. The preinstall job skips database creation, reading the M2M token, and granting permissions. Its only remaining action is deleting the `metadata-secret` and `broker-url-secret` secrets, which exist only if they were created by specific configurations in very old Qubership Airflow versions. On a new installation, you can disable the job with `customPreinstallJob.enabled: false`.
 * `DBAAS_PG_MICROSERVICE_NAME` and `DBAAS_REDIS_MICROSERVICE_NAME` are not used. Set the microservice names in `dbaasDeclarative.postgresql.microserviceName` and `dbaasDeclarative.redis.microserviceName`.
 * The aggregator creates the databases with `backupDisabled=false`, and the database owner is the classifier `microserviceName`. `DBAAS_PG_DB_OWNER`, `DBAAS_REDIS_DB_OWNER`, and `DBAAS_*_BACKUP_DISABLED` have no effect.
 * The chart does not render a `DatabaseAccessPolicy`. Airflow pods read the Secrets and never call DBaaS, so they need no grants.
-* The classifier, type, and Secret name are immutable on the resources. To change them, delete and recreate the resource.
+* The classifier, type, and Secret name are immutable properties of the resources. To change them, delete and recreate the resource.
 
 ### Airflow Connections with Declarative DBaaS
 
 PostgreSQL connections are defined in the same `qs_secrets_backend_params` parameter as in [DBaaS Integration for Airflow Connections](#dbaas-integration-for-airflow-connections). For each `<connection_name>_dbaas` entry with `type: postgresql`, the chart also renders an `InternalDatabase` and a `DatabaseSecretClaim`. The `classifier` field is required. `namePrefix` and `settings` are passed to the resources. `dbOwner`, `backupDisabled`, and `originService` are ignored, except for connections in `existingConnections`.
 
-The resource names are `<fullname>-<name>` and the Secret name is `<fullname>-dbaas-<name>`, where `<name>` is the connection name in lowercase with `-` instead of `_`. Mount each Secret in the `volumes` and `volumeMounts` parameters at `/var/run/secrets/dbaas-declarative/<name>`. The backend reads exactly this directory. For the connection `postgres_test_conn`:
+The resource names are `<fullname>-<name>`, and the Secret name is `<fullname>-dbaas-<name>`, where `<name>` is the connection name in lowercase with `-` instead of `_`. Mount each Secret in the `volumes` and `volumeMounts` parameters at `/var/run/secrets/dbaas-declarative/<name>`. The backend reads exactly this directory. For the connection `postgres_test_conn`:
 
 ```yaml
 qs_secrets_backend_params:
@@ -970,11 +970,11 @@ volumeMounts:
     mountPath: /var/run/secrets/dbaas-declarative/postgres-test-conn
 ```
 
-Mount the Secrets as required volumes. A pod then starts only after the operator has created the Secret, and a Secret that never appears shows up as a `FailedMount` event on a pod in `ContainerCreating`. With `optional: true` the pod starts without the Secret, the backend does not wait for it, and tasks that use the connection fail with `AIRFLOW-8311` until the Secret is created. Only PostgreSQL connections are resolved from the operator Secrets. Redis and Kafka (MaaS) connections keep using the REST API.
+Mount the Secrets as required volumes. A pod then starts only after the operator has created the Secret, and a Secret that never appears shows up as a `FailedMount` event on a pod in `ContainerCreating`. With `optional: true`, the pod starts without the Secret, the backend does not wait for it, and tasks that use the connection fail with `AIRFLOW-8311` until the Secret is created. Only PostgreSQL connections are resolved from the operator Secrets. Redis and Kafka (MaaS) connections keep using the REST API.
 
 ### Using Databases Owned by Another Service
 
-A database that another service created, possibly in another namespace, needs only a `DatabaseSecretClaim` on the Airflow side. List the connection in `dbaasDeclarative.existingConnections` and the chart skips the `InternalDatabase` for it. Use `postgresql`, `redis`, or the connection name from `qs_secrets_backend_params` without the `_dbaas` suffix.
+A database that another service created, possibly in another namespace, only needs a `DatabaseSecretClaim` on the Airflow side. List the connection in `dbaasDeclarative.existingConnections` and the chart skips the `InternalDatabase` for it. Use `postgresql`, `redis`, or the connection name from `qs_secrets_backend_params` without the `_dbaas` suffix.
 
 ```yaml
 dbaasDeclarative:
@@ -993,27 +993,27 @@ qs_secrets_backend_params:
 
 For the main databases, set the owner namespace in `dbaasDeclarative.postgresql.namespace` or `dbaasDeclarative.redis.namespace`.
 
-The claim label `app.kubernetes.io/name` is the service name that DBaaS checks against the owner's access policy. For a connection it is `originService` if the connection sets it, otherwise `dbaasDeclarative.serviceName`. It must differ from `classifier.microserviceName`.
+The claim label `app.kubernetes.io/name` is the service name that DBaaS checks against the owner's access policy. For a connection, it is `originService` if the connection sets it, otherwise `dbaasDeclarative.serviceName`. It must differ from `classifier.microserviceName`.
 
 For a database in another namespace, make sure that:
 
 * Both namespaces are registered in the same composite structure in DBaaS.
-* The owner creates a `DatabaseAccessPolicy` in the owner namespace that grants the service name above the required role.
+* The owner creates a `DatabaseAccessPolicy` in the owner's namespace that grants the required role to the service name above.
 * The dbaas-operator version supports claims with a `classifier.namespace` that differs from the claim namespace.
 
-Until the composite and the policy exist, the claim reports `NamespaceNotInComposite` or `AccessPolicyNotReady` and keeps retrying, and the pods wait for the Secret mount. For details, refer to [Cross-Namespace Access](https://github.com/Netcracker/qubership-dbaas/blob/main/dbaas-operator/docs/resources/database-secret-claim.md#cross-namespace-access) in the dbaas-operator documentation.
+Until the composite and the policy exist, the claim reports `NamespaceNotInComposite` or `AccessPolicyNotReady` and keeps retrying; the pods wait for the Secret mount. For details, refer to [Cross-Namespace Access](https://github.com/Netcracker/qubership-dbaas/blob/main/dbaas-operator/docs/resources/database-secret-claim.md#cross-namespace-access) in the dbaas-operator documentation.
 
 ### Switching an Existing Installation to Declarative DBaaS
 
 An installation that was deployed with the REST API can be upgraded with `dbaasDeclarative.enabled: true`. The chart renders the same classifier as the preinstall job: the release namespace, `scope: service`, `isServiceDb: "true"`, and the microservice name. If it matches, the operator reuses the existing databases, and the Airflow data is kept. To make sure it matches:
 
 * Set `dbaasDeclarative.postgresql.microserviceName` and `dbaasDeclarative.redis.microserviceName` to the values of `DBAAS_PG_MICROSERVICE_NAME` and `DBAAS_REDIS_MICROSERVICE_NAME`.
-* Set `namePrefix` to the value of `DBAAS_PG_DB_NAME_PREFIX` and `DBAAS_REDIS_DB_NAME_PREFIX`, if they were set.
+* Set the `namePrefix` parameters to the values of `DBAAS_PG_DB_NAME_PREFIX` and `DBAAS_REDIS_DB_NAME_PREFIX` respectively, if they were set.
 * After the upgrade, compare the database names in the new Secrets with the previous ones (the `name` field of `connectionProperties.json`).
 
 A different classifier makes the operator create new, empty databases, and Airflow starts with an empty metadata database.
 
-If the installation still has the `metadata-secret` and `broker-url-secret` secrets, which only very old Qubership Airflow versions create in some configurations, keep `customPreinstallJob` enabled for this upgrade so that it deletes them, or delete them manually. Otherwise you can disable the job.
+If the installation still has the `metadata-secret` and `broker-url-secret` secrets, which only very old Qubership Airflow versions create in some configurations, keep `customPreinstallJob` enabled for this upgrade so that it deletes them, or delete them manually. Otherwise, you can disable the job.
 
 Switching back to the REST API (`dbaasDeclarative.enabled: false`) removes the operator resources from the release. Before you do it on an installation with data, check in the dbaas-operator documentation what deleting an `InternalDatabase` does to the physical database.
 
