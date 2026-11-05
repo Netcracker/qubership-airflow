@@ -14,6 +14,7 @@ The topics covered in this section are as follows:
 * [Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multiple-tries)
 * [Airflow API Server Startup Failed due to Insufficient Resources](#airflow-api-server-startup-failed-due-to-insufficient-resources)
 * [Preinstall Job Fails and Logs are Unavailable](#preinstall-job-fails-and-logs-are-unavailable)
+* [Airflow Components Fail with Database Authentication Errors After Credentials Rotation](#airflow-components-fail-with-database-authentication-errors-after-credentials-rotation)
 * [Error Codes](#error-codes)
 
 ## Airflow DAG has Failed State
@@ -313,6 +314,34 @@ The preinstall job sometimes fails and its pod is removed before anyone can read
 
 5. Remove the `command`/`args` override before the next real install or upgrade. While the override is in place, the DB-creation script never runs automatically, and the preinstall job only sleeps.
 
+## Airflow Components Fail with Database Authentication Errors After Credentials Rotation
+
+With `dbaasDeclarative.enabled=true`, a password rotation or a restore in DBaaS causes the dbaas-operator to update the Secrets with the new credentials. The kubelet refreshes the mounted files within about a minute. Airflow reads the metadata database connection string once, when a process starts, so running components keep using the old password. The old password stops working immediately after the rotation. As long as their database sessions stay open, the components keep working. When a session drops, for example, after a database restart, a network interruption, or connection pool recycling, the component cannot reconnect and logs the following error:
+
+```
+psycopg2.OperationalError: connection to server at "<host>", port 5432 failed: FATAL:  password authentication failed for user "<user>"
+```
+
+Components that crash on this error, such as the scheduler and the DAG processor, are restarted by Kubernetes and read the new password from the mounted file. Components that log the error without exiting keep failing until they are restarted. The scheduler, the DAG processor, and the triggerer are restarted automatically. Their liveness probes run `airflow jobs check --local`, which fails when the component stops sending heartbeats to the metadata database. If these probes are misconfigured (for example, disabled or too lenient), the components are not restarted and must be restarted manually. The API server and the Celery workers are not restarted by their default liveness probes. The API server health endpoint returns HTTP 200 even when the database is unreachable and reports `metadatabase: unhealthy` only in the response body. Similarly, `celery inspect ping` does not use the database. Restart them manually. Until the restart, tasks can fail and DAGs may not be parsed. The same applies to the Celery broker URL when the Redis credentials change.
+
+**Solution**:
+
+1. Check that the operator has already updated the Secret. The `status.lastRotatedAt` field of the DatabaseSecretClaim shows when the Secret content last changed:
+
+   ```sh
+   kubectl get databasesecretclaim <fullname>-postgresql -n <namespace> -o jsonpath='{.status.lastRotatedAt}'
+   ```
+
+2. Restart the Airflow components that use the rotated database so that they read the new credentials, for example:
+
+   ```sh
+   kubectl rollout restart deployment/<fullname>-scheduler deployment/<fullname>-dag-processor deployment/<fullname>-api-server deployment/<fullname>-worker -n <namespace>
+   ```
+
+   If worker persistence is enabled, the workers run as a StatefulSet, so use `statefulset/<fullname>-worker` instead. Include the other Airflow components if they are installed, for example, the triggerer and Flower.
+
+To avoid failures during a planned rotation, restart the components as soon as the operator has updated the Secrets.
+
 ## Error Codes
 
 The error codes information is given in the table below.
@@ -332,3 +361,5 @@ The error codes information is given in the table below.
 | AIRFLOW-1931 | "Error occurred while creating Redis secret."                               | The Airflow deployment script, which is responsible for the DBaaS database's creation, creates the Kubernetes secret containing the PG connection string.        | The configuration issue or Kubernetes API issue. | Check the DBaaS and PG configuration. Check that the Kubernetes API works properly.                 |
 | AIRFLOW-8309 | "Could not add permissions to DBAAS database. Response code: %s"            | During the Airflow deployment, the DB creation script grants the Airflow service accounts access to the created PostgreSQL database through the DBaaS declarations API. | The configuration issue, DBaaS is unavailable, or DBaaS M2M is misconfigured (for example, M2M is disabled in DBaaS while Airflow is configured to use it). | Check the DBaaS configuration and that DBaaS works properly. If using M2M authentication, check that M2M is enabled and configured correctly in DBaaS. |
 | AIRFLOW-8310 | "Could not add permissions to redis database. Response code: %s"            | During the Airflow deployment, if the Redis microservice name differs from the PostgreSQL microservice name, the DB creation script also grants the Airflow service accounts access to the created Redis database through the DBaaS declarations API. | The configuration issue, DBaaS is unavailable, or DBaaS M2M is misconfigured (for example, M2M is disabled in DBaaS while Airflow is configured to use it). | Check the DBaaS configuration and that DBaaS works properly. If using M2M authentication, check that M2M is enabled and configured correctly in DBaaS. |
+| AIRFLOW-8311 | "No mounted DBaaS secret for %s database in %s. Check that the DatabaseSecretClaim exists, the dbaas-operator reconciled it, and its Secret is mounted at this path." | With `dbaasDeclarative.enabled=true`, the Secret that the dbaas-operator creates for a database is missing or incomplete at the path that Airflow reads. | The Secret is mounted at a different path than the one in the message. | Check that the `DatabaseSecretClaim` exists and is ready, and that the Secret volume is mounted at the path from the message. |
+| AIRFLOW-8312 | "DBaaS secret %s is for a %s database, but %s is expected." | The Secret mounted at the expected path was created for a different database type. | A Secret volume is mounted at the wrong path. | Check the `volumes` and `volumeMounts` parameters and the Secret name. |
