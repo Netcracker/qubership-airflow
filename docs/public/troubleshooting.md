@@ -14,6 +14,7 @@ The topics covered in this section are as follows:
 * [Airflow Logs are not Available for Some Attempts in Tasks with Multiple Tries](#airflow-logs-are-not-available-for-some-attempts-in-tasks-with-multiple-tries)
 * [Airflow API Server Startup Failed due to Insufficient Resources](#airflow-api-server-startup-failed-due-to-insufficient-resources)
 * [Preinstall Job Fails and Logs are Unavailable](#preinstall-job-fails-and-logs-are-unavailable)
+* [Airflow Components Fail with Database Authentication Errors After Credentials Rotation](#airflow-components-fail-with-database-authentication-errors-after-credentials-rotation)
 * [Error Codes](#error-codes)
 
 ## Airflow DAG has Failed State
@@ -312,6 +313,34 @@ The preinstall job sometimes fails and its pod is removed before anyone can read
    ```
 
 5. Remove the `command`/`args` override before the next real install or upgrade. While the override is in place, the DB-creation script never runs automatically, and the preinstall job only sleeps.
+
+## Airflow Components Fail with Database Authentication Errors After Credentials Rotation
+
+With `dbaasDeclarative.enabled=true`, a password rotation or a restore in DBaaS makes the dbaas-operator update the Secrets with the new credentials. The kubelet refreshes the mounted files within about a minute. Airflow reads the metadata database connection string once, when a process starts, so running components keep the old password. The old password stops working right after the rotation. As long as their database sessions stay open, the components keep working. When a session drops, for example after a database restart, a network interruption, or a connection pool recycle, the component cannot reconnect and logs the following error:
+
+```
+psycopg2.OperationalError: connection to server at "<host>", port 5432 failed: FATAL:  password authentication failed for user "<user>"
+```
+
+Components that crash on this error, such as the scheduler and the DAG processor, are restarted by Kubernetes and read the new password from the mounted file. Components that log the error without exiting keep failing until they are restarted. Normally, a component that cannot reach the database fails its liveness probe, and Kubernetes restarts it automatically. If the probes are misconfigured, for example with disabled or too lenient liveness probes, the component is not restarted and has to be restarted manually. Until the restart, tasks can fail and DAGs may not be parsed. The same applies to the Celery broker URL when the Redis credentials change.
+
+**Solution**:
+
+1. Check that the operator has already updated the Secret. The `status.lastRotatedAt` field of the claim shows when the Secret content last changed:
+
+   ```sh
+   kubectl get databasesecretclaim <fullname>-postgresql -n <namespace> -o jsonpath='{.status.lastRotatedAt}'
+   ```
+
+2. Restart the Airflow components that use the rotated database so that they read the new credentials, for example:
+
+   ```sh
+   kubectl rollout restart deployment/<fullname>-scheduler deployment/<fullname>-dag-processor deployment/<fullname>-api-server deployment/<fullname>-worker -n <namespace>
+   ```
+
+   If worker persistence is enabled, the workers are a StatefulSet, so use `statefulset/<fullname>-worker` instead. Include the other Airflow components if they are installed, for example the triggerer and Flower.
+
+To avoid failures in a planned rotation, restart the components right after the operator has updated the Secrets. 
 
 ## Error Codes
 
