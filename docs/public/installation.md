@@ -970,7 +970,7 @@ volumeMounts:
     mountPath: /var/run/secrets/dbaas-declarative/postgres-test-conn
 ```
 
-Mount the Secrets as required volumes and do not mark them `optional`. The backend reads each Secret once and does not wait for it. Only PostgreSQL connections are resolved from the operator Secrets. Redis and Kafka (MaaS) connections keep using the REST API.
+Mount the Secrets as required volumes. A pod then starts only after the operator has created the Secret, and a Secret that never appears shows up as a `FailedMount` event on a pod in `ContainerCreating`. With `optional: true` the pod starts without the Secret, the backend does not wait for it, and tasks that use the connection fail with `AIRFLOW-8311` until the Secret is created. Only PostgreSQL connections are resolved from the operator Secrets. Redis and Kafka (MaaS) connections keep using the REST API.
 
 ### Using Databases Owned by Another Service
 
