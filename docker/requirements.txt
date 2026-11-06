@@ -1,4 +1,5 @@
 apache-airflow[celery,kerberos,ldap,statsd,redis,rabbitmq,postgres,cncf.kubernetes]==3.3.0
+celery<5.7
 apache-airflow-providers-git
 apache-airflow-providers-amazon
 apache-airflow-providers-fab
