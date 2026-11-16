@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ## What This Repo Is
 
-A Kubernetes deployment stack for Apache Airflow 3.3.0 with Qubership platform integrations. It contains Docker images, a Helm chart (forked from the official Apache Airflow chart), and supporting services. Nothing here runs locally — all testing and deployment targets Kubernetes.
+A Kubernetes deployment stack for Apache Airflow 3.4.0 with Qubership platform integrations. It contains Docker images, a Helm chart (forked from the official Apache Airflow chart), and supporting services. Nothing here runs locally — all testing and deployment targets Kubernetes.
 
 ## Linting
 
@@ -56,7 +56,7 @@ cd site-manager && go test ./...
 
 ### Main Docker Image (`docker/`)
 
-Based on `apache/airflow:slim-3.3.0-python3.11`. Two custom Python packages are installed into it:
+Based on `apache/airflow:slim-3.4.0-python3.11`. Two custom Python packages are installed into it:
 
 - `docker/dbaasintegrationpackage/` — Airflow secrets backend that resolves connections/configs from Qubership DBaaS (PostgreSQL, Redis) and MaaS (Kafka).
 - `docker/keycloakrbacintegrationpackage/` — Keycloak RBAC/FAB integration for Airflow auth.
@@ -74,7 +74,7 @@ Credentials are read from mounted Kubernetes secrets at `/var/run/secrets/airflo
 
 ### Helm Chart (`chart/helm/airflow/`)
 
-A fork of the official Apache Airflow Helm chart (v1.22.0, appVersion 3.3.0). All Qubership modifications are annotated in template files, making it easy to diff against upstream. Two comment styles are used:
+A fork of the official Apache Airflow Helm chart (v1.22.0, appVersion 3.4.0). All Qubership modifications are annotated in template files, making it easy to diff against upstream. Two comment styles are used:
 - YAML comment: `#---Qubership custom change: Change description---`
 - Helm template comment: `{{- /* Qubership custom change: Change description--- */ -}}`
 
