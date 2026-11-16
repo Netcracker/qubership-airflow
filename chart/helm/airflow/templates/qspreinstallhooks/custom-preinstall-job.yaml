@@ -60,7 +60,9 @@ spec:
         {{- include "deployment_only_labels_preinstall_job" . | nindent 8 }}
 #---Qubership custom change: Labels for Qubership release---
     spec:
+      {{- if $securityContext }}
       securityContext: {{ $securityContext | nindent 8 }}
+      {{- end }}
       enableServiceLinks: {{ .Values.enableServiceLinks }}
       activeDeadlineSeconds: 600
 {{- if and .Values.customPreinstallJob.enabled .Values.customPreinstallJob.serviceAccount.create }}
@@ -85,7 +87,9 @@ spec:
           {{- end }}
           image: {{ template "airflow_image" . }}
           imagePullPolicy: {{ .Values.images.airflow.pullPolicy }}
+          {{- if $containerSecurityContext }}
           securityContext: {{ $containerSecurityContext | nindent 12 }}
+          {{- end }}
           name: {{ include "airflow.fullname" . }}-custom-preinstall-job
             {{- if .Values.customPreinstallJob.extraVolumeMounts }}
           volumeMounts:
