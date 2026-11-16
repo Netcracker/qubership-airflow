@@ -116,7 +116,7 @@ images:
     pullPolicy: IfNotPresent
   statsd:
     repository: quay.io/prometheus/statsd-exporter
-    tag: v0.30.0
+    tag: v0.31.0
     pullPolicy: IfNotPresent
   redis:
     repository: redis
@@ -126,11 +126,11 @@ images:
     pullPolicy: IfNotPresent
   pgbouncer:
     repository: apache/airflow
-    tag: airflow-pgbouncer-2026.04.17-1.23.1
+    tag: airflow-pgbouncer-2026.10.13-1.25.2
     pullPolicy: IfNotPresent
   pgbouncerExporter:
     repository: apache/airflow
-    tag: airflow-pgbouncer-exporter-2026.04.17-0.18.0
+    tag: airflow-pgbouncer-exporter-2026.10.13-0.21.0
     pullPolicy: IfNotPresent
   gitSync:
     repository: registry.k8s.io/git-sync/git-sync
@@ -992,6 +992,9 @@ workers:
       # Container level lifecycle hooks
       containerLifecycleHooks: {}
 
+    # Should the kerberos-ccache mount be readonly for Celery Workers
+    readonlyKerberosCache: true
+
     # Resource configuration for Airflow Celery workers
     resources: {}
     #  limits:
@@ -1238,6 +1241,9 @@ workers:
 
       # Container level lifecycle hooks
       containerLifecycleHooks: {}
+
+    # Should the kerberos-ccache mount be readonly for Kubernetes Workers
+    readonlyKerberosCache: true
 
     # Resource configuration for pods created with pod-template-file
     resources: {}
@@ -2385,6 +2391,8 @@ dagProcessor:
   # when it wants to scale a node down.
   safeToEvict: true
 
+  hostAliases: []
+
   # Launch additional containers into dag processor (templated).
   extraContainers: []
 
@@ -2469,6 +2477,8 @@ dagProcessor:
 
     securityContexts:
       container: {}
+
+    containerLifecycleHooks: {}
 
     env: []
 

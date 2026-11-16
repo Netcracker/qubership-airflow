@@ -72,13 +72,11 @@ spec:
 #---Qubership custom change: Labels for Qubership release---
         {{- include "deployment_only_labels_statsd" . | nindent 8 }}
 #---Qubership custom change: Labels for Qubership release---
-      {{- if or .Values.statsd.extraMappings .Values.statsd.podAnnotations }}
       annotations:
         checksum/statsd-config: {{ include (print $.Template.BasePath "/configmaps/statsd-configmap.yaml") . | sha256sum }}
         {{- if .Values.statsd.podAnnotations }}
           {{- tpl (toYaml .Values.statsd.podAnnotations) . | nindent 8 }}
         {{- end }}
-      {{- end }}
     spec:
       {{- if .Values.statsd.priorityClassName }}
       priorityClassName: {{ .Values.statsd.priorityClassName }}
