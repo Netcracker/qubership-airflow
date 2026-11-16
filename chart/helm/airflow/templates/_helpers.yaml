@@ -150,6 +150,17 @@ If release name contains chart name it will be used as a full name.
   {{- end }}
 {{- end }}
 
+{{/* JWT signing and validation secret, only needed by the API server and the scheduler */}}
+{{- define "jwt_secret_environment" }}
+  {{- if .Values.enableBuiltInSecretEnvVars.AIRFLOW__API_AUTH__JWT_SECRET }}
+  - name: AIRFLOW__API_AUTH__JWT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: {{ template "jwt_secret" . }}
+        key: jwt-secret
+  {{- end }}
+{{- end }}
+
 {{/* KEDA scaler database connection for the worker and triggerer autoscalers */}}
 {{- define "keda_airflow_environment" }}
   {{- if or (eq .Values.data.metadataConnection.protocol "mysql") (and .Values.pgbouncer.enabled (not .UsePgbouncer)) }}
