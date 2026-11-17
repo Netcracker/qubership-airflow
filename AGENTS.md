@@ -45,7 +45,7 @@ docker build -f integration-tests/tests/docker/Dockerfile -t qubership-airflow-i
 
 ## Site Manager (Go)
 
-The site-manager is a Go 1.26 binary in `site-manager/`. It manages Disaster Recovery mode-switching via the Kubernetes API.
+The site-manager is a Go 1.27 binary in `site-manager/`. It manages Disaster Recovery mode-switching via the Kubernetes API.
 
 ```sh
 cd site-manager && go build ./...
@@ -56,7 +56,7 @@ cd site-manager && go test ./...
 
 ### Main Docker Image (`docker/`)
 
-Based on `apache/airflow:slim-3.4.0-python3.11`. Two custom Python packages are installed into it:
+Based on `apache/airflow:slim-3.4.0-python3.14`. Two custom Python packages are installed into it:
 
 - `docker/dbaasintegrationpackage/` — Airflow secrets backend that resolves connections/configs from Qubership DBaaS (PostgreSQL, Redis) and MaaS (Kafka).
 - `docker/keycloakrbacintegrationpackage/` — Keycloak RBAC/FAB integration for Airflow auth.
