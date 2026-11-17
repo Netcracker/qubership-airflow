@@ -134,7 +134,7 @@ images:
     pullPolicy: IfNotPresent
   gitSync:
     repository: registry.k8s.io/git-sync/git-sync
-    tag: v4.7.1
+    tag: v4.8.0
     pullPolicy: IfNotPresent
   otelCollector:
     repository: otel/opentelemetry-collector-contrib
@@ -4017,7 +4017,7 @@ certManagerIntegration:
 
 statusProvisioner:
   enabled: true
-  dockerImage: ghcr.io/netcracker/qubership-deployment-status-provisioner:0.2.5
+  dockerImage: ghcr.io/netcracker/qubership-deployment-status-provisioner:0.2.11
   lifetimeAfterCompletion: 600
   podReadinessTimeout: 300
   integrationTestsTimeout: 300
