@@ -91,7 +91,7 @@ For more information about Airflow Helm parameters and configuration, refer to t
 
 ## Image Changes from Community Version
 
-The base Airflow image in addition to Airflow (airflow:slim-3.4.0-python3.11) contains the following libraries:
+The base Airflow image in addition to Airflow (airflow:slim-3.4.0-python3.14) contains the following libraries:
 
 * comerr-dev
 * unzip
