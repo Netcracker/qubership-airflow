@@ -2,7 +2,7 @@ This section provides information about the dashboards and metrics for the Airfl
 
 # Airflow Overview Dashboard
 
-The Airflow Overview dashboard provides information about Airflow status, pods, the Airflow scheduler, executor, DAG parser, DAGs, and tasks. This dashboard is based on both the [third‑party Airflow plugin](https://github.com/epoch8/airflow-exporter) and the [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.3.0/logging-monitoring/metrics.html), combined with the [statsd_exporter](https://github.com/prometheus/statsd_exporter). Additionally, the dashboard uses Kubernetes metrics.
+The Airflow Overview dashboard provides information about Airflow status, pods, the Airflow scheduler, executor, DAG parser, DAGs, and tasks. This dashboard is based on both the [third‑party Airflow plugin](https://github.com/epoch8/airflow-exporter) and the [official Airflow metrics](https://airflow.apache.org/docs/apache-airflow/3.4.0/logging-monitoring/metrics.html), combined with the [statsd_exporter](https://github.com/prometheus/statsd_exporter). Additionally, the dashboard uses Kubernetes metrics.
 
 ## Dashboard Variables
 

@@ -43,7 +43,9 @@ spec:
         {{- include "deployment_only_labels_status_provisioner" . | nindent 8 }}
 #---Qubership custom change: Labels for Qubership release---
     spec:
+      {{- if $securityContext }}
       securityContext: {{ $securityContext | nindent 8 }}
+      {{- end }}
       restartPolicy: Never
       serviceAccountName: {{ .Release.Name }}-status-provisioner
       {{- if .Values.statusProvisioner.priorityClassName }}
@@ -53,7 +55,9 @@ spec:
         - name: status-provisioner
           image: {{ template "deployment-status-provisioner.image" . }}
           imagePullPolicy: "Always"
+          {{- if $containerSecurityContext }}
           securityContext: {{ $containerSecurityContext | nindent 12 }}
+          {{- end }}
           env:
             - name: NAMESPACE
               valueFrom:
