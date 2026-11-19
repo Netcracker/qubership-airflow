@@ -25,7 +25,7 @@ Official airflow docs:
 * https://github.com/apache/airflow/tree/main - airflow repository
 * https://github.com/apache/airflow/tree/main/chart - airflow community helm chart location
 * https://github.com/apache/airflow/tree/main/providers/src/airflow/providers - airflow providers location
-* https://github.com/apache/airflow/blob/main/airflow/config_templates/airflow_local_settings.py - airflow default logging config
+* https://github.com/apache/airflow/blob/main/airflow-core/src/airflow/config_templates/airflow_local_settings.py - airflow default logging config
 
 Rclone and gitSync:
 
@@ -152,7 +152,7 @@ It is also necessary to try logging in to airflow and check URLs in your browser
 
 ### Logging Config Issues
 
-Custom logging config class supported by platform is located at [qs_platform_logging_config.py](/chart/helm/airflow/qs_files/qs_platform_logging_config.py). It is based on community logging config from https://github.com/apache/airflow/blob/main/airflow/config_templates/airflow_local_settings.py . Note, that handlers, specified in `airflow.task` logger are also used to fetch logs in airflow UI (see `class` of the secified handler).
+Custom logging config class supported by platform is located at [qs_platform_logging_config.py](/chart/helm/airflow/qs_files/qs_platform_logging_config.py). It is based on community logging config from https://github.com/apache/airflow/blob/main/airflow-core/src/airflow/config_templates/airflow_local_settings.py . Note, that handlers, specified in `airflow.task` logger are also used to fetch logs in airflow UI (see `class` of the secified handler).
 Custom logging config class and related third-party classes usually are used to investigate/troubleshoot issues related to incorrect log format, incorrect number of logs, incorrect logging level.
 
 When troubleshooting task logs in airflow webUI with celery executor, it is necessary to remember that without using S3 storage, logs in UI should be available only when workers are deployed as statefulset with persistence storage. If the workers are deployed differently, absence of airflow logs in UI is expected behavior.
@@ -165,96 +165,109 @@ When troubleshooting task logs in airflow webUI with celery executor, it is nece
 
 The distribution follows the latest Apache Airflow release. One update is one pull request, as in `feat: Airflow340 update (#85)` for 3.4.0. The pull request covers the Airflow image, the forked community chart, the supporting images, and every file that carries a version.
 
-Two rules hold for the whole procedure:
+Three rules hold for the whole procedure:
 
-* The target Airflow version is the only input. The Python version, the chart version and the upstream commit are derived from it.
-* Every Qubership change inside an upstream file carries a marker: `#---Qubership custom change: <description>---` in YAML and `{{- /* Qubership custom change: <description>--- */ -}}` in Helm templates. Unmarked content is treated as upstream content and is overwritten on the next sync.
+* The target Airflow version is the only input. The Python version, the chart version, and the upstream commit follow from it.
+* A Qubership change inside an upstream file is marked so that the next sync can tell it apart from upstream content. Three styles exist: `#---Qubership custom change: <description>---` in YAML, `{{- /* Qubership custom change: <description>--- */ -}}` in Helm templates, and `# Qubership override: <value> (upstream default: <value>)` for a changed default.
+* Markers are not a complete inventory. Many overrides in `chart/helm/airflow/values.yaml` predate them and carry none, so the diff against the chart you are updating from is the source of truth for what is local. The "Prepare the update" section explains how to build that diff.
 
 ### 1. Prepare the update
 
 1. Pick the target release: the latest stable Apache Airflow version from [apache/airflow releases](https://github.com/apache/airflow/releases).
-2. Pick the upstream chart commit. It must be a recent commit on the `apache/airflow` `main` branch whose `chart/Chart.yaml` declares `appVersion: <target>`. Release tags cannot be used: at tag `3.4.0` the chart still declares `appVersion: 3.3.2`, because the chart version is bumped after the release. Record the SHA; steps 10, 11, and 15 need it.
+2. Pick the upstream chart commit. It must be a recent commit on the `apache/airflow` `main` branch whose `chart/Chart.yaml` declares `appVersion: <target>`. Release tags do not work: at tag `3.4.0` the chart still declares `appVersion: 3.3.2`, because the chart version is bumped after the release. Record the SHA; the chart sync and the values schema use it.
    * The 3.4.0 update used commit `1195d1b11ccd7178d09960a9ea47ab005983c540` (chart `2.0.0`, `appVersion: 3.4.0`).
-   * With a local clone of `apache/airflow`: `git -C <airflow-clone> log -1 --format=%H origin/main` and `git -C <airflow-clone> show <SHA>:chart/Chart.yaml`.
-3. Record the Python version from the official slim image tag, `apache/airflow:slim-<version>-python<X.Y>`. The same Python version appears in the test DAG image and in the documentation.
-4. Create one branch and one pull request. Keep the chart sync as a commit of its own, separate from the version bumps, so that each concern can be reviewed on its own.
+   * With a local clone of `apache/airflow`: `git -C <airflow-clone> log -1 --format=%H origin/main`, then `git -C <airflow-clone> show <SHA>:chart/Chart.yaml`.
+3. Record the commit the current chart was synced from. It is pinned in [generate_json_schema.py](/docker-transfer/generate_json_schema.py), and earlier ones are in `git log -p -- docker-transfer/generate_json_schema.py`.
+4. Diff the local chart against the upstream chart at that commit, for example `git diff --no-index <upstream-chart-dir> chart/helm/airflow`. That diff lists every Qubership delta, marked or not, before anything is overwritten.
+5. Record the Python version from the official slim image tag, `apache/airflow:slim-<version>-python<X.Y>`. The same Python version appears in the test DAG image and in the documentation.
+6. Create one branch and one pull request. Keep the chart sync in a commit of its own, separate from the version bumps, so that each concern can be reviewed on its own.
 
 ### 2. Airflow image and Python dependencies
 
-5. Update the base image in [docker/Dockerfile](/docker/Dockerfile): `FROM apache/airflow:slim-<version>-python<X.Y>`.
-6. Update [docker/requirements.txt](/docker/requirements.txt):
+1. Update the base image in [docker/Dockerfile](/docker/Dockerfile): `FROM apache/airflow:slim-<version>-python<X.Y>`.
+2. Update [docker/requirements.txt](/docker/requirements.txt):
    * `apache-airflow[<extras>]==<version>` must be the same version as in the image tag.
-   * Review every other line instead of blindly bumping it. Remove what is no longer needed, keep constraints that are still required (for example `celery<5.7` exists for provider compatibility), and bump provider pins that are coupled to the release (for example `apache-airflow-providers-keycloak`).
-   * Keep the extra list complete: it is mirrored in [docs/public/installation.md](/docs/public/installation.md).
-7. Review [tests_dags_image/requirements.txt](/tests_dags_image/requirements.txt) and [tests_dags_image/Dockerfile](/tests_dags_image/Dockerfile): the provider packages and the `pyspark` pin must still install on the new Python, and `SPARK_HOME` must point at the `python<X.Y>` directory of that Python.
-8. Check the custom logging class [qs_platform_logging_config.py](/chart/helm/airflow/qs_files/qs_platform_logging_config.py) against the community logging config at [airflow_local_settings.py](https://github.com/apache/airflow/blob/main/airflow/config_templates/airflow_local_settings.py) and port whatever changed. The logging handlers are also what the UI uses to fetch task logs.
-9. Verify that both images still build:
+   * Review every other line instead of bumping it blindly. Remove what is no longer needed, keep constraints that are still required (`celery<5.7` exists for provider compatibility), and bump the provider pins that are coupled to the release (`apache-airflow-providers-keycloak`).
+3. Mirror [docker/requirements.txt](/docker/requirements.txt) into [docs/public/installation.md](/docs/public/installation.md) verbatim, extras and pins included. The two drift apart quickly; the requirements file wins.
+4. Review [tests_dags_image/requirements.txt](/tests_dags_image/requirements.txt) and [tests_dags_image/Dockerfile](/tests_dags_image/Dockerfile): the provider packages and the `pyspark` pin must still install on the new Python, and `SPARK_HOME` must point at the `python<X.Y>` directory.
+5. Check the custom logging class [qs_platform_logging_config.py](/chart/helm/airflow/qs_files/qs_platform_logging_config.py) against the community logging config at [airflow_local_settings.py](https://github.com/apache/airflow/blob/main/airflow-core/src/airflow/config_templates/airflow_local_settings.py) and port whatever changed. The logging handlers are also what the UI uses to fetch task logs.
+6. Verify that both images still build. The context is the repository root, because both Dockerfiles copy repository paths:
 
-    ```sh
-    docker build -f docker/Dockerfile -t qubership-airflow .
-    docker build -f tests_dags_image/Dockerfile --build-arg base_img=qubership-airflow -t qubership-airflow-tests-dags-image .
-    ```
+   ```sh
+   docker build -f docker/Dockerfile -t qubership-airflow .
+   docker build -f tests_dags_image/Dockerfile \
+     --build-arg base_img=qubership-airflow \
+     -t qubership-airflow-tests-dags-image .
+   ```
 
 ### 3. Helm chart sync
 
-10. Replace the upstream-owned part of `chart/helm/airflow` with the content of `chart/` at the recorded SHA.
-    * Copied from upstream: `Chart.yaml`, `Chart.lock`, `.gitignore`, `.helmignore`, `values.yaml`, `files/pod-template-file.kubernetes-helm-yaml`, `files/statsd-mappings.yml`, and everything under `templates/`.
-    * Not copied: upstream `docs/`, `tests/`, `kustomize-overlays/`, `newsfragments/`, `dockerfiles/`, `README.md`, `RELEASE_NOTES.rst`, `values.schema.json` (generated by `docker-transfer`, see step 15), and the bundled `charts/postgresql-*.tgz` (the internal PostgreSQL is not used).
-    * Qubership-only files that must survive untouched: `templates/_qs_helpers.tpl`, `templates/qsdbaas/`, `templates/qsmonitoring/`, `templates/qspreinstallhooks/`, `templates/status-provisioner/`, `templates/api-server/api-server-httproute-qs-extras.yaml`, `qs_files/`, `monitoring/`, `charts/airflow-site-manager/`, `charts/integrationTests/`, `qubership_values.schema.json`, and `release-images.yaml`.
-11. Re-apply the Qubership changes to the files that changed upstream, and delete local templates that upstream deleted: orphaned templates still render and are easy to miss. Expect structural changes between releases. 3.4.0 replaced the Kerberos init container with the sidecar and moved worker options under `workers.celery.*` and `workers.kubernetes.*`.
-    * To confirm nothing is missing, compare the upstream template list with the local one. The only local-only entries must be the Qubership-only files from step 10:
+1. Replace the upstream-owned part of `chart/helm/airflow` with the content of `chart/` at the recorded SHA.
+   * Copied from upstream: `Chart.yaml`, `Chart.lock`, `.gitignore`, `.helmignore`, `files/pod-template-file.kubernetes-helm-yaml`, `files/statsd-mappings.yml`, and everything under `templates/`.
+   * Merged instead of overwritten: `values.yaml`. Start from the upstream file and re-apply the local deltas from the "Prepare the update" diff; the values steps below list where they sit.
+   * Not copied: upstream `docs/`, `tests/`, `kustomize-overlays/`, `newsfragments/`, `dockerfiles/`, `README.md`, `RELEASE_NOTES.rst`, `values.schema.json` (generated by `docker-transfer`), and `charts/postgresql-*.tgz` (the internal PostgreSQL is not used).
+   * Qubership-only files that must survive untouched: `templates/_qs_helpers.tpl`, `templates/qsdbaas/`, `templates/qsmonitoring/`, `templates/qspreinstallhooks/`, `templates/status-provisioner/`, `templates/api-server/api-server-httproute-qs-extras.yaml`, `qs_files/`, `monitoring/`, `charts/airflow-site-manager/`, `charts/integrationTests/`, `qubership_values.schema.json`, and `release-images.yaml`.
+2. Re-apply the Qubership changes to the files that changed upstream, and delete local templates that upstream deleted: orphaned templates still render and are easy to miss. Expect structural changes between releases. 3.4.0 replaced the Kerberos init container with the sidecar and moved worker options under `workers.celery.*` and `workers.kubernetes.*`.
+   * To confirm nothing is missing, compare the upstream template list with the local one. The only local-only entries must be the Qubership-only files listed above:
 
-      ```sh
-      git -C <airflow-clone> ls-tree -r --name-only <SHA> chart/templates
-      ```
-12. In [values.yaml](/chart/helm/airflow/values.yaml), everything from `platformAirflowMonitoring:` to the end of the file is Qubership-owned and is kept as is. Set the values that follow the release:
-    * `defaultAirflowTag` and `airflowVersion` to the target version.
-    * Copy the image tags that come from upstream: `images.statsd.tag`, `images.redis.tag`, `images.pgbouncer.tag`, `images.pgbouncerExporter.tag`, `images.otelCollector.tag`.
-    * `images.gitSync.tag`: use the newest community git-sync release. It may be newer than the chart default: 3.4.0 pinned `v4.8.0` while the chart default was `v4.4.2`.
-    * `images.airflow.repository` and `images.flower.repository` stay `ghcr.io/netcracker/qubership-airflow` with `tag: main`.
-    * `statusProvisioner.dockerImage` to the newest [qubership-deployment-status-provisioner release](https://github.com/Netcracker/qubership-deployment-status-provisioner/releases).
-13. Update [Chart.yaml](/chart/helm/airflow/Chart.yaml):
-    * `appVersion` to the target version.
-    * `version` to the chart version of the recorded upstream commit (`1.22.0` became `2.0.0` in the 3.4.0 update).
-    * Keep the `artifacthub.io/*` annotations as upstream ships them, including the stale `helm-chart/1.21.0` documentation link, which is upstream content and not a local defect.
-    * Render the chart and make sure the command exits with code 0: `helm template qubership-airflow chart/helm/airflow > /dev/null`.
-14. Update the release plumbing:
-    * [.github/workflows/helm-charts-release.yaml](/.github/workflows/helm-charts-release.yaml): `chart-version` is the version the release action writes into `Chart.yaml`, so it must be the chart version with a `-dev` suffix (`2.0.0-dev`). The 3.4.0 update left it at `1.22.0-dev`.
-    * [release-images.yaml](/chart/helm/airflow/release-images.yaml): `statsd-exporter` and `git-sync` must match `images.statsd.tag` and `images.gitSync.tag` from `values.yaml`. The Qubership-built images stay on `:main`.
+     ```sh
+     git -C <airflow-clone> ls-tree -r --name-only <SHA> chart/templates
+     ```
+3. Update [values.yaml](/chart/helm/airflow/values.yaml). Two kinds of local change survive the sync:
+   * The Qubership block: everything from `platformAirflowMonitoring:` to the end of the file is Qubership-owned and copied as is.
+   * The in-body overrides in the upstream part: image repositories and tags, security context defaults, `dags.gitSync.rcloneImage`, the redirect route block, and similar. Most carry no marker, so take them from the "Prepare the update" diff.
+4. Then set the values that follow the release:
+   * `defaultAirflowTag` and `airflowVersion` to the target version.
+   * Copy the image tags that come from upstream: `images.statsd.tag`, `images.redis.tag`, `images.pgbouncer.tag`, `images.pgbouncerExporter.tag`, `images.otelCollector.tag`.
+   * `images.gitSync.tag`: use the newest community git-sync release. It may be newer than the chart default: 3.4.0 pinned `v4.8.0` while the chart default was `v4.4.2`.
+   * `images.airflow.repository` and `images.flower.repository` stay `ghcr.io/netcracker/qubership-airflow` with `tag: main`.
+   * `statusProvisioner.dockerImage` to the newest [qubership-deployment-status-provisioner release](https://github.com/Netcracker/qubership-deployment-status-provisioner/releases).
+5. Update [Chart.yaml](/chart/helm/airflow/Chart.yaml):
+   * `appVersion` to the target version.
+   * `version` to the chart version of the recorded upstream commit (`1.22.0` became `2.0.0` in the 3.4.0 update).
+   * Keep the `artifacthub.io/*` annotations as upstream ships them, including the stale `helm-chart/1.21.0` documentation link. That link is upstream content, not a local defect.
+   * Render the chart and check the exit code: `helm template qubership-airflow chart/helm/airflow > /dev/null`.
+6. Update the release plumbing:
+   * [.github/workflows/helm-charts-release.yaml](/.github/workflows/helm-charts-release.yaml): `chart-version` is written into `Chart.yaml` by `charts-values-update-action`. Keep it aligned with the chart version; the current value uses a `-dev` suffix. The chart 2 upgrade missed this input, and the convention is documented nowhere in the repository, so confirm it with the release pipeline owner.
+   * [release-images.yaml](/chart/helm/airflow/release-images.yaml): `statsd-exporter` and `git-sync` must match `images.statsd.tag` and `images.gitSync.tag` from `values.yaml`. The Qubership-built images stay on `:main`.
 
 ### 4. Values schema generation
 
-15. Update [generate_json_schema.py](/docker-transfer/generate_json_schema.py): the `url` must point at `chart/values.schema.json` of the same upstream commit as the chart sync.
-16. Reconcile `values_params_to_keep` with the new upstream schema: a path that upstream removed makes the schema generation fail, so delete it or comment it out (as was done for `workers.celery.kerberosInitContainer.*`), and add newly added upstream parameters that Qubership exposes.
-17. Every new Qubership-only value needs an entry in [qubership_values.schema.json](/chart/helm/airflow/qubership_values.schema.json), otherwise the generation fails the default-value validation.
-18. Validate by building the transfer image, which runs the script at build time: `docker build -f docker-transfer/Dockerfile -t qubership-airflow-transfer .`. The generated `values.schema.json` is not stored in the repository; it exists only in that image.
+1. Update [generate_json_schema.py](/docker-transfer/generate_json_schema.py): the `url` must point at `chart/values.schema.json` of the same upstream commit as the chart sync.
+2. Reconcile `values_params_to_keep` with the new upstream schema. A path that upstream removed makes the schema generation fail, so delete it or comment it out, as was done for `workers.celery.kerberosInitContainer.*`. Add the upstream parameters that Qubership now exposes.
+3. Every new Qubership-only value needs an entry in [qubership_values.schema.json](/chart/helm/airflow/qubership_values.schema.json), otherwise the generation fails the default-value validation.
+4. Validate by building the transfer image, which runs the script: `docker build -f docker-transfer/Dockerfile -t qubership-airflow-transfer .`. The generated `values.schema.json` is not stored in the repository; it exists only in that image.
 
 ### 5. Site manager and supporting images
 
-19. Update [site-manager/docker/Dockerfile](/site-manager/docker/Dockerfile): the builder image `golang:<version>-alpine<release>` and the runtime `alpine:<release>`.
-20. Update [site-manager/go.mod](/site-manager/go.mod): the `go` directive must be the same Go version as in the Dockerfile, `github.com/Netcracker/qubership-disaster-recovery-daemon` to the [latest release](https://github.com/Netcracker/qubership-disaster-recovery-daemon/releases), and the `k8s.io/*` modules to one consistent set. Then let the toolchain update the sums and check the result:
+1. Update [site-manager/docker/Dockerfile](/site-manager/docker/Dockerfile): the builder image `golang:<version>-alpine<release>` and the runtime `alpine:<release>`.
+2. Update [site-manager/go.mod](/site-manager/go.mod): the `go` directive must match the Go version in the Dockerfile, `github.com/Netcracker/qubership-disaster-recovery-daemon` goes to the [latest release](https://github.com/Netcracker/qubership-disaster-recovery-daemon/releases), and the `k8s.io/*` modules move as one consistent set. Then update the sums and check the result:
 
-    ```sh
-    cd site-manager && go mod tidy && go build ./... && go test ./...
-    ```
-21. Update [rclone-image/Dockerfile](/rclone-image/Dockerfile) to the [latest rclone release](https://github.com/rclone/rclone/releases) and re-check that `rclone-image/entrypoint.sh` still matches the rclone CLI it drives.
-22. Update the base image in [integration-tests/tests/docker/Dockerfile](/integration-tests/tests/docker/Dockerfile) to the [latest qubership-docker-integration-tests release](https://github.com/Netcracker/qubership-docker-integration-tests/releases).
-23. Scan the Go dependencies and address the reported vulnerabilities in `site-manager/go.mod`, or record why the remaining ones are acceptable.
-24. The list of images CI builds lives in [.github/docker-build-config.json](/.github/docker-build-config.json) and [.github/workflows/advanced-images.yml](/.github/workflows/advanced-images.yml). Adding an image means adding it to both.
+   ```sh
+   cd site-manager && go mod tidy && go build ./... && go test ./...
+   ```
+3. Update [rclone-image/Dockerfile](/rclone-image/Dockerfile) to the [latest rclone release](https://github.com/rclone/rclone/releases) and re-check that `rclone-image/entrypoint.sh` still matches the rclone CLI it drives.
+4. Update the base image in [integration-tests/tests/docker/Dockerfile](/integration-tests/tests/docker/Dockerfile) to the [latest qubership-docker-integration-tests release](https://github.com/Netcracker/qubership-docker-integration-tests/releases).
+5. Scan the Go dependencies and address the reported vulnerabilities in `site-manager/go.mod`, or record why the remaining ones are acceptable.
+6. Know which CI file owns which image before adding or renaming one:
+   * [.github/workflows/basic-images.yml](/.github/workflows/basic-images.yml) builds `qubership-airflow`, `-transfer`, `-rclone`, `-sm`, and `-integration-tests` on every push and release.
+   * [.github/docker-build-config.json](/.github/docker-build-config.json) lists the same five for the release workflow, so an image added to one belongs in the other too.
+   * [.github/workflows/advanced-images.yml](/.github/workflows/advanced-images.yml) builds only `qubership-airflow-tests-dags-image`, on top of `qubership-airflow`. It is not shipped in the chart, so no other file lists it.
+   * [.github/helm-charts-release-config.yaml](/.github/helm-charts-release-config.yaml) maps [release-images.yaml](/chart/helm/airflow/release-images.yaml) to release versions, which is why that file carries every chart image plus the status provisioner, statsd-exporter, and git-sync.
 
 ### 6. Documentation and agent-facing files
 
-25. Search for the previous version and repeat until only intentional occurrences remain: `git grep -n "<old version>"`.
-26. Update the documentation pages that carry Airflow doc links and the library list:
-    * [installation.md](/docs/public/installation.md): base image and Python version, the library list copied from `docker/requirements.txt` including pinned providers, the Airflow documentation URLs, and the parameter descriptions affected by the chart changes.
-    * [maintenance.md](/docs/public/maintenance.md), [monitoring.md](/docs/public/monitoring.md), and [airflow-site-manager.md](/docs/public/airflow-site-manager.md): Airflow documentation URLs.
-27. Update [AGENTS.md](/AGENTS.md): the Airflow version, the base image tag and Python version, the Go version, and the chart version.
-28. The troubleshooting skill references `agent-packages/troubleshoot-airflow/.apm/skills/troubleshoot-airflow/references/troubleshooting.md` and `references/monitoring.md` are generated from `docs/public/troubleshooting.md` and `docs/public/monitoring.md` by [sync-troubleshooting-skill.yml](/.github/workflows/sync-troubleshooting-skill.yml). Update the documentation source, and update the copies in the same pull request if the sync pull request has not landed yet.
+1. Search for the previous version and repeat until only intentional occurrences remain: `git grep -n "<old version>"`.
+2. Update the documentation pages that carry Airflow doc links and library data:
+   * [installation.md](/docs/public/installation.md): base image and Python version, the library list (mirror of `docker/requirements.txt`), the Airflow documentation URLs, and the parameter descriptions affected by the chart changes.
+   * [maintenance.md](/docs/public/maintenance.md), [monitoring.md](/docs/public/monitoring.md), and [airflow-site-manager.md](/docs/public/airflow-site-manager.md): Airflow documentation URLs.
+3. Update [AGENTS.md](/AGENTS.md): the Airflow version, the base image tag and Python version, the Go version, and the chart version.
+4. The troubleshooting skill references `agent-packages/troubleshoot-airflow/.apm/skills/troubleshoot-airflow/references/troubleshooting.md` and `references/monitoring.md` are generated from `docs/public/troubleshooting.md` and `docs/public/monitoring.md` by [sync-troubleshooting-skill.yml](/.github/workflows/sync-troubleshooting-skill.yml). Update the documentation source and, if the sync pull request has not landed yet, the copies in the same pull request.
 
 ### 7. Verification (definition of done)
 
-29. All pipelines pass: basic images, advanced images (includes the test DAG image) and the super-linter. Lint locally where possible: `black --config .github/linters/.python-black docker/`, `flake8 --config .github/linters/.flake8 docker/`, and `golangci-lint` for `site-manager/`.
-30. The chart renders and deploys: `helm template qubership-airflow chart/helm/airflow` succeeds and a test environment installs from the new chart.
-31. The integrations still work: DBaaS in both REST and declarative mode, Keycloak IDP login, GitSync DAG delivery, rclone DAG delivery, the test DAGs from the test DAG image, site manager failover and switchover, and status provisioning.
-32. The generated `values.schema.json` still accepts the documented installation parameters.
-33. No unresolved vulnerabilities are left without a recorded reason.
+1. All pipelines pass: basic images, advanced images (includes the test DAG image), and the super-linter. Lint locally where possible: `black --config .github/linters/.python-black docker/`, `flake8 --config .github/linters/.flake8 docker/`, and `golangci-lint` for `site-manager/`.
+2. The chart renders and deploys: `helm template qubership-airflow chart/helm/airflow` succeeds, and a test environment installs from the new chart.
+3. The integrations still work: DBaaS in both REST and declarative mode, Keycloak IDP login, GitSync DAG delivery, rclone DAG delivery, the test DAGs from the test DAG image, site manager failover and switchover, and status provisioning.
+4. The generated `values.schema.json` still accepts the documented installation parameters.
+5. No unresolved vulnerabilities are left without a recorded reason.

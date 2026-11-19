@@ -99,21 +99,20 @@ The base Airflow image in addition to Airflow (airflow:slim-3.4.0-python3.14) co
 * manpages-dev
 * libkrb5-dev
 * libsasl2-dev
-* python3-dev
 * libldap2-dev
 * libssl-dev
-* libpq-dev
+* libnss-wrapper
 
 Also, the image contains the following Python libraries/Airflow extras:
 
-* apache-airflow[celery,kerberos,ldap,statsd,rabbitmq,postgres,kubernetes]==3.4.0
+* apache-airflow[celery,kerberos,ldap,statsd,redis,rabbitmq,postgres,cncf.kubernetes]==3.4.0
+* celery<5.7
 * apache-airflow-providers-git
-* apache-airflow-providers-keycloak==0.12.0
 * apache-airflow-providers-amazon
 * apache-airflow-providers-fab
+* apache-airflow-providers-keycloak==0.12.0
 * airflow-exporter
 * Authlib
-* libnss-wrapper
 
 The image contains Python script for the PG database creation.
 
