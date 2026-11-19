@@ -194,6 +194,9 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
 2. Update [docker/requirements.txt](/docker/requirements.txt):
    * `apache-airflow[<extras>]==<version>` must be the same version as in the image tag.
    * Review every other line instead of bumping it blindly. Remove what is no longer needed, keep constraints that are still required (`celery<5.7` exists for provider compatibility), and bump the provider pins that are coupled to the release (`apache-airflow-providers-keycloak`).
+   * Check the pins against the release constraints in `apache/airflow`: `constraints-<version>/constraints-<py>.txt`, for example `constraints-3.4.0/constraints-3.14.txt`. That file pins `celery==5.6.3`, and a candidate can be tested with `pip install --dry-run` or `pip check` against it.
+   * The constraints are a baseline, not a ceiling. The keycloak provider moved 0.7.1 → 0.8.2 → 0.12.0 while the 3.4.0 constraints still say 0.11.2, so a deliberate bump above them is normal; verify it with the image build.
+   * `airflow-exporter` is a third-party plugin that hooks Airflow internals and is unpinned. It is the riskiest line in this file; the check that it still loads and emits its metrics is in 7.5.
 3. Mirror [docker/requirements.txt](/docker/requirements.txt) into [docs/public/installation.md](/docs/public/installation.md) verbatim, extras and pins included. The two drift apart quickly; the requirements file wins.
 4. Review [tests_dags_image/requirements.txt](/tests_dags_image/requirements.txt) and [tests_dags_image/Dockerfile](/tests_dags_image/Dockerfile): the provider packages and the `pyspark` pin must still install on the new Python, and `SPARK_HOME` must point at the `python<X.Y>` directory.
    * The apt packages in that Dockerfile depend on the base distribution. The 3.4.0 base is Debian 13, where `libxmlsec1-openssl` resolves to `libxmlsec1t64-openssl`, and hardened versions (`+dhi`) sort above the point-release rebuilds apt tries to install, so a package that pins its runtime dependency exactly can make the transaction unresolvable.
@@ -223,6 +226,10 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
      ```sh
      git -C <airflow-clone> ls-tree -r --name-only <SHA> chart/templates
      ```
+   * Values that move break the Qubership code that is not part of the diff. Grep the local tree for every key that moved or disappeared between the old and the new upstream `values.yaml`: `git grep -n '<old.path>' -- chart/helm/airflow/templates chart/helm/airflow/charts docs/public`.
+   * The 3.3.0 update needed that for `workers.*` → `workers.celery.*`, `httpRoute.apiServer` → `apiServer.httpRoute`, and the removal of `webserver`. `_qs_helpers.tpl`, `qubership_values.schema.json`, the `values_params_to_keep` list, and about a hundred lines of [installation.md](/docs/public/installation.md) had to follow.
+   * Qubership-only templates call upstream helpers, and helper signatures change. 3.4.0 turned the security context helpers into `(list <node> .Values)` and made them return an empty string, which needed matching edits in `templates/status-provisioner/` and `templates/qspreinstallhooks/`. Check every helper call site in the Qubership-only templates against the definitions in `templates/_helpers.yaml`.
+   * Check the reverse direction too: when upstream adopts something Qubership added, drop the local copy. 3.3.0 added `apiServer.httpRoute`, so the local `httpRoute.apiServer` block went away and only the redirect route, the BackendTLSPolicy, and `api-server-httproute-qs-extras.yaml` stayed. Removing or renaming a value that users set is a breaking change: record it in the release notes and the documentation.
 3. Update [values.yaml](/chart/helm/airflow/values.yaml). Two kinds of local change survive the sync:
    * The Qubership block: everything from `platformAirflowMonitoring:` to the end of the file is Qubership-owned and copied as is.
    * The in-body overrides in the upstream part: image repositories and tags, security context defaults, `dags.gitSync.rcloneImage`, the redirect route block, and similar. Most carry no marker, so take them from the "Prepare the update" diff.
@@ -238,6 +245,7 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
    * `version` to the chart version of the recorded upstream commit (`1.22.0` became `2.0.0` in the 3.4.0 update).
    * Keep the `artifacthub.io/*` annotations as upstream ships them, including the stale `helm-chart/1.21.0` documentation link. That link is upstream content, not a local defect.
    * Render the chart and check the exit code: `helm template qubership-airflow chart/helm/airflow > /dev/null`.
+   * Rendering with defaults does not reach every branch, and many Qubership paths sit behind `if` conditions. Render again with the variants that guard them: Celery executor with `workers.celery.persistence.enabled=true`, `executor=KubernetesExecutor`, `apiServer.httpRoute.enabled=true`, `dbaasDeclarative.enabled=true`, and `platformAirflowMonitoring=true`.
 6. Update the release plumbing:
    * [.github/workflows/helm-charts-release.yaml](/.github/workflows/helm-charts-release.yaml): set `chart-version` to the `version` from `Chart.yaml` with a `-dev` suffix, so chart `2.0.0` takes `2.0.0-dev`. That is how the value tracked the chart before. The action writes this value into `Chart.yaml` at release time, and the convention is documented nowhere in the repository, so state the assumption in the pull request description instead of pausing to ask for a decision.
    * [release-images.yaml](/chart/helm/airflow/release-images.yaml): `statsd-exporter` and `git-sync` must match `images.statsd.tag` and `images.gitSync.tag` from `values.yaml`. The Qubership-built images stay on `:main`.
@@ -246,12 +254,13 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
 
 1. Update [generate_json_schema.py](/docker-transfer/generate_json_schema.py): the `url` must point at `chart/values.schema.json` of the same upstream commit as the chart sync.
 2. Reconcile `values_params_to_keep` with the new upstream schema. A path that upstream removed makes the schema generation fail, so delete it or comment it out, as was done for `workers.celery.kerberosInitContainer.*`. Add the upstream parameters that Qubership now exposes.
+   * The keep list is not the only lever. The 3.3.0 update also changed the script: it inlines upstream `$ref` entries, skips Qubership-only keys that upstream does not have, and deep-merges nested schema properties. If generation fails with a key error or a missing `properties`, the shape of the upstream schema changed, so fix the script rather than only the list.
 3. Every new Qubership-only value needs an entry in [qubership_values.schema.json](/chart/helm/airflow/qubership_values.schema.json), otherwise the generation fails the default-value validation.
 4. Validate by building the transfer image: `docker build -f docker-transfer/Dockerfile -t qubership-airflow-transfer .`. It first copies the tags from `release-images.yaml` into `values.yaml` and the two subchart value files, then runs the schema script. A mismatch therefore shows up as changed tags after the build. The generated `values.schema.json` is not stored in the repository; it exists only in that image.
 
 ### 5. Site manager and supporting images
 
-1. Update [site-manager/docker/Dockerfile](/site-manager/docker/Dockerfile): the builder image `golang:<version>-alpine<release>` and the runtime `alpine:<release>`.
+1. Update [site-manager/docker/Dockerfile](/site-manager/docker/Dockerfile): the builder image `golang:<version>-alpine<N>` and the runtime `alpine:<N>`. Both must use the same Alpine release; 3.3.0 moved them together from 3.22 to 3.24.
 2. Update [site-manager/go.mod](/site-manager/go.mod): the `go` directive must match the Go version in the Dockerfile, `github.com/Netcracker/qubership-disaster-recovery-daemon` goes to the [latest release](https://github.com/Netcracker/qubership-disaster-recovery-daemon/releases), and the `k8s.io/*` modules move as one consistent set. Then update the sums and check the result:
 
    ```sh
@@ -287,5 +296,7 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
    * When either of them fails, check the Airflow source at the target version for that API change before suspecting the integration code.
    * IDP entry point: [keycloakrbacintegrationpackage](/docker/keycloakrbacintegrationpackage). The chart also ships [webserver_config_keycloak.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py), which is low priority: reconcile it only if the task explicitly asks for it.
    * DBaaS entry points: [dbaas_secrets_backend.py](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) and [create_dbs_dbaas.py](/docker/create_dbs_dbaas.py).
+   * Check that the test DAGs parse before running them: `airflow dags list-import-errors` in the test DAG image. They import operator and sensor classes through `airflow.providers.*` paths, which move between releases; the unused copies in `tests_dags_image/deprecated_dags/` still use `airflow.operators` and `airflow.contrib` and break earlier.
 4. The generated `values.schema.json` still accepts the documented installation parameters.
-5. No unresolved vulnerabilities are left without a recorded reason.
+5. Monitoring still works: `airflow-exporter` loads, and Prometheus receives `airflow_dag_status`, `airflow_task_status`, and `airflow_dag_run_duration`, which the alerts and the Airflow Overview dashboard use. See [monitoring.md](/docs/public/monitoring.md).
+6. No unresolved vulnerabilities are left without a recorded reason.
