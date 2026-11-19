@@ -171,6 +171,8 @@ Three rules hold for the whole procedure:
 * A Qubership change inside an upstream file is marked so that the next sync can tell it apart from upstream content. Three styles exist: `#---Qubership custom change: <description>---` in YAML, `{{- /* Qubership custom change: <description>--- */ -}}` in Helm templates, and `# Qubership override: <value> (upstream default: <value>)` for a changed default.
 * Markers are not a complete inventory. Many overrides in `chart/helm/airflow/values.yaml` predate them and carry none, so the diff against the chart you are updating from is the source of truth for what is local. The "Prepare the update" section explains how to build that diff.
 
+Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for example `3.2` for the second step of the Helm chart sync, and use the same form when reporting progress or resuming after an interruption. Adding a step renumbers only its own section.
+
 ### 1. Prepare the update
 
 1. Pick the target release: the latest stable Apache Airflow version from [apache/airflow releases](https://github.com/apache/airflow/releases).
@@ -228,7 +230,7 @@ Three rules hold for the whole procedure:
    * Keep the `artifacthub.io/*` annotations as upstream ships them, including the stale `helm-chart/1.21.0` documentation link. That link is upstream content, not a local defect.
    * Render the chart and check the exit code: `helm template qubership-airflow chart/helm/airflow > /dev/null`.
 6. Update the release plumbing:
-   * [.github/workflows/helm-charts-release.yaml](/.github/workflows/helm-charts-release.yaml): `chart-version` is written into `Chart.yaml` by `charts-values-update-action`. Keep it aligned with the chart version; the current value uses a `-dev` suffix. The chart 2 upgrade missed this input, and the convention is documented nowhere in the repository, so confirm it with the release pipeline owner.
+   * [.github/workflows/helm-charts-release.yaml](/.github/workflows/helm-charts-release.yaml): set `chart-version` to the `version` from `Chart.yaml` with a `-dev` suffix, so chart `2.0.0` takes `2.0.0-dev`. That is how the value tracked the chart before. The action writes this value into `Chart.yaml` at release time, and the convention is documented nowhere in the repository, so state the assumption in the pull request description instead of pausing to ask for a decision.
    * [release-images.yaml](/chart/helm/airflow/release-images.yaml): `statsd-exporter` and `git-sync` must match `images.statsd.tag` and `images.gitSync.tag` from `values.yaml`. The Qubership-built images stay on `:main`.
 
 ### 4. Values schema generation
@@ -236,7 +238,7 @@ Three rules hold for the whole procedure:
 1. Update [generate_json_schema.py](/docker-transfer/generate_json_schema.py): the `url` must point at `chart/values.schema.json` of the same upstream commit as the chart sync.
 2. Reconcile `values_params_to_keep` with the new upstream schema. A path that upstream removed makes the schema generation fail, so delete it or comment it out, as was done for `workers.celery.kerberosInitContainer.*`. Add the upstream parameters that Qubership now exposes.
 3. Every new Qubership-only value needs an entry in [qubership_values.schema.json](/chart/helm/airflow/qubership_values.schema.json), otherwise the generation fails the default-value validation.
-4. Validate by building the transfer image, which runs the script: `docker build -f docker-transfer/Dockerfile -t qubership-airflow-transfer .`. The generated `values.schema.json` is not stored in the repository; it exists only in that image.
+4. Validate by building the transfer image: `docker build -f docker-transfer/Dockerfile -t qubership-airflow-transfer .`. It first copies the tags from `release-images.yaml` into `values.yaml` and the two subchart value files, then runs the schema script. A mismatch therefore shows up as changed tags after the build. The generated `values.schema.json` is not stored in the repository; it exists only in that image.
 
 ### 5. Site manager and supporting images
 
@@ -249,11 +251,13 @@ Three rules hold for the whole procedure:
 3. Update [rclone-image/Dockerfile](/rclone-image/Dockerfile) to the [latest rclone release](https://github.com/rclone/rclone/releases) and re-check that `rclone-image/entrypoint.sh` still matches the rclone CLI it drives.
 4. Update the base image in [integration-tests/tests/docker/Dockerfile](/integration-tests/tests/docker/Dockerfile) to the [latest qubership-docker-integration-tests release](https://github.com/Netcracker/qubership-docker-integration-tests/releases).
 5. Scan the Go dependencies and address the reported vulnerabilities in `site-manager/go.mod`, or record why the remaining ones are acceptable.
-6. Know which CI file owns which image before adding or renaming one:
-   * [.github/workflows/basic-images.yml](/.github/workflows/basic-images.yml) builds `qubership-airflow`, `-transfer`, `-rclone`, `-sm`, and `-integration-tests` on every push and release.
-   * [.github/docker-build-config.json](/.github/docker-build-config.json) lists the same five for the release workflow, so an image added to one belongs in the other too.
-   * [.github/workflows/advanced-images.yml](/.github/workflows/advanced-images.yml) builds only `qubership-airflow-tests-dags-image`, on top of `qubership-airflow`. It is not shipped in the chart, so no other file lists it.
-   * [.github/helm-charts-release-config.yaml](/.github/helm-charts-release-config.yaml) maps [release-images.yaml](/chart/helm/airflow/release-images.yaml) to release versions, which is why that file carries every chart image plus the status provisioner, statsd-exporter, and git-sync.
+6. Know which file owns which image before adding or renaming one. A Qubership-built image touches five places:
+   * [.github/workflows/basic-images.yml](/.github/workflows/basic-images.yml): the build matrix, which builds `qubership-airflow`, `-transfer`, `-rclone`, `-sm`, and `-integration-tests`.
+   * [.github/docker-build-config.json](/.github/docker-build-config.json): the same five entries, read by the release workflow.
+   * [chart/helm/airflow/release-images.yaml](/chart/helm/airflow/release-images.yaml): the image reference with its tag. `docker-transfer/sync_util.py` copies that tag into the values entry below while the transfer image builds.
+   * The values entry that the tag is written to: `images.<name>` in `chart/helm/airflow/values.yaml`, `image` in `charts/airflow-site-manager/values.yaml`, or `image` in `charts/integrationTests/values.yaml`. Without one, the sync has nothing to update.
+   * [.github/helm-charts-release-config.yaml](/.github/helm-charts-release-config.yaml): the image reference with its release version, which rewrites that tag at release time.
+   `qubership-airflow-tests-dags-image` is the exception. It is built in [.github/workflows/advanced-images.yml](/.github/workflows/advanced-images.yml) on top of `qubership-airflow`, ships in no chart, and appears in neither release file.
 
 ### 6. Documentation and agent-facing files
 
