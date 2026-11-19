@@ -251,13 +251,14 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
 3. Update [rclone-image/Dockerfile](/rclone-image/Dockerfile) to the [latest rclone release](https://github.com/rclone/rclone/releases) and re-check that `rclone-image/entrypoint.sh` still matches the rclone CLI it drives.
 4. Update the base image in [integration-tests/tests/docker/Dockerfile](/integration-tests/tests/docker/Dockerfile) to the [latest qubership-docker-integration-tests release](https://github.com/Netcracker/qubership-docker-integration-tests/releases).
 5. Scan the Go dependencies and address the reported vulnerabilities in `site-manager/go.mod`, or record why the remaining ones are acceptable.
-6. Know which file owns which image before adding or renaming one. A Qubership-built image touches five places:
+6. Know which file owns which image before adding or renaming one. A Qubership-built image touches six places:
    * [.github/workflows/basic-images.yml](/.github/workflows/basic-images.yml): the build matrix, which builds `qubership-airflow`, `-transfer`, `-rclone`, `-sm`, and `-integration-tests`.
    * [.github/docker-build-config.json](/.github/docker-build-config.json): the same five entries, read by the release workflow.
    * [chart/helm/airflow/release-images.yaml](/chart/helm/airflow/release-images.yaml): the image reference with its tag. `docker-transfer/sync_util.py` copies that tag into the values entry below while the transfer image builds.
    * The values entry that the tag is written to: `images.<name>` in `chart/helm/airflow/values.yaml`, `image` in `charts/airflow-site-manager/values.yaml`, or `image` in `charts/integrationTests/values.yaml`. Without one, the sync has nothing to update.
    * [.github/helm-charts-release-config.yaml](/.github/helm-charts-release-config.yaml): the image reference with its release version, which rewrites that tag at release time.
-   `qubership-airflow-tests-dags-image` is the exception. It is built in [.github/workflows/advanced-images.yml](/.github/workflows/advanced-images.yml) on top of `qubership-airflow`, ships in no chart, and appears in neither release file.
+   * [.github/workflows/clean.yml](/.github/workflows/clean.yml): the GHCR cleanup matrix, which deletes package versions when a branch or tag is deleted. A missing entry leaves stale package versions behind; it does not break a build.
+   `qubership-airflow-tests-dags-image` is the exception. It is built in [.github/workflows/advanced-images.yml](/.github/workflows/advanced-images.yml) on top of `qubership-airflow`, ships in no chart, and appears only there and in `clean.yml`.
 
 ### 6. Documentation and agent-facing files
 
