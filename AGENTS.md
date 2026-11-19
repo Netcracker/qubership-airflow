@@ -74,7 +74,7 @@ Credentials are read from mounted Kubernetes secrets at `/var/run/secrets/airflo
 
 ### Helm Chart (`chart/helm/airflow/`)
 
-A fork of the official Apache Airflow Helm chart (v1.22.0, appVersion 3.4.0). All Qubership modifications are annotated in template files, making it easy to diff against upstream. Two comment styles are used:
+A fork of the official Apache Airflow Helm chart (v2.0.0, appVersion 3.4.0). All Qubership modifications are annotated in template files, making it easy to diff against upstream. Two comment styles are used:
 - YAML comment: `#---Qubership custom change: Change description---`
 - Helm template comment: `{{- /* Qubership custom change: Change description--- */ -}}`
 

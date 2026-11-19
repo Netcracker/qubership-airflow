@@ -12,8 +12,11 @@ USER root
 COPY tests_dags_image/dags/ ${AIRFLOW_USER_HOME}/dags/
 COPY tests_dags_image/get_hadoop_conf.sh ${AIRFLOW_USER_HOME}/get_hadoop_conf.sh
 COPY tests_dags_image/add_s3_policy.py /bin/
-# https://github.com/xmlsec/python-xmlsec/issues/336
-RUN apt-get --no-install-recommends install -y default-jre sasl2-bin libsasl2-2 libsasl2-modules libsasl2-modules-gssapi-mit pkg-config libxml2-dev libxmlsec1-dev libxmlsec1-openssl \
+# default-jre and the SASL packages serve the HDFS and Kafka test DAGs. The libxmlsec1-dev packages are
+# deliberately absent: xmlsec is pulled only by apache-airflow-providers-amazon[python3-saml], which is not
+# installed here and is excluded on Python 3.14. Keeping it would drag in libgnutls28-dev, whose nettle-dev
+# dependency cannot resolve against the hardened nettle packages already in the base image.
+RUN apt-get --no-install-recommends install -y default-jre sasl2-bin libsasl2-2 libsasl2-modules libsasl2-modules-gssapi-mit \
     && apt-get clean
 
 RUN chmod 0777 ${AIRFLOW_USER_HOME}/get_hadoop_conf.sh \
@@ -27,7 +30,7 @@ USER airflow
 # Install apache-airflow-backport-providers-cncf-kubernetes python package
 RUN python3 -m pip install -r ${AIRFLOW_USER_HOME}/test_requirements.txt
 
-ENV SPARK_HOME=/home/airflow/.local/lib/python3.11/site-packages/pyspark
+ENV SPARK_HOME=/home/airflow/.local/lib/python3.14/site-packages/pyspark
 ENV HADOOP_USER_NAME=hdfs
 ENV HADOOP_CONF_DIR=/etc/hadoop/conf
 
