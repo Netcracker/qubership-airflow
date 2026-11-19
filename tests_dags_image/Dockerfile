@@ -12,12 +12,11 @@ USER root
 COPY tests_dags_image/dags/ ${AIRFLOW_USER_HOME}/dags/
 COPY tests_dags_image/get_hadoop_conf.sh ${AIRFLOW_USER_HOME}/get_hadoop_conf.sh
 COPY tests_dags_image/add_s3_policy.py /bin/
-# https://github.com/xmlsec/python-xmlsec/issues/336
-# libxmlsec1-dev pulls libgnutls28-dev, which pulls nettle-dev. Debian orders the hardened runtime
-# packages already in the base image (libnettle8t64, libhogweed6t64) 3.10.1-1+dhi1 above the
-# 3.10.1-1+deb13u0+dhi1 that nettle-dev requires, so apt refuses the implied downgrade and the
-# transaction fails with unmet dependencies. Allow the downgrade for this install.
-RUN apt-get --no-install-recommends install -y --allow-downgrades default-jre sasl2-bin libsasl2-2 libsasl2-modules libsasl2-modules-gssapi-mit pkg-config libxml2-dev libxmlsec1-dev libxmlsec1-openssl \
+# default-jre and the SASL packages serve the HDFS and Kafka test DAGs. The libxmlsec1-dev packages are
+# deliberately absent: xmlsec is pulled only by apache-airflow-providers-amazon[python3-saml], which is not
+# installed here and is excluded on Python 3.14. Keeping it would drag in libgnutls28-dev, whose nettle-dev
+# dependency cannot resolve against the hardened nettle packages already in the base image.
+RUN apt-get --no-install-recommends install -y default-jre sasl2-bin libsasl2-2 libsasl2-modules libsasl2-modules-gssapi-mit \
     && apt-get clean
 
 RUN chmod 0777 ${AIRFLOW_USER_HOME}/get_hadoop_conf.sh \
