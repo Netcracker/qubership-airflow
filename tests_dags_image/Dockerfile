@@ -27,7 +27,7 @@ USER airflow
 # Install apache-airflow-backport-providers-cncf-kubernetes python package
 RUN python3 -m pip install -r ${AIRFLOW_USER_HOME}/test_requirements.txt
 
-ENV SPARK_HOME=/home/airflow/.local/lib/python3.11/site-packages/pyspark
+ENV SPARK_HOME=/home/airflow/.local/lib/python3.14/site-packages/pyspark
 ENV HADOOP_USER_NAME=hdfs
 ENV HADOOP_CONF_DIR=/etc/hadoop/conf
 
