@@ -176,10 +176,12 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
 ### 1. Prepare the update
 
 1. Pick the target release: the latest stable Apache Airflow version from [apache/airflow releases](https://github.com/apache/airflow/releases).
-2. Pick the upstream chart commit: the latest commit on the `apache/airflow` `main` branch. Release tags do not work, because the chart is bumped after the release: at tag `3.4.0` the chart still declares `appVersion: 3.3.2`.
-   The latest commit must declare `appVersion: <target>` in `chart/Chart.yaml`. The bump lands a few days after the release, so while the tip still declares the previous version, or once it has moved on to the next one, take the newest commit that declares the target. Chart changes merged after the bump are part of the sync. Record the SHA; the chart sync and the values schema use it.
+2. Pick the upstream chart commit and record its SHA; the chart sync and the values schema use it. It must be the latest commit on the `apache/airflow` `main` branch that declares the target version in `chart/Chart.yaml`. Release tags do not work, because the chart is bumped after the release: at tag `3.4.0` the chart still declares `appVersion: 3.3.2`.
+   * Point `<airflow-clone>` at a local clone of `apache/airflow`. If the tip declares `appVersion: <target>`, take it: `git -C <airflow-clone> show origin/main:chart/Chart.yaml`, then `git -C <airflow-clone> rev-parse origin/main`.
+   * If the tip declares a later version, the newest commit that still declares the target is the parent of the first bump after it: `git -C <airflow-clone> log -G'^appVersion: <next>' --format=%H -- chart/Chart.yaml` prints that bump, so append `^` to its SHA.
+   * If the tip still declares the previous version, the bump has not landed yet. Stop and re-run after it has; the tag state is the pre-bump chart and does not match the release.
+   * Check the candidate with `git -C <airflow-clone> show <SHA>:chart/Chart.yaml`: it must declare `appVersion: <target>`. Chart changes merged after the bump are part of the sync.
    * The 3.4.0 update used commit `1195d1b11ccd7178d09960a9ea47ab005983c540` (chart `2.0.0`, `appVersion: 3.4.0`), taken after the chart bump.
-   * With a local clone of `apache/airflow`: `git -C <airflow-clone> show origin/main:chart/Chart.yaml` to check the tip, then `git -C <airflow-clone> log -1 --format=%H origin/main` for the SHA.
 3. Record the commit the current chart was synced from. It is pinned in [generate_json_schema.py](/docker-transfer/generate_json_schema.py), and earlier ones are in `git log -p -- docker-transfer/generate_json_schema.py`.
 4. Diff the local chart against the upstream chart at that commit, for example `git diff --no-index <upstream-chart-dir> chart/helm/airflow`. That diff lists every Qubership delta, marked or not, before anything is overwritten.
 5. Record the Python version from the official slim image tag, `apache/airflow:slim-<version>-python<X.Y>`. The same Python version appears in the test DAG image and in the documentation.
@@ -205,6 +207,8 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
      -t qubership-airflow-tests-dags-image .
    ```
 
+   * The Airflow image installs the two custom packages under `docker/`, and the test DAG image inherits them: `dbaasintegrationpackage` and `keycloakrbacintegrationpackage`. They hook into Airflow internals, so the DBaaS or IDP integration can break without any build failure; triage is in 7.3.
+
 ### 3. Helm chart sync
 
 1. Replace the upstream-owned part of `chart/helm/airflow` with the content of `chart/` at the recorded SHA.
@@ -221,6 +225,7 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
 3. Update [values.yaml](/chart/helm/airflow/values.yaml). Two kinds of local change survive the sync:
    * The Qubership block: everything from `platformAirflowMonitoring:` to the end of the file is Qubership-owned and copied as is.
    * The in-body overrides in the upstream part: image repositories and tags, security context defaults, `dags.gitSync.rcloneImage`, the redirect route block, and similar. Most carry no marker, so take them from the "Prepare the update" diff.
+   * The IDP and DBaaS integrations are configured here, through `apiServer.apiServerConfig`, the secrets backend settings, and `dbaasDeclarative`. If either breaks after the update, triage is in 7.3.
 4. Then set the values that follow the release:
    * `defaultAirflowTag` and `airflowVersion` to the target version.
    * Copy the image tags that come from upstream: `images.statsd.tag`, `images.redis.tag`, `images.pgbouncer.tag`, `images.pgbouncerExporter.tag`, `images.otelCollector.tag`.
@@ -279,7 +284,7 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
 3. The integrations still work: DBaaS in both REST and declarative mode, Keycloak IDP login, GitSync DAG delivery, rclone DAG delivery, the test DAGs from the test DAG image, site manager failover and switchover, and status provisioning.
    * The Keycloak IDP and DBaaS integrations break often, even when the image builds and the chart deploys cleanly. Both hang off Airflow internals rather than public configuration, so a small API change in the new release is enough to break them.
    * When either of them fails, check the Airflow source at the target version for that API change before suspecting the integration code.
-   * IDP entry point: [keycloakrbacintegrationpackage](/docker/keycloakrbacintegrationpackage). The chart also ships [webserver_config_keycloak.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py), but that file is deprecated: do not reconcile it with the new release unless the task explicitly asks for it.
+   * IDP entry point: [keycloakrbacintegrationpackage](/docker/keycloakrbacintegrationpackage). The chart also ships [webserver_config_keycloak.py](/chart/helm/airflow/qs_files/webserver_config_keycloak.py), which is low priority: reconcile it only if the task explicitly asks for it.
    * DBaaS entry points: [dbaas_secrets_backend.py](/docker/dbaasintegrationpackage/qsdbaasintegration/dbaas_secrets_backend.py) and [create_dbs_dbaas.py](/docker/create_dbs_dbaas.py).
 4. The generated `values.schema.json` still accepts the documented installation parameters.
 5. No unresolved vulnerabilities are left without a recorded reason.
