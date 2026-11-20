@@ -1,0 +1,11 @@
+name: qa-airflow
+version: 1.0.0
+description: QA guidance for the Qubership Airflow Helm deployment — which suites exist, how to run them, which configuration variants and error codes must be exercised.
+targets:
+- claude
+- copilot
+- cursor
+dependencies:
+  apm: []
+  mcp: []
+includes: auto
