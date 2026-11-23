@@ -285,6 +285,7 @@ Steps are numbered from 1 in each section. Cite them as `<section>.<step>`, for 
    * [installation.md](/docs/public/installation.md): base image and Python version, the library list (mirror of `docker/requirements.txt`), the Airflow documentation URLs, and the parameter descriptions affected by the chart changes.
    * [maintenance.md](/docs/public/maintenance.md), [monitoring.md](/docs/public/monitoring.md), and [airflow-site-manager.md](/docs/public/airflow-site-manager.md): Airflow documentation URLs.
 3. Update [AGENTS.md](/AGENTS.md): the Airflow version, the base image tag and Python version, the Go version, and the chart version.
+   * Update the pinned versions in the QA skill [qa-airflow SKILL.md](/agent-packages/qa-airflow/.apm/skills/qa-airflow/SKILL.md): the "What this deployment is" paragraph repeats the Airflow version, the upstream chart fork version, and the base image tag/Python version. Grep the skill for the old version to be sure nothing else drifted.
 4. The troubleshooting skill references `agent-packages/troubleshoot-airflow/.apm/skills/troubleshoot-airflow/references/troubleshooting.md` and `references/monitoring.md` are generated from `docs/public/troubleshooting.md` and `docs/public/monitoring.md` by [sync-troubleshooting-skill.yml](/.github/workflows/sync-troubleshooting-skill.yml). Update the documentation source and, if the sync pull request has not landed yet, the copies in the same pull request.
 
 ### 7. Verification (definition of done)
