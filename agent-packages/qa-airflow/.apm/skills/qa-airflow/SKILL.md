@@ -5,8 +5,8 @@ description: Plan and verify testing of a Qubership Airflow change — pick the 
 
 ## What this deployment is
 
-`chart/helm/airflow` deploys Apache Airflow 3.3.0 (fork of the upstream chart v1.22.0) with
-Qubership modifications. Image `apache/airflow:slim-3.3.0-python3.11` plus two installed
+`chart/helm/airflow` deploys Apache Airflow 3.4.0 (fork of the upstream chart 2.0.0) with
+Qubership modifications. Image `apache/airflow:slim-3.4.0-python3.14` plus two installed
 packages: a **DBaaS/MaaS secrets backend** and a **Keycloak RBAC** integration.
 Default executor is `CeleryExecutor`; `triggerer.enabled` is **`false`** by default.
 
