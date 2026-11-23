@@ -213,7 +213,7 @@ subjects:
 
 * If the [Custom Preinstall Job](#custom-preinstall-job) is not used to create a PG database, then create the database in the External PostgreSQL server manually.
 
-**Warning**: When you set the `createUserJob.defaultUser.enabled` parameter, the `airflow users create` command runs at the start of the Airflow pod. Ensure that the PostgreSQL database you are using does not have any conflicting records. For example, another user with the same email ID. It is possible to delete or recreate the user manually after the installation using the Airflow CLI. For more information, refer to [https://airflow.apache.org/docs/stable/cli-ref](https://airflow.apache.org/docs/stable/cli-ref).
+**Warning**: When you set the `createUserJob.enabled` parameter, the `airflow users create` command runs at the start of the Airflow pod. Ensure that the PostgreSQL database you are using does not have any conflicting records. For example, another user with the same email ID. It is possible to delete or recreate the user manually after the installation using the Airflow CLI. For more information, refer to [https://airflow.apache.org/docs/stable/cli-ref](https://airflow.apache.org/docs/stable/cli-ref).
 
 ### Restricted Deploy User with Site Manager
 
